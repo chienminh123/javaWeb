@@ -1,0 +1,130 @@
+<div
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+>
+  <style>
+    .banner img {
+      background-color: #c9baba;
+      color: #fff;
+      text-align: center;
+
+      border-radius: 10px;
+      margin-bottom: 20px;
+      width: 100%;
+      height: 200px;
+      position: relative;
+    }
+
+    .home {
+      margin-left: 270px; /* Đảm bảo không bị sidebar che khuất */
+      padding: 20px;
+      background-color: #f5f5f5;
+      min-height: 100vh;
+    }
+    .banner h2 {
+      margin: 0;
+      font-size: 24px;
+    }
+    .banner p {
+      margin: 5px 0 0;
+      font-size: 14px;
+    }
+    .cards {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+    .card {
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      text-align: center;
+      position: relative;
+      display: flex; /* Sử dụng flexbox để sắp xếp nội dung ngang */
+      justify-content: space-between; /* Đẩy .card1 sang phải */
+      align-items: flex-start; /* Căn chỉnh theo đầu nếu nội dung khác chiều cao */
+    }
+
+    .card1 {
+      background-color: #bfbaba;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      width: 45%;
+      text-align: center;
+      position: relative;
+      min-width: 200px; /* Đảm bảo không quá hẹp */
+    }
+    .card h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #333;
+    }
+    .card p {
+      margin: 5px 0;
+      font-size: 18px;
+      color: #333;
+    }
+    .card .value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #ff4d4f;
+    }
+    .order-card {
+      background-color: #fff;
+      padding: 26.5px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      width: 44%;
+      text-align: center;
+    }
+    .order-card img {
+      width: 80px;
+      height: 80px;
+    }
+  </style>
+  <div th:replace="Admin/header::Header"></div>
+  <div th:replace="Admin/sidebar::sideBar"></div>
+  <div class="home">
+    <div class="banner">
+      <img th:src="@{/img/OIP.png}" alt="Star" />
+    </div>
+    <h3>Quản trị</h3>
+    <div class="cards">
+      <div class="card">
+        <p>Tổng tồn kho</p>
+        <div class="value">giá vốn * số lượng tồn</div>
+        <div class="card1">
+          <h3>Hết hàng</h3>
+          <div class="value">0 HH</div>
+          <a href="">Chi tiết</a>
+        </div>
+      </div>
+    </div>
+    <h3>Cần theo dõi</h3>
+    <div class="cards">
+      <div class="card order-card">
+        <div>
+          <div>
+            <img th:src="@{/img/delivery-time.png}" alt="Time" />
+          </div>
+          <h3>Đơn hàng đã hủy</h3>
+          <div class="value">0 ĐH</div>
+          <a href="">Chi tiết</a>
+        </div>
+      </div>
+      <div class="card order-card">
+        <div>
+          <img th:src="@{/img/shipping.png}" alt="Chờ xác nhận" />
+          <h3>Đơn hàng chờ xác nhận</h3>
+          <div class="value">0 ĐH</div>
+          <a href="">Xem tất cả</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div th:replace="Admin/footer::Footer"></div>
+</div>

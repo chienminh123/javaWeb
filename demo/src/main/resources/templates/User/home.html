@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html
+  lang="vi"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Trang bán hàng Demo</title>
+  </head>
+  <body>
+    <nav>
+      <a th:href="@{/}">Home</a>
+      <a th:href="@{/User/home}">User Home</a>
+      <span sec:authorize="hasRole('ADMIN')">
+        | <a th:href="@{/Admin/home}">Admin</a></span
+      >
+      <a th:href="@{/Auth/login}">Logout</a>
+    </nav>
+    <h1 th:text="${message}">Đây là Trang bán hàng</h1>
+  </body>
+</html>
