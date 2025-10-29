@@ -18,16 +18,15 @@ public class Orders {
 @Id
 @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer orderId;
-    private Integer userId;
     private LocalDateTime orderDate;
     private String status;
     private String Address;
     private String Phone;
     private String paymentMethod;
-
+    
     @OneToMany(mappedBy="orders")
     private List<OrderDetail> orderDetails;
     @ManyToOne
-    @JoinColumn(name = "userId", referencedColumnName = "userId")
+    @JoinColumn(name = "user_id", referencedColumnName = "userId")
     private User user; // Quan hệ nhiều-một với User
 }
