@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head th:fragment="head(cssFile)">
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title th:text="${title ?: 'Admin Dashboard'}">Admin Dashboard</title>
+
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        />
+
+        <link rel="stylesheet" th:href="@{/assets/css/reset.css}" />
+
+        <link rel="stylesheet" th:href="@{/assets/css/admin_core.css}" />
+
+        <link rel="stylesheet" th:href="@{/assets/css/admin_layout.css}" />
+
+        <th:block th:if="${cssFile}">
+            <link
+                rel="stylesheet"
+                th:href="@{'/assets/css/' + ${cssFile} + '.css'}"
+            />
+        </th:block>
+    </head>
+
+    <header th:fragment="Header" class="admin-header">
+        <div class="header-left">
+            <button class="toggle-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <span class="page-title">Quản Trị Hệ Thống</span>
+        </div>
+
+        <div class="header-right">
+            <div class="notification-icon">
+                <i class="fas fa-bell"></i>
+                <span class="badge badge-danger">3</span>
+            </div>
+
+            <div class="user-profile">
+                <img
+                    th:src="@{/img/admin.png}"
+                    alt="Avatar"
+                    class="user-avatar"
+                />
+                <span class="user-name">Quản Trị Viên</span>
+                <i class="fas fa-caret-down"></i>
+            </div>
+        </div>
+    </header>
+</html>
