@@ -24,4 +24,44 @@ document.addEventListener("DOMContentLoaded", function () {
     if (savedState === "hidden") {
         body.classList.add("sidebar-toggled");
     }
+
+    const profileDropdown = document.querySelector(".user-profile.dropdown");
+    const dropdownMenu = document.querySelector(
+        ".user-profile.dropdown .dropdown-menu"
+    );
+    const dropdownArrow = document.querySelector(
+        ".user-profile.dropdown .dropdown-arrow"
+    );
+
+    if (profileDropdown && dropdownMenu && dropdownArrow) {
+        const profileLink = document.querySelector(".profile-link");
+        if (profileLink) {
+            profileLink.addEventListener("click", function (event) {
+                event.preventDefault();
+                const isHidden =
+                    dropdownMenu.style.display === "none" ||
+                    dropdownMenu.style.display === "";
+
+                if (isHidden) {
+                    dropdownMenu.style.display = "block";
+                    dropdownArrow.style.transform = "rotate(180deg)";
+                } else {
+                    dropdownMenu.style.display = "none";
+                    dropdownArrow.style.transform = "rotate(0deg)";
+                }
+                event.stopPropagation();
+            });
+        }
+
+        // Đóng dropdown khi click ra ngoài (quan trọng)
+        document.addEventListener("click", function (event) {
+            if (
+                dropdownMenu.style.display === "block" &&
+                !profileDropdown.contains(event.target)
+            ) {
+                dropdownMenu.style.display = "none";
+                dropdownArrow.style.transform = "rotate(0deg)";
+            }
+        });
+    }
 });

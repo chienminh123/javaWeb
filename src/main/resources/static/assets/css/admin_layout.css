@@ -75,13 +75,22 @@ body {
     background-color: var(--sidebar-bg);
     color: var(--sidebar-text);
     position: fixed;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0 0 10px 0;
     top: 60px;
     left: 0;
     height: calc(100vh - 60px);
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     z-index: 950;
-    padding-top: 15px;
+
     transition: all 0.3s ease-in-out;
+}
+
+.sidebar-header {
+    text-align: center;
+    padding: 15px 10px;
 }
 
 .main-content-wrapper {
@@ -108,7 +117,13 @@ body.sidebar-toggled .home {
 }
 
 .sidebar-menu {
+    list-style: none;
     padding: 0 10px;
+    margin: auto 0;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
 }
 
 .menu-item a {
@@ -148,4 +163,73 @@ body.sidebar-toggled .home {
     background-color: var(--bg-light);
     min-height: calc(100vh - 60px);
     transition: margin-left 0.3s ease-in-out;
+}
+
+/* src/main/resources/static/assets/css/admin_layout.css */
+
+/* 1. Thiết lập Container Profile làm điểm neo */
+.user-profile.dropdown {
+    position: relative; 
+    display: inline-block;
+    margin-left: 20px;
+    cursor: pointer; /* Hiển thị con trỏ tay để gợi ý có thể click */
+}
+
+/* 2. Style Link Profile */
+.profile-link {
+    display: flex;
+    align-items: center;
+    color: var(--text-color, #333); 
+    text-decoration: none;
+    padding: 5px;
+}
+
+.avatar-icon {
+    font-size: 24px;
+    margin-right: 8px;
+    color: #a3a3c2; /* Màu avatar */
+}
+
+.dropdown-arrow {
+    margin-left: 8px;
+    transition: transform 0.3s ease;
+}
+
+/* 3. Style Menu Dropdown */
+.dropdown-menu {
+    display: none; /* Mặc định ẩn */
+    position: absolute;
+    right: 0; /* Xổ xuống sát lề phải của tên Admin */
+    top: 100%; /* Đặt ngay dưới link profile */
+    background-color: #fff;
+    min-width: 160px;
+    box-shadow: var(--shadow-md, 0px 8px 16px 0px rgba(0,0,0,0.2));
+    z-index: 1001; /* Đảm bảo nằm trên Header (z-index: 1000) */
+    border-radius: 5px;
+    overflow: hidden; 
+    border: 1px solid #ddd;
+}
+
+/* 4. Style cho Nút Đăng Xuất (dropdown-item-btn) */
+.dropdown-item-btn {
+    /* Đặt style để button trông giống link */
+    background: none;
+    border: none;
+    text-align: left;
+    width: 100%;
+    color: var(--text-color, #333); 
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 14px; 
+    display: block;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.dropdown-item-btn i {
+    margin-right: 8px;
+}
+
+.dropdown-item-btn:hover {
+    background-color: #f1f1f1; 
+    color: var(--primary-color);
 }

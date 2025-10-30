@@ -49,7 +49,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests((requests) -> requests
                 // permit auth endpoints (login/register), root and static resources; do NOT permit Admin pages
-                .requestMatchers("/", "/Auth/**", "/register", "/css/**", "/js/**").permitAll()
+                .requestMatchers("/", "/Auth/**", "/register", "/css/**", "/js/**", "/assets/**").permitAll()
                 // match the Admin controller path (case-sensitive)
                 .requestMatchers("/Admin/**").hasRole("ADMIN")
                 .requestMatchers("/User/**").hasRole("USER")
@@ -63,11 +63,11 @@ public class SecurityConfig {
                 .passwordParameter("Password")
                 .successHandler(roleBasedAuthenticationSuccessHandler())
                 .permitAll()
-            )
-
+            )     
+            
             .logout((logout) -> logout
                 .logoutUrl("/logout")
-                .logoutSuccessUrl("/Auth/login")
+                .logoutSuccessUrl("/Auth/login?logout")
                 .permitAll()
                 .invalidateHttpSession(true) // Đảm bảo session bị hủy
                 .clearAuthentication(true)

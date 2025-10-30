@@ -1,36 +1,48 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Đăng Nhập</title>
-  </head>
-  <body>
-    <h1>Đăng Nhập</h1>
-    <div th:if="${param.error}">
-      <p style="color:red">Tên đăng nhập hoặc mật khẩu không đúng.</p>
-    </div>
-    <div th:if="${param.logout}">
-      <p style="color:green">Bạn đã đăng xuất thành công.</p>
-    </div>
-    <form th:action="@{/Auth/login}" method="post">
-      <!-- CSRF token for Spring Security -->
-      <input
-        type="hidden"
-        th:name="${_csrf.parameterName}"
-        th:value="${_csrf.token}"
-      />
-      <div>
-        <label for="Phone">Số điện thoại: </label>
-        <input type="text" id="Phone" name="Phone" required />
-      </div>
-      <div>
-        <label for="Password">Mật khẩu:</label>
-        <input type="password" id="Password" name="Password" required />
-      </div>
-      <div>
-        <button type="submit">Đăng Nhập</button>
-      </div>
-    </form>
-    <p>Chưa có tài khoản? <a th:href="@{/register}">Đăng ký</a></p>
-  </body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Đăng Nhập</title>
+
+        <link rel="stylesheet" th:href="@{/assets/css/reset.css}" />
+        <link rel="stylesheet" th:href="@{/assets/css/login.css}" />
+    </head>
+    <body>
+        <div class="login-container">
+            <h1>Đăng Nhập</h1>
+
+            <div th:if="${param.error}" class="message-box error-message">
+                <p>Tên đăng nhập hoặc mật khẩu không đúng.</p>
+            </div>
+            <div th:if="${param.logout}" class="message-box success-message">
+                <p>Bạn đã đăng xuất thành công.</p>
+            </div>
+
+            <form th:action="@{/Auth/login}" method="post">
+                <input
+                    type="hidden"
+                    th:name="${_csrf.parameterName}"
+                    th:value="${_csrf.token}"
+                />
+                <div>
+                    <label for="Phone">Số điện thoại: </label>
+                    <input type="text" id="Phone" name="Phone" required />
+                </div>
+                <div>
+                    <label for="Password">Mật khẩu:</label>
+                    <input
+                        type="password"
+                        id="Password"
+                        name="Password"
+                        required
+                    />
+                </div>
+                <div>
+                    <button type="submit">Đăng Nhập</button>
+                </div>
+            </form>
+            <p>Chưa có tài khoản? <a th:href="@{/register}">Đăng ký</a></p>
+        </div>
+    </body>
 </html>
