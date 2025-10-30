@@ -1,0 +1,77 @@
+:root {
+    --primary-color: #3498db;
+    --primary-light: #f0f0ff;
+    --sidebar-bg: #34495e;
+    --sidebar-text: #ecf0f1;
+    --sidebar-hover: #3d4a5c;
+    --text-color: #333;
+    --text-light: #777;
+    --danger-color: #dc3545;
+    --success-color: #28a745;
+    --header-bg: #ffffff;
+    --bg-light: #f4f7fa;
+
+    --font-size-base: 14px;
+    --border-radius-base: 6px;
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+body {
+    font-family: "Arial", sans-serif;
+    font-size: var(--font-size-base);
+    color: var(--text-color);
+    background-color: var(--bg-light);
+}
+
+a {
+    text-decoration: none;
+    color: var(--primary-color);
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--primary-color);
+    opacity: 0.8;
+}
+
+h3 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: #444;
+}
+
+.text-center {
+    text-align: center;
+}
+.text-right {
+    text-align: right;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
+.mb-3 {
+    margin-bottom: 1rem;
+}
+.p-4 {
+    padding: 1.5rem;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25em 0.4em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: var(--border-radius-base);
+}
+
+.badge-danger {
+    background-color: var(--danger-color);
+    color: white;
+}

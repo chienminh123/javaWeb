@@ -1,0 +1,71 @@
+<div th:fragment="sideBar" class="sidebar">
+    <div class="sidebar-header">
+        <span class="logo-text">Menu Admin</span>
+    </div>
+    <ul class="sidebar-menu">
+        <li
+            th:class="${currentPage == '/Admin/home'} ? 'menu-item active' : 'menu-item'"
+        >
+            <a th:href="@{/Admin/home}">
+                <i class="fas fa-home"></i>
+                <span>Trang chủ</span>
+            </a>
+        </li>
+        <li
+            th:class="${currentPage == '/Admin/orders'} ? 'menu-item active' : 'menu-item'"
+        >
+            <a th:href="@{/Admin/orders}">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Đặt hàng</span>
+            </a>
+        </li>
+        <li
+            th:class="${currentPage == '/Admin/tonkho'} ? 'menu-item active' : 'menu-item'"
+        >
+            <a th:href="@{/Admin/tonkho}">
+                <i class="fas fa-box-open"></i>
+                <span>Tồn kho</span>
+            </a>
+        </li>
+        <li
+            th:class="${currentPage == '/Admin/export'} ? 'menu-item active' : 'menu-item'"
+        >
+            <a th:href="@{/Admin/export}">
+                <i class="fas fa-upload"></i>
+                <span>Xuất kho</span>
+            </a>
+        </li>
+        <li
+            th:class="${currentPage == '/Admin/addproduct'} ? 'menu-item active' : 'menu-item'"
+        >
+            <a th:href="@{/Admin/addproduct}">
+                <i class="fas fa-download"></i>
+                <span>Nhập kho</span>
+            </a>
+        </li>
+        <li
+            th:class="${currentPage == '/Admin/inventory'} ? 'menu-item active' : 'menu-item'"
+        >
+            <a th:href="@{/Admin/inventory}">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Kiểm kê</span>
+            </a>
+        </li>
+        <li
+            th:class="${currentPage == '/Admin/fixproduct'} ? 'menu-item active' : 'menu-item'"
+        >
+            <a th:href="@{/Admin/fixproduct}">
+                <i class="fas fa-cog"></i>
+                <span>Sửa đổi</span>
+            </a>
+        </li>
+        <li
+            th:class="${currentPage == '/Admin/report'} ? 'menu-item active' : 'menu-item'"
+        >
+            <a th:href="@{/Admin/report}">
+                <i class="fas fa-chart-line"></i>
+                <span>Báo cáo</span>
+            </a>
+        </li>
+    </ul>
+</div>

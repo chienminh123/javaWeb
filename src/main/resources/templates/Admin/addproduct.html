@@ -1,0 +1,103 @@
+<div>
+  <div
+    th:fragment="addProductContent"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+  >
+    <div th:replace="Admin/header::Header"></div>
+    <div th:replace="Admin/sidebar::sideBar"></div>
+    <!DOCTYPE html>
+
+    <h3>Thêm sản phẩm mới</h3>
+    <form id="productForm"  method="post" enctype="multipart/form-data">
+    <div class="text-danger"></div>
+    <table class="ProductTable">
+        <tr>
+            <th>Tên sản phẩm</th>
+            <th>Thể loại</th>
+            <th>Giá gốc</th>
+            <th>Size và số lượng</th>
+            <th>Mô tả</th>
+        </tr>
+        <tr>
+            <td>
+                <input type="text" asp-for="TenSanPham" placeholder="Nhập tên sản phẩm" required />
+                <span asp-validation-for="TenSanPham" class="text-danger"></span>
+            </td>
+            <td>
+                <select id="categorySelect" onchange="handleCategoryChange()" required>
+                    <option value="">Chọn thể loại</option>
+                    foreach (var theloai in ViewBag.TheLoais ?? new List<TheLoai>())
+                    {
+                        <option value="@theloai.TenTheLoai">@theloai.TenTheLoai</option>
+                    }
+                    <option value="Thêm Thể loại">Thêm Thể loại</option>
+                </select>
+                <div id="newCategoryInput" style="display: none; margin-top: 5px">
+                    <input type="text" id="categoryInput" placeholder="Nhập thể loại mới" />
+                    <button type="button" onclick="addNewCategory()" style=" margin-top: 5px">Thêm</button>
+                </div>
+                <input type="hidden" asp-for="TenTheLoai" id="hiddenCategory" />
+                <span asp-validation-for="TenTheLoai" class="text-danger"></span>
+            </td>
+            <td>
+                <input type="number" asp-for="Gia" min="0" step="0.01" placeholder="Nhập giá" required />
+                <span asp-validation-for="Gia" class="text-danger"></span>
+            </td>
+
+            <td>
+              
+                <div class="size-container" id="clothingSizes" style="display: block;">
+                    @for (int i = 0; i < 5; i++)
+                    {
+                        var size = new[] { "S", "M", "L", "XL", "XXL" }[i];
+                        <div class="size-item" data-size="@size">
+                            <label for="size-@size">@size</label>
+                            <input type="hidden" name="Sizes[@i].TenSize" value="@size" />
+                            <input type="number" id="size-@size" name="Sizes[@i].SoLuongTon" min="0" placeholder="SL" value="0" />
+                        </div>
+                    }
+                </div>
+                <div class="size-container" id="shoeSizes" style="display: none;">
+                    @for (int i = 0; i < 11; i++)
+                    {
+                        var size = new[] { "27", "28", "29", "30", "31", "38", "39", "40", "41", "42", "44" }[i];
+                        <div class="size-item" data-size="@size">
+                            <label for="size-@size">@size</label>
+                            <input type="hidden" name="Sizes[@i].TenSize" value="@size" />
+                            <input type="number" id="size-@size" name="Sizes[@i].SoLuongTon" min="0" placeholder="SL" value="0" />
+                        </div>
+                    }
+                </div>
+            </td>
+            <td>
+                <textarea asp-for="MoTa" placeholder="Nhập mô tả" required></textarea>
+                <span asp-validation-for="MoTa" class="text-danger"></span>
+            </td>
+        </tr>
+    </table>
+    <h3>Thêm hình ảnh sản phẩm</h3>
+    <table class="ImageTable">
+        <tr>
+            <th>Ảnh bìa</th>
+            <th>Hình ảnh 1</th>
+            <th>Hình ảnh 2</th>
+            <th>Hình ảnh 3</th>
+        </tr>
+        <tr>
+            @for (int i = 0; i < 4; i++)
+            {
+                <td>
+                    <input type="file" name="HinhAnhs" accept="image/*" @(i == 0 ? "required" : "") />
+                </td>
+            }
+        </tr>
+    </table>
+    <button type="submit" class="addButton">Thêm sản phẩm</button>
+
+
+</form>
+
+    <div th:replace="Admin/footer::Footer"></div>
+  </div>
+</div>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+>
+    <head th:replace="Admin/header :: head(cssFile='home')"></head>
+
+    <body>
+        <header th:replace="Admin/header :: Header"></header>
+
+        <div class="main-content-wrapper">
+            <div th:replace="Admin/sidebar :: sideBar"></div>
+
+            <div class="home">
+                <div class="banner">
+                    <img th:src="@{/img/OIP.png}" alt="Star" />
+                </div>
+
+                <h3>Quản trị</h3>
+                <div class="cards">
+                    <div class="card card-inventory">
+                        <div class="inventory-info">
+                            <p>Tổng tồn kho</p>
+                            <div class="value">giá vốn * số lượng tồn</div>
+                        </div>
+
+                        <div class="card card-out-of-stock">
+                            <h4 class="card-title">Hết hàng</h4>
+                            <div class="value">0 HH</div>
+                            <a href="">Chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Cần theo dõi</h3>
+                <div class="cards">
+                    <div class="card order-card">
+                        <img th:src="@{/img/delivery-time.png}" alt="Time" />
+                        <h4 class="card-title">Đơn hàng đã hủy</h4>
+                        <div class="value">0 ĐH</div>
+                        <a href="">Chi tiết</a>
+                    </div>
+                    <div class="card order-card">
+                        <img th:src="@{/img/shipping.png}" alt="Chờ xác nhận" />
+                        <h4 class="card-title">Đơn hàng chờ xác nhận</h4>
+                        <div class="value">0 ĐH</div>
+                        <a href="">Xem tất cả</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer th:replace="Admin/footer :: Footer"></footer>
+        <script th:src="@{/assets/js/admin_scripts.js}"></script>
+    </body>
+</html>
