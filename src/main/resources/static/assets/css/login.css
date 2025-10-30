@@ -1,0 +1,120 @@
+/* src/main/resources/static/assets/css/login.css */
+
+/* SỬ DỤNG CÁC BIẾN CHUNG TỪ admin_core.css (Nếu bạn đã import core.css lên login.html) */
+
+/* 1. Thiết lập chung cho BODY */
+body {
+    /* Đảm bảo nền của trang Login là màu nền Admin đã định (f4f7fa) */
+    background-color: var(--bg-light, #f4f7fa);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: "Arial", sans-serif;
+}
+
+/* 2. Container chính của Form */
+.login-container {
+    width: 100%;
+    max-width: 380px;
+    padding: 30px;
+    background-color: var(--card-bg, #ffffff);
+    border-radius: var(--border-radius-base, 8px);
+    box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.1));
+    text-align: center;
+}
+
+/* 3. Tiêu đề */
+h1 {
+    color: var(--primary-color, #5d5d9b); /* Sử dụng màu chính của Admin */
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+/* 4. Messages (Error/Logout) - Sử dụng màu sắc tương phản */
+.message-box {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.error-message {
+    border: 1px solid #f5c6cb;
+    background-color: #f8d7da;
+    color: #721c24; /* Đỏ sẫm */
+}
+
+.success-message {
+    border: 1px solid #c3e6cb;
+    background-color: #d4edda;
+    color: #155724; /* Xanh lá sẫm */
+}
+
+/* 5. Input Fields */
+form div {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--text-color, #333);
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus {
+    border-color: var(--primary-color, #5d5d9b);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(93, 93, 155, 0.2);
+}
+
+/* 6. Button */
+button[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary-color, #5d5d9b);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+button[type="submit"]:hover {
+    background-color: #4a4a7f;
+}
+
+/* 7. Footer Link */
+p {
+    margin-top: 20px;
+    color: var(--text-color, #333);
+    font-size: 0.9rem;
+}
+
+p a {
+    color: var(--primary-color, #5d5d9b);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+p a:hover {
+    text-decoration: underline;
+}
