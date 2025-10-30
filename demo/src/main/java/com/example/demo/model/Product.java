@@ -17,7 +17,9 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer productId;
 
-    private String genre;
+    @ManyToOne
+    @JoinColumn(name = "genreId", referencedColumnName = "genreId")
+    private Genre genre; // Quan hệ nhiều-một với Thể Loại
 
     @ManyToOne
     @JoinColumn(name = "providerId", referencedColumnName = "providerId") 
@@ -27,9 +29,17 @@ public class Product {
     private String description;
     private float basisPrice;
     private float sellPrice;
-
+    private String imageUrl;
     @OneToMany(mappedBy = "product")
     private List<Sizes> sizes;
-    @OneToMany(mappedBy = "product")
-    private List<Images> images;
+    // Getter & Setter
+    public Genre getGenre() { return genre; }
+    public void setGenre(Genre genre) { this.genre = genre; }
+
+    // Để hiển thị tên thể loại
+    public String getGenreName() {
+        return genre != null ? genre.getGenreName() : "";
+    }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 }

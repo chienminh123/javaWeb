@@ -19,5 +19,7 @@ public class Sizes {
     
     private String sizeName;
     private Integer qantity;
-
+    
+    public Integer getQantity() { return qantity; }
+    public void setQantity(Integer qantity) { this.qantity = qantity; }
 }

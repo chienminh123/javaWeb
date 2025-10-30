@@ -61,15 +61,6 @@
         <span>Trang chủ</span>
       </div></a
     >
-    <a
-      th:href="@{/Admin/orders}"
-      sec:authorize="hasRole('ADMIN')"
-      th:class="${currentPage == '/Admin/orders'} ? 'sidebar-link active' : 'sidebar-link'"
-      ><div class="menu-item">
-        <img th:src=@{/img/ecommerce.png} alt="Đặt hàng" />
-        <span>Đặt hàng</span>
-      </div></a
-    >
 
     <a
       th:href="@{/Admin/tonkho}"

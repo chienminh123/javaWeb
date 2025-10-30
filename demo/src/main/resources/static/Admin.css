@@ -1,0 +1,133 @@
+body {
+  font-family: Arial;
+  margin: 20px;
+  background: #f9f9fb;
+}
+.container {
+  max-width: 1200px;
+  margin-left: 240px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+h3 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+.add-product-btn {
+  background: #27ae60;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+}
+.add-product-btn:hover {
+  background: #219a52;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+}
+th {
+  background: #3498db;
+  color: white;
+  padding: 12px;
+  text-align: center;
+}
+td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  vertical-align: top;
+}
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.size-row {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 5px;
+  align-items: center;
+}
+.size-row input {
+  width: 60px;
+}
+.remove-row,
+.remove-size {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+}
+.autocomplete {
+  position: relative;
+}
+.autocomplete-items {
+  position: absolute;
+  border: 1px solid #ddd;
+  background: white;
+  z-index: 99;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 150px;
+  overflow-y: auto;
+}
+.autocomplete-items div {
+  padding: 8px;
+  cursor: pointer;
+}
+.autocomplete-items div:hover {
+  background: #f0f0f0;
+}
+.submit-all {
+  background: #e67e22;
+  color: white;
+  padding: 14px 40px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: block;
+  margin: 30px auto;
+}
+.submit-all:hover {
+  background: #d35400;
+}
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
+}
+.close {
+  float: right;
+  font-size: 20px;
+  cursor: pointer;
+}

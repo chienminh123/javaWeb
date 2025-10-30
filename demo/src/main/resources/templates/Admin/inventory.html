@@ -1,8 +1,74 @@
-<div>
-  <div>
-    <div th:replace="Admin/header::Header"></div>
-    <div th:replace="Admin/sidebar::sideBar"></div>
-    <h1>trang Kiểm kê</h1>
-    <div th:replace="Admin/footer::Footer"></div>
-  </div>
-</div>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Tồn Kho</title>
+    <link rel="stylesheet" th:href="@{/css/Admin.css}" />
+    <style>
+      .container {
+        margin-left: 270px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      .action-btn {
+        padding: 5px 10px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      .action-btn:hover {
+        background-color: #45a049;
+      }
+    </style>
+  </head>
+  <body>
+    <div th:replace="Admin/header :: Header"></div>
+    <div th:replace="Admin/sidebar :: sideBar"></div>
+    <div class="container">
+      <h2>Kiểm Kê</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Nhà cung cấp</th>
+            <th>Mã Sản Phẩm</th>
+            <th>Thể Loại</th>
+            <th>Số Lượng Tồn</th>
+            <th>Tồn Thực tế</th>
+            <th>Ghi Chú</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-table-body">
+          <tr th:each="item : ${inventoryList}">
+            <td th:text="${item.productId}">Mã SP</td>
+            <td th:text="${item.productName}">Tên SP</td>
+            <td th:text="${item.quantity}">Số Lượng</td>
+            <td>
+              <button
+                class="action-btn"
+                th:onclick="'location.href=\'/admin/editInventory/' + ${item.productId} + '\';'"
+              >
+                Chỉnh Sửa
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div th:replace="Admin/footer :: Footer"></div>
+  </body>
+</html>

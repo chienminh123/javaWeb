@@ -13,6 +13,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -45,35 +47,36 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .authorizeHttpRequests((requests) -> requests
-                // permit auth endpoints (login/register), root and static resources; do NOT permit Admin pages
-                .requestMatchers("/", "/Auth/**", "/register", "/css/**", "/js/**").permitAll()
-                // match the Admin controller path (case-sensitive)
-                .requestMatchers("/Admin/**").hasRole("ADMIN")
-                .requestMatchers("/User/**").hasRole("USER")
-                .anyRequest().authenticated()
-            )
-            .formLogin((form) -> form
-                .loginPage("/Auth/login")
-                // process the login POST at /Auth/login and use the form's field names
-                .loginProcessingUrl("/Auth/login")
-                .usernameParameter("Phone")
-                .passwordParameter("Password")
-                .successHandler(roleBasedAuthenticationSuccessHandler())
-                .permitAll()
-            )
-
-            .logout((logout) -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/Auth/login")
-                .permitAll()
-                .invalidateHttpSession(true) // Đảm bảo session bị hủy
-                .clearAuthentication(true)
-            );
-        return http.build();
-    }
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .authorizeHttpRequests((requests) -> requests
+            .requestMatchers("/", "/Auth/**", "/register", "/css/**", "/js/**").permitAll()
+            .requestMatchers("/Admin/addProvider", "/Admin/addGenre").permitAll()
+            .requestMatchers("/Admin/**").hasRole("ADMIN")
+            .requestMatchers("/User/**").hasRole("USER")
+            .anyRequest().authenticated()
+        )
+        .formLogin((form) -> form
+            .loginPage("/Auth/login")
+            .loginProcessingUrl("/Auth/login")
+            .usernameParameter("Phone")
+            .passwordParameter("Password")
+            .successHandler(roleBasedAuthenticationSuccessHandler())
+            .permitAll()
+        )
+        .logout((logout) -> logout
+            .logoutUrl("/logout")
+            .logoutSuccessUrl("/Auth/login")
+            .permitAll()
+            .invalidateHttpSession(true)
+            .clearAuthentication(true)
+        )
+        // BẬT CSRF NHƯNG CHO PHÉP ANONYMOUS
+        .csrf(csrf -> csrf
+            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+        );
+    return http.build();
+}
 
     /**
      * @return

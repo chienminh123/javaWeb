@@ -1,103 +1,396 @@
-<div>
-  <div
-    th:fragment="addProductContent"
-    xmlns:th="http://www.thymeleaf.org"
-    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
-  >
-    <div th:replace="Admin/header::Header"></div>
-    <div th:replace="Admin/sidebar::sideBar"></div>
-    <!DOCTYPE html>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Thêm Nhiều Sản Phẩm</title>
+    <link rel="stylesheet" th:href="@{/Admin.css}" />
+    <meta name="csrf-token" th:content="${_csrf.token}" />
+    <meta name="csrf-header" th:content="${_csrf.headerName}" />
+  </head>
+  <body>
+    <div th:replace="Admin/header :: Header"></div>
+    <div th:replace="Admin/sidebar :: sideBar"></div>
+    <div class="container" th:fragment="addProductContent">
+      <h3>Thêm Nhiều Sản Phẩm</h3>
+      <button type="button" class="add-product-btn" onclick="addProductRow()">
+        + Thêm sản phẩm
+      </button>
 
-    <h3>Thêm sản phẩm mới</h3>
-    <form id="productForm"  method="post" enctype="multipart/form-data">
-    <div class="text-danger"></div>
-    <table class="ProductTable">
-        <tr>
-            <th>Tên sản phẩm</th>
-            <th>Thể loại</th>
-            <th>Giá gốc</th>
-            <th>Size và số lượng</th>
-            <th>Mô tả</th>
-        </tr>
-        <tr>
-            <td>
-                <input type="text" asp-for="TenSanPham" placeholder="Nhập tên sản phẩm" required />
-                <span asp-validation-for="TenSanPham" class="text-danger"></span>
-            </td>
-            <td>
-                <select id="categorySelect" onchange="handleCategoryChange()" required>
-                    <option value="">Chọn thể loại</option>
-                    foreach (var theloai in ViewBag.TheLoais ?? new List<TheLoai>())
-                    {
-                        <option value="@theloai.TenTheLoai">@theloai.TenTheLoai</option>
-                    }
-                    <option value="Thêm Thể loại">Thêm Thể loại</option>
+      <form
+        id="multiProductForm"
+        th:action="@{/Admin/saveMultipleProducts}"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <table id="productTable">
+          <thead>
+            <tr>
+              <th>
+                Nhà cung cấp
+                <button
+                  type="button"
+                  class="add-btn"
+                  onclick="openProviderModal()"
+                >
+                  +
+                </button>
+              </th>
+              <th>Tên sản phẩm</th>
+              <th>
+                Thể loại
+                <button
+                  type="button"
+                  class="add-btn"
+                  onclick="openGenreModal()"
+                >
+                  +
+                </button>
+              </th>
+              <th>Giá gốc</th>
+              <th>Size & SL</th>
+              <th>Mô tả</th>
+              <th>Hình ảnh</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Dòng mẫu -->
+            <tr class="product-row" style="display: none">
+              <td>
+                <select
+                  name="providerId"
+                  required
+                  onchange="loadProductSuggestions(this)"
+                >
+                  <option value="">-- Chọn NCC --</option>
+                  <option
+                    th:each="p : ${providers}"
+                    th:value="${p.providerId}"
+                    th:text="${p.providerName}"
+                  ></option>
                 </select>
-                <div id="newCategoryInput" style="display: none; margin-top: 5px">
-                    <input type="text" id="categoryInput" placeholder="Nhập thể loại mới" />
-                    <button type="button" onclick="addNewCategory()" style=" margin-top: 5px">Thêm</button>
+              </td>
+              <td class="autocomplete">
+                <input
+                  type="text"
+                  name="productName"
+                  placeholder="Nhập tên..."
+                  required
+                  minlength="1"
+                  oninput="showSuggestions(this)"
+                />
+                <div class="autocomplete-items"></div>
+              </td>
+              <td>
+                <select name="genre" required>
+                  <option value="">-- Chọn thể loại --</option>
+                  <option
+                    th:each="g : ${genres}"
+                    th:value="${g.genreId}"
+                    th:text="${g.genreName}"
+                  ></option>
+                </select>
+              </td>
+              <td>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="basisPrice"
+                  placeholder="0.00"
+                  min="0"
+                  required
+                  oninvalid="this.setCustomValidity('Vui lòng nhập giá gốc hợp lệ')"
+                  oninput="this.setCustomValidity('')"
+                />
+              </td>
+              <td>
+                <div class="sizes-container">
+                  <div class="size-row">
+                    <input
+                      type="text"
+                      name="sizeName"
+                      placeholder="S"
+                      style="width: 40px"
+                    />
+                    <input
+                      type="number"
+                      name="quantity"
+                      placeholder="0"
+                      min="0"
+                      style="width: 50px"
+                    />
+                    <button
+                      type="button"
+                      class="add-btn"
+                      onclick="addSizeRow(this)"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-                <input type="hidden" asp-for="TenTheLoai" id="hiddenCategory" />
-                <span asp-validation-for="TenTheLoai" class="text-danger"></span>
-            </td>
-            <td>
-                <input type="number" asp-for="Gia" min="0" step="0.01" placeholder="Nhập giá" required />
-                <span asp-validation-for="Gia" class="text-danger"></span>
-            </td>
+              </td>
+              <td><textarea name="description" rows="2"></textarea></td>
+              <td>
+                <input type="file" name="images" multiple accept="image/*" />
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="remove-row"
+                  onclick="removeRow(this)"
+                >
+                  X
+                </button>
+              </td>
+            </tr>
+          </tbody>
+          <!-- <button type="submit" class="submit-all">LƯU TẤT CẢ SẢN PHẨM</button> -->
+          <button type="submit" class="submit-all">LƯU TẤT CẢ SẢN PHẨM</button>
+        </table>
+      </form>
 
-            <td>
-              
-                <div class="size-container" id="clothingSizes" style="display: block;">
-                    @for (int i = 0; i < 5; i++)
-                    {
-                        var size = new[] { "S", "M", "L", "XL", "XXL" }[i];
-                        <div class="size-item" data-size="@size">
-                            <label for="size-@size">@size</label>
-                            <input type="hidden" name="Sizes[@i].TenSize" value="@size" />
-                            <input type="number" id="size-@size" name="Sizes[@i].SoLuongTon" min="0" placeholder="SL" value="0" />
-                        </div>
-                    }
-                </div>
-                <div class="size-container" id="shoeSizes" style="display: none;">
-                    @for (int i = 0; i < 11; i++)
-                    {
-                        var size = new[] { "27", "28", "29", "30", "31", "38", "39", "40", "41", "42", "44" }[i];
-                        <div class="size-item" data-size="@size">
-                            <label for="size-@size">@size</label>
-                            <input type="hidden" name="Sizes[@i].TenSize" value="@size" />
-                            <input type="number" id="size-@size" name="Sizes[@i].SoLuongTon" min="0" placeholder="SL" value="0" />
-                        </div>
-                    }
-                </div>
-            </td>
-            <td>
-                <textarea asp-for="MoTa" placeholder="Nhập mô tả" required></textarea>
-                <span asp-validation-for="MoTa" class="text-danger"></span>
-            </td>
-        </tr>
-    </table>
-    <h3>Thêm hình ảnh sản phẩm</h3>
-    <table class="ImageTable">
-        <tr>
-            <th>Ảnh bìa</th>
-            <th>Hình ảnh 1</th>
-            <th>Hình ảnh 2</th>
-            <th>Hình ảnh 3</th>
-        </tr>
-        <tr>
-            @for (int i = 0; i < 4; i++)
-            {
-                <td>
-                    <input type="file" name="HinhAnhs" accept="image/*" @(i == 0 ? "required" : "") />
-                </td>
+      <!-- Modal Thêm Nhà cung cấp -->
+      <div id="providerModal" class="modal">
+        <div class="modal-content">
+          <span class="close" onclick="closeModal('providerModal')">X</span>
+          <h4>Thêm Nhà cung cấp mới</h4>
+          <input
+            type="text"
+            id="newProviderName"
+            placeholder="Tên nhà cung cấp"
+            required
+          />
+          <input type="email" id="newProviderEmail" placeholder="Email" />
+          <input type="text" id="newProviderPhone" placeholder="SĐT" />
+          <input type="text" id="newProviderAddress" placeholder="Địa chỉ" />
+          <button class="add-btn" onclick="saveProvider()">Thêm</button>
+        </div>
+      </div>
+
+      <!-- Modal Thêm Thể loại -->
+      <div id="genreModal" class="modal">
+        <div class="modal-content">
+          <span class="close" onclick="closeModal('genreModal')">X</span>
+          <h4>Thêm Thể loại mới</h4>
+          <input
+            type="text"
+            id="newGenre"
+            placeholder="Tên thể loại"
+            required
+          />
+          <button class="add-btn" onclick="saveGenre()">Thêm</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const productSuggestions = /*[[${productSuggestions}]]*/ {};
+      function submitForm() {
+        const form = document.getElementById("productForm");
+
+        // Kiểm tra tất cả input required
+        let valid = true;
+        form
+          .querySelectorAll("input[required], select[required]")
+          .forEach((input) => {
+            if (!input.value || input.value.trim() === "") {
+              input.reportValidity(); // Hiển thị lỗi ngay
+              valid = false;
             }
-        </tr>
-    </table>
-    <button type="submit" class="addButton">Thêm sản phẩm</button>
+          });
 
+        if (!valid) return;
 
-</form>
+        // Đảm bảo basisPrice là số hợp lệ
+        form.querySelectorAll('input[name="basisPrice"]').forEach((input) => {
+          const val = parseFloat(input.value);
+          if (isNaN(val) || val < 0) {
+            input.setCustomValidity("Giá phải ≥ 0");
+            input.reportValidity();
+            valid = false;
+          } else {
+            input.setCustomValidity("");
+          }
+        });
 
-    <div th:replace="Admin/footer::Footer"></div>
-  </div>
-</div>
+        if (!valid) return;
+
+        form.submit(); // Submit thật
+      }
+      function addProductRow() {
+        const tbody = document.querySelector("#productTable tbody");
+        const row = tbody.querySelector(".product-row").cloneNode(true);
+        row.style.display = "";
+        row
+          .querySelectorAll("input, select, textarea")
+          .forEach((el) => (el.value = ""));
+        row.querySelector(
+          ".sizes-container"
+        ).innerHTML = `<div class="size-row">
+            <input type="text" name="sizeName" placeholder="S" style="width:40px" />
+            <input type="number" name="quantity" placeholder="0" min="0" style="width:50px" />
+            <button type="button" class="add-btn" onclick="addSizeRow(this)">+</button>
+        </div>`;
+        tbody.appendChild(row);
+      }
+
+      function addSizeRow(btn) {
+        const container = btn.closest(".sizes-container");
+        const row = document.createElement("div");
+        row.className = "size-row";
+        row.innerHTML = `
+            <input type="text" name="sizeName" placeholder="M" style="width:40px" />
+            <input type="number" name="quantity" placeholder="0" min="0" style="width:50px" />
+            <button type="button" class="remove-size" onclick="this.parentElement.remove()">−</button>
+        `;
+        container.appendChild(row);
+      }
+
+      function removeRow(btn) {
+        btn.closest("tr").remove();
+      }
+
+      function openProviderModal() {
+        document.getElementById("providerModal").style.display = "flex";
+      }
+      function openGenreModal() {
+        document.getElementById("genreModal").style.display = "flex";
+      }
+      function closeModal(id) {
+        document.getElementById(id).style.display = "none";
+      }
+
+      function getCsrfToken() {
+        const token = document
+          .querySelector('meta[name="csrf-token"]')
+          .getAttribute("content");
+        const header = document
+          .querySelector('meta[name="csrf-header"]')
+          .getAttribute("content");
+        return { token, header };
+      }
+
+      function saveProvider() {
+        const { token, header } = getCsrfToken();
+        const data = {
+          providerName: document.getElementById("newProviderName").value.trim(),
+          providerEmail: document
+            .getElementById("newProviderEmail")
+            .value.trim(),
+          providerPhone: document
+            .getElementById("newProviderPhone")
+            .value.trim(),
+          providerAddress: document
+            .getElementById("newProviderAddress")
+            .value.trim(),
+        };
+
+        if (!data.providerName) {
+          alert("Vui lòng nhập tên nhà cung cấp!");
+          return;
+        }
+
+        fetch("/Admin/addProvider", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            [header]: token,
+          },
+          body: JSON.stringify(data),
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error("Lưu thất bại: " + res.status);
+            return res.json();
+          })
+          .then((provider) => {
+            document
+              .querySelectorAll('select[name="providerId"]')
+              .forEach((sel) => {
+                const opt = new Option(
+                  provider.providerName,
+                  provider.providerId
+                );
+                sel.add(opt);
+                sel.value = provider.providerId;
+              });
+            closeModal("providerModal");
+            document
+              .querySelectorAll("#providerModal input")
+              .forEach((input) => (input.value = ""));
+          })
+          .catch((err) => alert("Lỗi: " + err.message));
+      }
+
+      function saveGenre() {
+        const { token, header } = getCsrfToken();
+        const name = document.getElementById("newGenre").value.trim();
+
+        if (!name) {
+          alert("Vui lòng nhập thể loại!");
+          return;
+        }
+
+        fetch("/Admin/addGenre", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            [header]: token,
+          },
+          body: JSON.stringify({ genre: name }),
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error("Lưu thất bại");
+            return res.text();
+          })
+          .then(() => {
+            document.querySelectorAll('select[name="genre"]').forEach((sel) => {
+              const opt = new Option(name, name);
+              sel.add(opt);
+              sel.value = name;
+            });
+            closeModal("genreModal");
+            document.getElementById("newGenre").value = "";
+          })
+          .catch((err) => alert("Lỗi: " + err.message));
+      }
+
+      function loadProductSuggestions(select) {
+        const providerId = select.value;
+        const row = select.closest("tr");
+        const input = row.querySelector('input[name="productName"]');
+        input.dataset.suggestions = JSON.stringify(
+          productSuggestions[providerId] || []
+        );
+      }
+
+      function showSuggestions(input) {
+        const suggestions = JSON.parse(input.dataset.suggestions || "[]");
+        const val = input.value.toLowerCase();
+        const container = input.nextElementSibling;
+        container.innerHTML = "";
+        if (!val) return;
+
+        suggestions
+          .filter((p) => p.productName.toLowerCase().includes(val))
+          .slice(0, 5)
+          .forEach((p) => {
+            const div = document.createElement("div");
+            div.innerHTML = `<strong>${p.productName}</strong><br><small>Mã: ${p.productId} | Giá: ${p.basisPrice}</small>`;
+            div.onclick = () => {
+              input.value = p.productName;
+              input.closest("tr").querySelector('select[name="genre"]').value =
+                p.genre;
+              input
+                .closest("tr")
+                .querySelector('input[name="basisPrice"]').value = p.basisPrice;
+              container.innerHTML = "";
+            };
+            container.appendChild(div);
+          });
+      }
+
+      window.onload = () => addProductRow();
+    </script>
+    <div th:replace="Admin/footer :: Footer"></div>
+  </body>
+</html>

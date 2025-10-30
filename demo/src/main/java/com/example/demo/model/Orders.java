@@ -17,7 +17,7 @@ import lombok.Data;
 public class Orders {
 @Id
 @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer orderId;
+    private Integer orderId;  
     private LocalDateTime orderDate;
     private String status;
     private String Address;
