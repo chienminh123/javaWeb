@@ -53,6 +53,7 @@ public void saveMultipleProducts(
         // --- TẠO BIÊN LAI THEO NCC ---
             Quittance quittance = providerQuittanceMap.computeIfAbsent(currentProviderId, id -> {
             Provider provider = providerRepo.findById(id).orElse(null);
+            // Product product = productRepo.findByProductNameAndProviderProviderId(name, currentProviderId).orElse(null);
             String providerName = provider != null ? provider.getProviderName() : "Không xác định";
 
             Quittance q = new Quittance();
@@ -60,6 +61,9 @@ public void saveMultipleProducts(
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
             q.setDate(LocalDateTime.now());
             q.setNote("Nhập kho tự động từ form thêm sản phẩm");
+            q.setQuittanceType("IMPORT"); // ĐÁNH DẤU ĐÂY LÀ BIÊN LAI NHẬP
+            q.setProvider(provider);
+            // q.setProduct(product);
             return q;
         });
 
@@ -141,6 +145,89 @@ public void saveMultipleProducts(
         quittanceRepo.saveAll(providerQuittanceMap.values());
     }
 }
+    @Transactional
+    public void exportMultipleProducts(
+            Integer[] providerIds, Integer[] productIds, 
+            String[][] sizeNames, Integer[][] quantities)
+            throws IllegalStateException, IllegalArgumentException {
+
+        Map<Integer, Quittance> providerQuittanceMap = new HashMap<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        for (int i = 0; i < productIds.length; i++) {
+            final Integer currentProviderId = providerIds[i];
+            final Integer currentProductId = productIds[i];
+            
+            if (currentProviderId == null || currentProductId == null) continue;
+
+            Product product = productRepo.findById(currentProductId)
+                .orElseThrow(() -> new IllegalArgumentException("Sản phẩm ID " + currentProductId + " không tồn tại."));
+
+            Quittance quittance = providerQuittanceMap.computeIfAbsent(currentProviderId, id -> {
+                Provider provider = providerRepo.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("NCC ID " + id + " không tồn tại."));
+                
+                Quittance q = new Quittance();
+                q.setQuittanceName("Phiếu xuất kho - " + provider.getProviderName() + " - " + LocalDateTime.now().format(formatter));
+                q.setDate(LocalDateTime.now());
+                q.setQuittanceType("EXPORT"); 
+                q.setProvider(provider);      
+                q.setNote("Chi tiết xuất kho:");
+                return q;
+            });
+
+
+            String[] currentSizeNames = sizeNames[i];
+            Integer[] currentQuantities = quantities[i];
+
+            if (currentSizeNames == null || currentQuantities == null) {
+                 throw new IllegalArgumentException("Sản phẩm '" + product.getProductName() + "' phải có ít nhất 1 size để xuất.");
+            }
+
+            boolean hasValidSize = false;
+            for (int j = 0; j < currentSizeNames.length; j++) {
+                String sizeName = currentSizeNames[j];
+                Integer exportQty = currentQuantities[j];
+
+                if (sizeName == null || sizeName.trim().isEmpty() || exportQty == null || exportQty <= 0) {
+                    continue;
+                }
+                
+                hasValidSize = true;
+                
+                final String finalSizeName = sizeName.trim();
+
+                // 2. Dùng biến 'finalSizeName' cho tất cả logic bên dưới
+                Sizes size = sizeRepo.findByProductAndSizeName(product, finalSizeName)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                        "Sản phẩm '" + product.getProductName() + "' không có size '" + finalSizeName + "'."));
+
+                int currentStock = size.getQuantity();
+                if (currentStock < exportQty) {
+                    throw new IllegalStateException(
+                        "Không đủ hàng! SP '" + product.getProductName() + 
+                        "' (Size " + finalSizeName + ") chỉ còn " + currentStock + 
+                        ", nhưng bạn muốn xuất " + exportQty);
+                }
+
+                size.setQuantity(currentStock - exportQty);
+                sizeRepo.save(size);
+
+                String note = quittance.getNote() + "\n- " + 
+                    product.getProductName() + " (Size: " + finalSizeName + ") x " + exportQty;
+                quittance.setNote(note.trim());
+            }
+
+            if (!hasValidSize) {
+                throw new IllegalArgumentException("Sản phẩm '" + product.getProductName() + "' cần ít nhất 1 size có số lượng > 0 để xuất.");
+            }
+            quittance.setProduct(product);
+        }
+
+        if (!providerQuittanceMap.isEmpty()) {
+            quittanceRepo.saveAll(providerQuittanceMap.values());
+        }
+    }
 
     public Map<Integer, List<Map<String, Object>>> getAllProductSuggestionsMap() {
         Map<Integer, List<Map<String, Object>>> map = new HashMap<>();
@@ -150,4 +237,7 @@ public void saveMultipleProducts(
         }
         return map;
     }
+   public List<Product> getAllProductsWithInventory() {
+    return productRepo.findAllWithDetails(); // JOIN FETCH tất cả
+}
 }

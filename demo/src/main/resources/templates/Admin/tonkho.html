@@ -2,72 +2,235 @@
 <html xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Quản Lý Tồn Kho</title>
-    <link rel="stylesheet" th:href="@{/css/Admin.css}" />
+
     <style>
       .container {
         margin-left: 270px;
+        padding: 20px;
+      }
+      .filters {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .filters select,
+      .filters input {
+        font-size: 14px;
+        padding: 6px;
       }
       table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 20px;
       }
       th,
       td {
         border: 1px solid #ddd;
-        padding: 8px;
+        padding: 10px;
         text-align: left;
       }
       th {
         background-color: #f2f2f2;
       }
-      .action-btn {
-        padding: 5px 10px;
-        background-color: #4caf50;
-        color: white;
-        border: none;
-        cursor: pointer;
+      .size-list {
+        padding: 0;
+        margin: 0;
+        list-style: none;
       }
-      .action-btn:hover {
-        background-color: #45a049;
+      .size-item {
+        margin: 3px 0;
+        font-size: 13px;
+      }
+      .size-item.in-stock {
+        color: #27ae60;
+        font-weight: bold;
+      }
+      .size-item.out-of-stock {
+        color: #aaa;
+      }
+      .product-image {
+        width: 70px;
+        height: auto;
+        border-radius: 4px;
+      }
+      .no-data {
+        text-align: center;
+        color: #999;
+        padding: 20px;
       }
     </style>
   </head>
   <body>
     <div th:replace="Admin/header :: Header"></div>
     <div th:replace="Admin/sidebar :: sideBar"></div>
+
     <div class="container" th:fragment="tonkhoContent">
       <h2>Quản Lý Tồn Kho</h2>
-      <table>
+
+      <!-- BỘ LỌC -->
+      <div class="filters">
+        <div>
+          <label>NCC:</label>
+          <select id="filterProvider">
+            <option value="">Tất cả</option>
+            <option
+              th:each="p : ${providers}"
+              th:value="${p.providerId}"
+              th:text="${p.providerName}"
+            ></option>
+          </select>
+        </div>
+
+        <div>
+          <label>Thể loại:</label>
+          <select id="filterGenre">
+            <option value="">Tất cả</option>
+            <option
+              th:each="g : ${genres}"
+              th:value="${g.genreId}"
+              th:text="${g.genreName}"
+            ></option>
+          </select>
+        </div>
+
+        <div>
+          <label>Tìm tên SP:</label>
+          <input type="text" id="searchName" placeholder="Nhập tên..." />
+        </div>
+
+        <div>
+          <label>
+            <input type="checkbox" id="inStockOnly" /> Chỉ hiện còn hàng
+          </label>
+        </div>
+
+        <button onclick="applyFilters()" style="padding: 8px 15px">Lọc</button>
+        <button
+          onclick="resetFilters()"
+          style="padding: 8px 15px; background: #ccc"
+        >
+          Xóa lọc
+        </button>
+      </div>
+
+      <!-- BẢNG TỒN KHO -->
+      <table id="inventoryTable">
         <thead>
           <tr>
             <th>STT</th>
             <th>Nhà cung cấp</th>
-            <th>Mã Sản Phẩm</th>
+            <th>Tên Sản Phẩm</th>
             <th>Thể Loại</th>
-            <th>Size và Số Lượng Tồn</th>
+            <th>Size & SL Tồn</th>
             <th>Hình ảnh</th>
           </tr>
         </thead>
-        <tbody id="inventory-table-body">
-          <tr th:each="item : ${inventoryList}">
-            <td th:text="${item.productId}">Mã SP</td>
-            <td th:text="${item.productName}">Tên SP</td>
-            <td th:text="${item.quantity}">Số Lượng</td>
-            <td>
-              <button
-                class="action-btn"
-                th:onclick="'location.href=\'/admin/editInventory/' + ${item.productId} + '\';'"
-              >
-                Chỉnh Sửa
-              </button>
-            </td>
-          </tr>
+        <tbody id="inventoryTableBody">
+          <!-- JS sẽ render toàn bộ sản phẩm ngay khi load -->
         </tbody>
       </table>
     </div>
+
     <div th:replace="Admin/footer :: Footer"></div>
+
+    <script th:inline="javascript">
+      // DỮ LIỆU TỪ SERVER
+      const products = /*[[${products}]]*/ [];
+      const providers = /*[[${providers}]]*/ [];
+      const genres = /*[[${genres}]]*/ [];
+
+      // HIỂN THỊ TOÀN BỘ KHI MỞ TRANG
+      function renderTable(filteredProducts) {
+        const tbody = document.getElementById("inventoryTableBody");
+        tbody.innerHTML = "";
+
+        if (filteredProducts.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="no-data">Không có sản phẩm nào phù hợp</td></tr>`;
+          return;
+        }
+
+        filteredProducts.forEach((p, index) => {
+          const providerName =
+            providers.find((pr) => pr.providerId === p.provider.providerId)
+              ?.providerName || "N/A";
+          const genreName =
+            genres.find((g) => g.genreId === p.genre.genreId)?.genreName ||
+            "N/A";
+
+          let sizeHtml = "";
+          if (p.sizes && p.sizes.length > 0) {
+            p.sizes.forEach((size) => {
+              const stockClass =
+                size.quantity > 0 ? "in-stock" : "out-of-stock";
+              const stockText = size.quantity > 0 ? size.quantity : "Hết";
+              sizeHtml += `<div class="size-item ${stockClass}">${size.sizeName}: ${stockText}</div>`;
+            });
+          } else {
+            sizeHtml = `<div class="size-item out-of-stock">Chưa có size</div>`;
+          }
+
+          const imgHtml = p.imageUrl
+            ? `<img src="${p.imageUrl}" alt="SP" class="product-image" />`
+            : `<span>Không có ảnh</span>`;
+
+          const row = document.createElement("tr");
+          row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${providerName}</td>
+          <td>${p.productName}</td>
+          <td>${genreName}</td>
+          <td>${sizeHtml}</td>
+          <td>${imgHtml}</td>
+        `;
+          tbody.appendChild(row);
+        });
+      }
+
+      // LỌC KHI NGƯỜI DÙNG CHỌN
+      function applyFilters() {
+        let filtered = products;
+
+        const providerId = document.getElementById("filterProvider").value;
+        const genreId = document.getElementById("filterGenre").value;
+        const searchText = document
+          .getElementById("searchName")
+          .value.toLowerCase();
+        const inStockOnly = document.getElementById("inStockOnly").checked;
+
+        if (providerId) {
+          filtered = filtered.filter(
+            (p) => p.provider.providerId == providerId
+          );
+        }
+        if (genreId) {
+          filtered = filtered.filter((p) => p.genre.genreId == genreId);
+        }
+        if (searchText) {
+          filtered = filtered.filter((p) =>
+            p.productName.toLowerCase().includes(searchText)
+          );
+        }
+        if (inStockOnly) {
+          filtered = filtered.filter(
+            (p) => p.sizes && p.sizes.some((s) => s.quantity > 0)
+          );
+        }
+
+        renderTable(filtered);
+      }
+
+      function resetFilters() {
+        document.getElementById("filterProvider").value = "";
+        document.getElementById("filterGenre").value = "";
+        document.getElementById("searchName").value = "";
+        document.getElementById("inStockOnly").checked = false;
+        renderTable(products); // HIỂN THỊ LẠI TẤT CẢ
+      }
+
+      // MỞ TRANG → HIỂN THỊ TOÀN BỘ SẢN PHẨM NGAY
+      window.onload = () => renderTable(products);
+    </script>
   </body>
 </html>

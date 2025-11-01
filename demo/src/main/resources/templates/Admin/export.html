@@ -2,72 +2,189 @@
 <html xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quản Lý Tồn Kho</title>
-    <link rel="stylesheet" th:href="@{/css/Admin.css}" />
+    <title>Xuất Kho Sản Phẩm</title>
+    <link rel="stylesheet" th:href="@{/Admin.css}" />
     <style>
-      .container {
-        margin-left: 270px;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-      }
-      th,
-      td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-      }
-      th {
-        background-color: #f2f2f2;
-      }
-      .action-btn {
-        padding: 5px 10px;
-        background-color: #4caf50;
-        color: white;
-        border: none;
-        cursor: pointer;
-      }
-      .action-btn:hover {
-        background-color: #45a049;
+      .error-message {
+        color: red;
+        background: #ffe0e0;
+        padding: 10px;
+        margin: 15px 0;
+        border: 1px solid red;
+        border-radius: 4px;
       }
     </style>
   </head>
   <body>
     <div th:replace="Admin/header :: Header"></div>
     <div th:replace="Admin/sidebar :: sideBar"></div>
-    <div class="container" th:fragment="tonkhoContent">
-      <h2>Xuất kho</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>STT</th>
-            <th>Nhà cung cấp</th>
-            <th>Mã Sản Phẩm</th>
-            <th>Thể Loại</th>
-            <th>Size và Số Lượng Tồn</th>
-            <th>Ghi chú</th>
-          </tr>
-        </thead>
-        <tbody id="inventory-table-body">
-          <tr th:each="item : ${inventoryList}">
-            <td th:text="${item.productId}">Mã SP</td>
-            <td th:text="${item.productName}">Tên SP</td>
-            <td th:text="${item.quantity}">Số Lượng</td>
-            <td>
-              <button
-                class="action-btn"
-                th:onclick="'location.href=\'/admin/editInventory/' + ${item.productId} + '\';'"
-              >
-                Xuất kho
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+
+    <div class="container" th:fragment="exportContent">
+      <h3>Tạo Phiếu Xuất Kho</h3>
+
+      <div
+        th:if="${errorMessage}"
+        class="error-message"
+        th:text="${errorMessage}"
+      ></div>
+
+      <button type="button" class="add-product-btn" onclick="addProductRow()">
+        + Thêm sản phẩm
+      </button>
+
+      <form
+        id="multiExportForm"
+        th:action="@{/Admin/processExport}"
+        method="post"
+      >
+        <table id="productTable">
+          <thead>
+            <tr>
+              <th>NCC (Bắt buộc)</th>
+              <th>Tên sản phẩm (Chọn từ gợi ý)</th>
+              <th>Size & SL Xuất</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="product-row" style="display: none">
+              <td>
+                <select
+                  name="providerId"
+                  required
+                  onchange="loadProductSuggestions(this)"
+                >
+                  <option value="">-- Chọn NCC --</option>
+                  <option
+                    th:each="p : ${providers}"
+                    th:value="${p.providerId}"
+                    th:text="${p.providerName}"
+                  ></option>
+                </select>
+              </td>
+              <td class="autocomplete">
+                <input
+                  type="text"
+                  name="productName"
+                  placeholder="Nhập tên SP..."
+                  required
+                  oninput="showSuggestions(this)"
+                />
+                <div class="autocomplete-items"></div>
+                <input type="hidden" name="productId" required />
+              </td>
+              <td>
+                <div class="sizes-container">
+                  <div class="size-row">
+                    <input
+                      type="text"
+                      name="sizeName"
+                      placeholder="S"
+                      style="width: 40px"
+                    />
+                    <input
+                      type="number"
+                      name="quantity"
+                      placeholder="SL"
+                      min="1"
+                      style="width: 50px"
+                    />
+                    <button
+                      type="button"
+                      class="add-btn"
+                      onclick="addSizeRow(this)"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="remove-row"
+                  onclick="removeRow(this)"
+                >
+                  X
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <button type="submit" class="submit-all">XÁC NHẬN XUẤT KHO</button>
+      </form>
     </div>
+
     <div th:replace="Admin/footer :: Footer"></div>
+
+    <script th:inline="javascript">
+      const productSuggestions = /*[[${productSuggestions}]]*/ {};
+
+      function addProductRow() {
+        const table = document
+          .getElementById("productTable")
+          .getElementsByTagName("tbody")[0];
+        const templateRow = document.querySelector(".product-row");
+        const newRow = templateRow.cloneNode(true);
+        newRow.style.display = "table-row";
+        table.appendChild(newRow);
+      }
+
+      function addSizeRow(btn) {
+        const sizeContainer = btn.closest(".sizes-container");
+        const newSizeRow = sizeContainer
+          .querySelector(".size-row")
+          .cloneNode(true);
+        newSizeRow.querySelector('input[name="sizeName"]').value = "";
+        newSizeRow.querySelector('input[name="quantity"]').value = "";
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "remove-row";
+        removeBtn.innerText = "X";
+        removeBtn.onclick = () => removeBtn.parentElement.remove();
+        newSizeRow.appendChild(removeBtn);
+
+        sizeContainer.appendChild(newSizeRow);
+      }
+
+      function removeRow(btn) {
+        btn.closest("tr").remove();
+      }
+
+      function loadProductSuggestions(select) {
+        const suggestions = productSuggestions[select.value] || [];
+        select
+          .closest("tr")
+          .querySelector('input[name="productName"]').dataset.suggestions =
+          JSON.stringify(suggestions);
+      }
+
+      function showSuggestions(input) {
+        const suggestions = JSON.parse(input.dataset.suggestions || "[]");
+        const val = input.value.toLowerCase();
+        const container = input.nextElementSibling;
+        container.innerHTML = "";
+        if (!val) return;
+
+        suggestions
+          .filter((p) => p.productName.toLowerCase().includes(val))
+          .slice(0, 5)
+          .forEach((p) => {
+            const div = document.createElement("div");
+            div.innerHTML = `<strong>${p.productName}</strong><br><small>Mã: ${p.productId}</small>`;
+            div.onclick = () => {
+              input.value = p.productName;
+              input
+                .closest("td")
+                .querySelector('input[name="productId"]').value = p.productId;
+              container.innerHTML = "";
+            };
+            container.appendChild(div);
+          });
+      }
+
+      window.onload = () => addProductRow();
+    </script>
   </body>
 </html>

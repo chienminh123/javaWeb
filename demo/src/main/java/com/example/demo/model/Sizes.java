@@ -1,4 +1,6 @@
 package com.example.demo.model;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,7 +14,8 @@ public class Sizes {
 @Id
 @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer SizeId;
-
+    
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "productId", referencedColumnName = "productId") // Khóa ngoại tham chiếu Sản Phẩm
     private Product product;

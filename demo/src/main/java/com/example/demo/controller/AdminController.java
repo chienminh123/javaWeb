@@ -104,14 +104,54 @@ public class AdminController {
 
     @GetMapping("/tonkho")
     public String tonkho(Model model) {
-       
-        return "Admin/tonkho";
+        model.addAttribute("products", productService.getAllProductsWithInventory());
+        model.addAttribute("providers", providerService.findAll());
+        model.addAttribute("genres", genreService.findAllGenres());
+    return "Admin/tonkho";
     }
     @GetMapping("/export")
     public String export(Model model) {
-       
-        return "Admin/export";
+        // Tái sử dụng các service để nạp dữ liệu cho form
+        model.addAttribute("providers", providerService.findAll());
+        model.addAttribute("productSuggestions", productService.getAllProductSuggestionsMap());
+        return "Admin/export"; // Trả về trang export.html mới
     }
+    @PostMapping("/processExport")
+    public String processExport(
+        @RequestParam(required = false) Integer[] providerId,
+        @RequestParam(required = false) Integer[] productId,
+        @RequestParam(required = false) String[][] sizeName,
+        @RequestParam(required = false) Integer[][] quantity,
+        Model model
+    ) {
+        // Kiểm tra xem người dùng có nhập gì không
+        if (providerId == null || productId == null) {
+            model.addAttribute("errorMessage", "Bạn chưa thêm sản phẩm nào để xuất kho.");
+            // Nạp lại dữ liệu cho form
+            model.addAttribute("providers", providerService.findAll());
+            model.addAttribute("productSuggestions", productService.getAllProductSuggestionsMap());
+            return "Admin/export";
+        }
+
+        try {
+            // Gọi service mới để xử lý logic
+            productService.exportMultipleProducts(providerId, productId, sizeName, quantity);
+            
+            // Nếu thành công, quay về trang tồn kho
+            return "redirect:/Admin/tonkho"; 
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            // Nếu có lỗi (ví dụ: không đủ hàng), quay lại trang
+            // export và hiển thị thông báo lỗi
+            model.addAttribute("errorMessage", e.getMessage());
+            
+            // Nạp lại dữ liệu cho form
+            model.addAttribute("providers", providerService.findAll());
+            model.addAttribute("productSuggestions", productService.getAllProductSuggestionsMap());
+            return "Admin/export";
+        }
+    }
+    
     @GetMapping("/inventory")
     public String inventory(Model model) {
        
