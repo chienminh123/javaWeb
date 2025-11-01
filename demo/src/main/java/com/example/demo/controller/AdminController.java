@@ -20,9 +20,6 @@ import com.example.demo.service.GenreService;
 import com.example.demo.service.ProductService;
 import com.example.demo.service.ProviderService;
 
-
-
-
 @Controller
 @RequestMapping("/Admin")
 public class AdminController {
@@ -44,25 +41,27 @@ public class AdminController {
 
     @GetMapping("/addproduct")
     public String addProduct(Model model) {
-    model.addAttribute("providers", providerService.findAll());
-    model.addAttribute("genres", genreService.findAllGenres()); // List<Genre>
-    model.addAttribute("productSuggestions", productService.getAllProductSuggestionsMap());
-    return "Admin/addproduct";
-}
+        model.addAttribute("providers", providerService.findAll());
+        model.addAttribute("genres", genreService.findAllGenres()); // List<Genre>
+        model.addAttribute("productSuggestions", productService.getAllProductSuggestionsMap());
+        return "Admin/addproduct";
+    }
 
     @PostMapping("/saveMultipleProducts")
     public String saveMultipleProducts(
         @RequestParam String[] productName,
         @RequestParam Integer[] providerId,
-        @RequestParam String[] genre,
+        @RequestParam Integer[] genreId,
         @RequestParam Float[] basisPrice,
         @RequestParam String[] description,
         @RequestParam(required = false) MultipartFile[][] images,
-        @RequestParam(required = false) String[] sizeName,
-        @RequestParam(required = false) Integer[] quantity
+       
+        @RequestParam(required = false) String[][] sizeName,
+        @RequestParam(required = false) Integer[][] quantity
+        
     ) {
         productService.saveMultipleProducts(
-            productName, providerId, genre, basisPrice, description, images,
+            productName, providerId, genreId, basisPrice, description, images,
             sizeName, quantity
         );
         return "redirect:/Admin/tonkho";
@@ -84,7 +83,7 @@ public class AdminController {
     public Genre addGenre(@RequestBody Map<String, String> body) {
         String genreName = body.get("genre");
         return genreService.saveGenre(genreName);
-}
+    }
 
     @GetMapping("/fixproduct")
     public String fixProduct(Model model) {

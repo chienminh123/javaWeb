@@ -17,9 +17,9 @@ Optional<Product> findByProductNameAndProviderProviderId(@Param("name") String n
 
 @Query("SELECT new map(" +
        "p.productName as productName, " +
-       "p.genre.genreName as genre, " +
+       "p.genre.genreId as genreId, " +
        "p.basisPrice as basisPrice, " +
-       "p.productId as productCode) " +
+       "p.productId as productId) " +
        "FROM Product p WHERE p.provider.providerId = :providerId")
 List<Map<String, Object>> findSuggestionsByProvider(@Param("providerId") Integer providerId);
 }

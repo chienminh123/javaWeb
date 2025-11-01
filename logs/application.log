@@ -1,0 +1,36 @@
+2025-10-31 21:03:23 [restartedMain] [INFO] com.example.demo.DemoApplication - Starting DemoApplication using Java 22.0.2 with PID 17064 (C:\VsCode\.vscode\java\demo\target\classes started by ASUS in C:\VsCode\.vscode\java)
+2025-10-31 21:03:23 [restartedMain] [DEBUG] com.example.demo.DemoApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
+2025-10-31 21:03:23 [restartedMain] [INFO] com.example.demo.DemoApplication - No active profile set, falling back to 1 default profile: "default"
+2025-10-31 21:03:24 [restartedMain] [INFO] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-10-31 21:03:24 [restartedMain] [INFO] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-10-31 21:03:25 [restartedMain] [INFO] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-31 21:03:25 [restartedMain] [INFO] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 142 ms. Found 6 JPA repository interfaces.
+2025-10-31 21:03:27 [restartedMain] [INFO] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2025-10-31 21:03:27 [restartedMain] [INFO] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-10-31 21:03:27 [restartedMain] [INFO] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.48]
+2025-10-31 21:03:27 [restartedMain] [INFO] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-10-31 21:03:27 [restartedMain] [INFO] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3279 ms
+2025-10-31 21:03:27 [restartedMain] [INFO] o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-31 21:03:27 [restartedMain] [INFO] org.hibernate.Version - HHH000412: Hibernate ORM core version 6.6.33.Final
+2025-10-31 21:03:27 [restartedMain] [INFO] o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-10-31 21:03:28 [restartedMain] [INFO] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-31 21:03:28 [restartedMain] [INFO] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2025-10-31 21:03:28 [restartedMain] [INFO] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@503e0e25
+2025-10-31 21:03:28 [restartedMain] [INFO] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2025-10-31 21:03:29 [restartedMain] [WARN] org.hibernate.dialect.Dialect - HHH000511: The 5.5.5 version for [org.hibernate.dialect.MySQLDialect] is no longer supported, hence certain features may not work properly. The minimum supported version is 8.0.0. Check the community dialects project for available legacy versions.
+2025-10-31 21:03:29 [restartedMain] [INFO] o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 5.5.5
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-31 21:03:30 [restartedMain] [INFO] o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-31 21:03:30 [restartedMain] [INFO] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-31 21:03:31 [restartedMain] [INFO] o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-10-31 21:03:32 [restartedMain] [WARN] o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-10-31 21:03:32 [restartedMain] [INFO] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name userDetailsService
+2025-10-31 21:03:33 [restartedMain] [INFO] o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2025-10-31 21:03:34 [restartedMain] [INFO] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2025-10-31 21:03:34 [restartedMain] [INFO] com.example.demo.DemoApplication - Started DemoApplication in 11.04 seconds (process running for 12.112)

@@ -18,8 +18,8 @@ public class Sizes {
     private Product product;
     
     private String sizeName;
-    private Integer qantity;
+    private Integer quantity;
     
-    public Integer getQantity() { return qantity; }
-    public void setQantity(Integer qantity) { this.qantity = qantity; }
+    // public Integer getQuantity() { return quantity; }
+    // public void setQuantity(Integer quantity) { this.quantity = quantity; }
 }
