@@ -12,10 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.model.Genre;
+import com.example.demo.model.InventoryCheck;
+import com.example.demo.model.InventoryDetail;
 import com.example.demo.model.Product;
 import com.example.demo.model.Provider;
 import com.example.demo.model.Quittance;
 import com.example.demo.model.Sizes;
+import com.example.demo.repository.InventoryCheckRepository;
+import com.example.demo.repository.InventoryDetailRepository;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.ProviderRepository;
 import com.example.demo.repository.QuittanceRepository;
@@ -30,9 +34,11 @@ public class ProductService {
     @Autowired private GenreService genreService;
     @Autowired private ImageService imageService;
     @Autowired private QuittanceRepository quittanceRepo; 
+    @Autowired private InventoryCheckRepository checkRepo;
+    @Autowired private InventoryDetailRepository detailRepo;
 
    @Transactional
-public void saveMultipleProducts(
+    public void saveMultipleProducts(
     String[] productNames, Integer[] providerIds, Integer[] genreIds,
         Float[] basisPrices, String[] descriptions, MultipartFile[][] images,
         // === THAY ĐỔI Ở ĐÂY: Sửa signature để nhận mảng 2 chiều ===
@@ -145,6 +151,7 @@ public void saveMultipleProducts(
         quittanceRepo.saveAll(providerQuittanceMap.values());
     }
 }
+
     @Transactional
     public void exportMultipleProducts(
             Integer[] providerIds, Integer[] productIds, 
@@ -226,6 +233,51 @@ public void saveMultipleProducts(
 
         if (!providerQuittanceMap.isEmpty()) {
             quittanceRepo.saveAll(providerQuittanceMap.values());
+        }
+    }
+//Inventory
+    @Transactional
+    public void saveInventoryCheck(
+       
+        Integer[] productId,
+        String[] sizeName,
+        Integer[] systemQty,
+        Integer[] actualQty,
+        String[] note
+    ) {
+        // 1. Tạo phiếu kiểm kê
+        InventoryCheck check = new InventoryCheck();
+        check.setCheckDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+        
+        check = checkRepo.save(check);
+
+        // 2. Lưu từng chi tiết + cập nhật tồn
+        for (int i = 0; i < productId.length; i++) {
+            
+            // === TẠO BIẾN FINAL ĐỂ SỬA LỖI ===
+            final int currentProductId = productId[i];
+            final String currentSizeName = sizeName[i];
+            // === KẾT THÚC SỬA LỖI ===
+
+            Product product = productRepo.findById(currentProductId)
+                .orElseThrow(() -> new RuntimeException("Sản phẩm ID " + currentProductId + " không tồn tại"));
+
+            Sizes size = sizeRepo.findByProductAndSizeName(product, currentSizeName)
+                .orElseThrow(() -> new RuntimeException("Size '" + currentSizeName + "' của sản phẩm '" + product.getProductName() + "' không tồn tại"));
+
+            InventoryDetail detail = new InventoryDetail();
+            detail.setInventoryCheck(check);
+            detail.setProduct(size.getProduct());
+            detail.setSize(size); // Lưu lại size
+            detail.setSystemQuantity(systemQty[i]);
+            detail.setActualQuantity(actualQty[i]);
+            detail.setDifference(actualQty[i] - systemQty[i]);
+            detail.setNote(note[i]);
+            detailRepo.save(detail);
+
+            // CẬP NHẬT TỒN THỰC TẾ
+            size.setQuantity(actualQty[i]);
+            sizeRepo.save(size);
         }
     }
 

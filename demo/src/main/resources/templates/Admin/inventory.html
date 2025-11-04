@@ -2,12 +2,12 @@
 <html xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quản Lý Tồn Kho</title>
+    <title>Kiểm Kê Tồn Kho</title>
     <link rel="stylesheet" th:href="@{/css/Admin.css}" />
     <style>
       .container {
         margin-left: 270px;
+        padding: 20px;
       }
       table {
         width: 100%;
@@ -17,58 +17,170 @@
       th,
       td {
         border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
+        padding: 10px;
+        text-align: center;
       }
       th {
-        background-color: #f2f2f2;
+        background: #f2f2f2;
       }
-      .action-btn {
-        padding: 5px 10px;
-        background-color: #4caf50;
+      .size-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 5px 0;
+        border-bottom: 1px dashed #ccc;
+      }
+      .size-row input[type="number"] {
+        width: 70px;
+      }
+      .size-row textarea {
+        width: 200px;
+        height: 40px;
+        font-size: 12px;
+      }
+      .diff {
+        font-weight: bold;
+        min-width: 50px;
+      }
+      .diff-positive {
+        color: green;
+      }
+      .diff-negative {
+        color: red;
+      }
+      .save-btn {
+        background: #4caf50;
         color: white;
+        padding: 10px 20px;
         border: none;
         cursor: pointer;
-      }
-      .action-btn:hover {
-        background-color: #45a049;
+        font-size: 16px;
       }
     </style>
   </head>
   <body>
     <div th:replace="Admin/header :: Header"></div>
     <div th:replace="Admin/sidebar :: sideBar"></div>
+
     <div class="container">
-      <h2>Kiểm Kê</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>STT</th>
-            <th>Nhà cung cấp</th>
-            <th>Mã Sản Phẩm</th>
-            <th>Thể Loại</th>
-            <th>Số Lượng Tồn</th>
-            <th>Tồn Thực tế</th>
-            <th>Ghi Chú</th>
-          </tr>
-        </thead>
-        <tbody id="inventory-table-body">
-          <tr th:each="item : ${inventoryList}">
-            <td th:text="${item.productId}">Mã SP</td>
-            <td th:text="${item.productName}">Tên SP</td>
-            <td th:text="${item.quantity}">Số Lượng</td>
-            <td>
-              <button
-                class="action-btn"
-                th:onclick="'location.href=\'/admin/editInventory/' + ${item.productId} + '\';'"
-              >
-                Chỉnh Sửa
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <h2>KIỂM KÊ TỒN KHO</h2>
+      <p>
+        Ngày kiểm:
+        <strong
+          th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy HH:mm')}"
+        ></strong>
+      </p>
+
+      <form
+        id="checkForm"
+        th:action="@{/Admin/saveInventoryCheck}"
+        method="post"
+      >
+        <table>
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th>Nhà cung cấp</th>
+              <th>Sản phẩm</th>
+              <th>Size</th>
+              <th>Tồn hệ thống</th>
+              <th>Tồn thực tế</th>
+              <th>Chênh lệch</th>
+              <th>Ghi chú lý do</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="p, iter : ${productsWithSizes}">
+              <td th:text="${iter.index + 1}"></td>
+              <td th:text="${p.provider.providerName}"></td>
+              <td th:text="${p.productName}"></td>
+              <td colspan="5">
+                <div th:each="size : ${p.sizes}" class="size-group">
+                  <div class="size-row">
+                    <!-- Size -->
+                    <strong
+                      th:text="${size.sizeName}"
+                      style="width: 50px"
+                    ></strong>
+
+                    <!-- Hidden inputs để gửi dữ liệu -->
+                    <input
+                      type="hidden"
+                      name="productId"
+                      th:value="${p.productId}"
+                    />
+                    <input
+                      type="hidden"
+                      name="sizeName"
+                      th:value="${size.sizeName}"
+                    />
+                    <input
+                      type="hidden"
+                      name="systemQty"
+                      th:value="${size.quantity}"
+                    />
+
+                    <!-- Tồn hệ thống -->
+                    <span th:text="${size.quantity}" style="width: 80px"></span>
+
+                    <!-- Tồn thực tế -->
+                    <input
+                      type="number"
+                      name="actualQty"
+                      min="0"
+                      th:data-system="${size.quantity}"
+                      onchange="calcDiff(this)"
+                      style="width: 70px"
+                      required
+                    />
+
+                    <!-- Chênh lệch -->
+                    <span class="diff">0</span>
+
+                    <!-- GHI CHÚ RIÊNG -->
+                    <textarea
+                      name="note"
+                      placeholder="Lý do chênh lệch..."
+                      th:if="${size.quantity != 0}"
+                    ></textarea>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <button type="submit" class="save-btn">HOÀN TẤT KIỂM KÊ</button>
+      </form>
     </div>
+
+    <script>
+      function calcDiff(input) {
+        const system = parseInt(input.dataset.system) || 0;
+        const actual = parseInt(input.value) || 0;
+        const diff = actual - system;
+        const span = input.nextElementSibling;
+        span.textContent = diff;
+        span.className =
+          "diff " +
+          (diff > 0 ? "diff-positive" : diff < 0 ? "diff-negative" : "");
+
+        // Tự động gợi ý ghi chú nếu thừa/thiếu
+        const textarea = span.nextElementSibling;
+        if (
+          diff < 0 &&
+          (!textarea.value || textarea.value.includes("Hao hụt"))
+        ) {
+          textarea.value = "Hao hụt do bảo quản / vận chuyển";
+        } else if (
+          diff > 0 &&
+          (!textarea.value || textarea.value.includes("Nhập thêm"))
+        ) {
+          textarea.value = "Nhập bổ sung chưa cập nhật";
+        }
+      }
+    </script>
+
     <div th:replace="Admin/footer :: Footer"></div>
   </body>
 </html>

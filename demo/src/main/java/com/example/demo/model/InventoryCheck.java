@@ -8,16 +8,9 @@ import lombok.Data;
 
 @Entity
 @Data
-public class User {
+public class InventoryCheck {
 @Id
 @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer userId;
-    private String userName;
-    // @Column(name = "pass_word")
-    private String passWord;
-    private String role;
-    private String phone;
-    private String email;    
-    private String address;  
-    private float point;
+    private Integer inventoryCheckId;
+    private String checkDate;
 }

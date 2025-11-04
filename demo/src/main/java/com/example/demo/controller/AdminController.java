@@ -154,8 +154,32 @@ public class AdminController {
     
     @GetMapping("/inventory")
     public String inventory(Model model) {
-       
+        // 1. Lấy tất cả sản phẩm và size
+        model.addAttribute("productsWithSizes", productService.getAllProductsWithInventory());
         return "Admin/inventory";
+    }
+    @PostMapping("/saveInventoryCheck")
+    public String saveInventoryCheck(
+        // Các mảng dữ liệu từ form
+        @RequestParam Integer[] productId,
+        @RequestParam String[] sizeName,
+        @RequestParam Integer[] systemQty,
+        @RequestParam Integer[] actualQty,
+        @RequestParam String[] note
+        
+    ) {
+        // 2. Gọi service để lưu
+        productService.saveInventoryCheck(
+            
+            productId,
+            sizeName,
+            systemQty,
+            actualQty,
+            note
+        );
+        
+        // 3. Xong thì quay về trang tồn kho
+        return "redirect:/Admin/tonkho";
     }
     
 }
