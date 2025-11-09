@@ -1,27 +1,24 @@
 package com.example.demo.config;
 
-import java.io.IOException;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
-
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 
 @Configuration
 public class SecurityConfig {
@@ -48,37 +45,36 @@ public class SecurityConfig {
     }
 
     @Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-        .authorizeHttpRequests((requests) -> requests
-            .requestMatchers("/", "/Auth/**", "/register", "/css/**", "/js/**").permitAll() 
-            .requestMatchers("/Admin/addProvider", "/Admin/addGenre").permitAll()
-            // trang ai cx xem ddc
-            .requestMatchers("/Admin/**").hasRole("ADMIN")
-            .requestMatchers("/User/**").hasRole("USER")
-            .anyRequest().authenticated()
-        )
-        .formLogin((form) -> form
-            .loginPage("/Auth/login")
-            .loginProcessingUrl("/Auth/login")
-            .usernameParameter("Phone")
-            .passwordParameter("Password")
-            .successHandler(roleBasedAuthenticationSuccessHandler())
-            .permitAll()
-        )
-        .logout((logout) -> logout
-            .logoutUrl("/logout")
-            .logoutSuccessUrl("/Auth/login")
-            .permitAll()
-            .invalidateHttpSession(true)
-            .clearAuthentication(true)
-        )
-        // BẬT CSRF NHƯNG CHO PHÉP ANONYMOUS
-        .csrf(csrf -> csrf
-            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-        );
-    return http.build();
-}
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests((requests) -> requests
+                // permit auth endpoints (login/register), root and static resources; do NOT permit Admin pages
+                .requestMatchers("/", "/Auth/**", "/register", "/css/**", "/js/**", "/assets/**").permitAll()
+                .requestMatchers("/Admin/addProvider", "/Admin/addGenre").permitAll()
+                // match the Admin controller path (case-sensitive)
+                .requestMatchers("/Admin/**").hasRole("ADMIN")
+                .requestMatchers("/User/**").hasRole("USER")
+                .anyRequest().authenticated()
+            )
+            .formLogin((form) -> form
+                .loginPage("/Auth/login")
+                // process the login POST at /Auth/login and use the form's field names
+                .loginProcessingUrl("/Auth/login")
+                .usernameParameter("Phone")
+                .passwordParameter("Password")
+                .successHandler(roleBasedAuthenticationSuccessHandler())
+                .permitAll()
+            )     
+            
+            .logout((logout) -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/Auth/login?logout")
+                .permitAll()
+                .invalidateHttpSession(true) // Đảm bảo session bị hủy
+                .clearAuthentication(true)
+            );
+        return http.build();
+    }
 
     /**
      * @return
@@ -95,7 +91,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
                         response.sendRedirect(request.getContextPath() + "/Admin/home");
                         return;
                     } else if ("ROLE_USER".equals(role)) {
-                        response.sendRedirect(request.getContextPath() + "/User/home");
+                        response.sendRedirect(request.getContextPath() + "/User/index");
                         return;
                     }
                 }

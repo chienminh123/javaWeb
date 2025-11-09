@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html
+    lang="vi"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Mẹ & Bé Yêu - Trang Chủ</title>
+
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+            integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
+
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            th:href="@{/img/favicon.png}"
+        />
+        <link
+            rel="shortcut icon"
+            type="image/png"
+            th:href="@{/img/favicon.png}"
+        />
+
+        <link rel="stylesheet" th:href="@{/user-css/reset.css}" />
+        <link rel="stylesheet" th:href="@{/user-css/main.css}" />
+        <link rel="stylesheet" th:href="@{/user-css/header.css}" />
+        <link rel="stylesheet" th:href="@{/user-css/footer.css}" />
+        <link rel="stylesheet" th:href="@{/user-css/product.css}" />
+    </head>
+    <body>
+        <header class="header">
+            <div class="header__top-bar top-bar">
+                <div class="top-bar__left">
+                    <a href="/" class="logo">
+                        <img
+                            th:src="@{/img/logo.png}"
+                            alt="Logo Bibo Mart"
+                            class="logo__image"
+                        />
+                    </a>
+                </div>
+
+                <div class="top-bar__center">
+                    <form class="search-form">
+                        <input
+                            type="text"
+                            placeholder="Ba mẹ cần tìm gì cho bé hôm nay?"
+                            class="search-form__input"
+                        />
+                        <button type="submit" class="search-form__button">
+                            <i
+                                class="fa-solid fa-magnifying-glass search-form__icon"
+                            ></i>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="top-bar__right header-actions">
+                    <a
+                        href="#"
+                        class="top-bar__action top-bar__action--notification"
+                    >
+                        <i class="fa-regular fa-bell top-bar__icon"></i>
+                        <span>Thông báo</span>
+                    </a>
+                    <a href="#" class="top-bar__action top-bar__action--cart">
+                        <i class="fa-solid fa-cart-shopping top-bar__icon"></i>
+                        <span>Giỏ hàng</span>
+                    </a>
+
+                    <a
+                        th:href="@{/login}"
+                        class="top-bar__action top-bar__action--account"
+                    >
+                        <i class="fa-regular fa-circle-user top-bar__icon"></i>
+                        <span>Đăng nhập</span>
+                    </a>
+                </div>
+            </div>
+
+            <nav class="category-menu">
+                <ul class="category-menu__list">
+                    <li class="category-menu__item">
+                        <a href="#" class="category-menu__link">Sữa cho bé</a>
+                    </li>
+                    <li class="category-menu__item">
+                        <a href="#" class="category-menu__link"
+                            >Bỉm tã & vệ sinh</a
+                        >
+                    </li>
+                    <li class="category-menu__item">
+                        <a href="#" class="category-menu__link"
+                            >Bình sữa & phụ kiện</a
+                        >
+                    </li>
+                    <li class="category-menu__item">
+                        <a href="#" class="category-menu__link"
+                            >Ăn dặm, dinh dưỡng</a
+                        >
+                    </li>
+                    <li class="category-menu__item">
+                        <a href="#" class="category-menu__link"
+                            >Vitamin & sức khỏe</a
+                        >
+                    </li>
+                    <li class="category-menu__item">
+                        <a href="#" class="category-menu__link"
+                            >Đồ dùng mẹ & bé</a
+                        >
+                    </li>
+                    <li class="category-menu__item">
+                        <a href="#" class="category-menu__link">Đồ sơ sinh</a>
+                    </li>
+                    <li class="category-menu__item">
+                        <a href="#" class="category-menu__link"
+                            >Thời trang & phụ kiện</a
+                        >
+                    </li>
+                    <li class="category-menu__item">
+                        <a href="#" class="category-menu__link">Xe cho bé</a>
+                    </li>
+                    <li class="category-menu__item">
+                        <a href="#" class="category-menu__link"
+                            >Đồ chơi, học tập</a
+                        >
+                    </li>
+                    <li class="category-menu__item">
+                        <a href="#" class="category-menu__link"
+                            >Mẹ bầu & sau sinh</a
+                        >
+                    </li>
+                    <li class="category-menu__item">
+                        <a href="#" class="category-menu__link"
+                            >Chăm sóc gia đình</a
+                        >
+                    </li>
+                </ul>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <section class="home-hero-section">
+                <!-- BANNER CHÍNH - SLIDE KÉO NGANG -->
+                <div class="home-hero-section__main">
+                    <div class="mega-banner-carousel" id="megaBannerCarousel">
+                        <div class="carousel-track" id="carouselTrack">
+                            <!-- Slide 1 -->
+                            <div class="mega-banner-slide">
+                                <img
+                                    th:src="@{/img/slide-1.jpg}"
+                                    alt="Slide 1"
+                                    class="slide-image"
+                                />
+                            </div>
+
+                            <!-- Slide 2 -->
+                            <div class="mega-banner-slide">
+                                <img
+                                    th:src="@{/img/slide-2.png}"
+                                    alt="Slide 2"
+                                    class="slide-image"
+                                />
+                            </div>
+
+                            <!-- Slide 3 -->
+                            <div class="mega-banner-slide">
+                                <img
+                                    th:src="@{/img/slide-3.jpg}"
+                                    alt="Slide 3"
+                                    class="slide-image"
+                                />
+                            </div>
+
+                            <!-- Slide 4 -->
+                            <div class="mega-banner-slide">
+                                <img
+                                    th:src="@{/img/slide-4.png}"
+                                    alt="Slide 4"
+                                    class="slide-image"
+                                />
+                            </div>
+
+                            <!-- Slide 5 -->
+                            <div class="mega-banner-slide">
+                                <img
+                                    th:src="@{/img/slide-5.png}"
+                                    alt="Slide 5"
+                                    class="slide-image"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chấm tròn -->
+                    <div class="mega-banner__dots" id="carouselDots"></div>
+                </div>
+
+                <!-- 2 BANNER NHỎ BÊN PHẢI -->
+                <div class="home-hero-section__side side-banners">
+                    <!-- Banner Cho Bé -->
+                    <a href="#" class="side-banner side-banner--baby">
+                        <button
+                            class="side-banner__button button button--outline"
+                        >
+                            MUA NGAY
+                        </button>
+                    </a>
+
+                    <!-- Banner Cho Mẹ -->
+                    <a href="#" class="side-banner side-banner--mom">
+                        <button
+                            class="side-banner__button button button--outline"
+                        >
+                            MUA NGAY
+                        </button>
+                    </a>
+                </div>
+            </section>
+
+            <section class="hot-deal-section">
+                <div class="section-header">
+                    <h2>Hot Deal</h2>
+                    <a href="#" class="view-all">
+                        Xem tất cả
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </div>
+
+                <div class="hot-deal-carousel">
+                    <div class="hot-deal-grid" id="hotDealTrack">
+                        <div class="product-card">
+                            <div class="discount-badge">-3%</div>
+
+                            <i class="far fa-heart product-wishlist"></i>
+                            <img th:src="@{/img/deal-1.jpg}" alt="Huggies" />
+
+                            <h3 class="product-name">
+                                Sữa Meiji thanh Infant Formula 20 thanh (0 - 1
+                                tuổi)
+                            </h3>
+                            <div class="product-info-footer">
+                                <p class="product-price">441.000đ</p>
+                                <button class="add-to-cart">
+                                    <i class="fa-solid fa-bag-shopping"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="product-card">
+                            <div class="discount-badge">-6%</div>
+
+                            <i class="far fa-heart product-wishlist"></i>
+                            <img th:src="@{/img/deal-2.jpg}" alt="Huggies" />
+
+                            <h3 class="product-name">
+                                Vitamin D3K2 LineaBon dạng xịt 10ml
+                            </h3>
+                            <div class="product-info-footer">
+                                <p class="product-price">307.000đ</p>
+                                <button class="add-to-cart">
+                                    <i class="fa-solid fa-bag-shopping"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="product-card">
+                            <div class="discount-badge">-8%</div>
+
+                            <i class="far fa-heart product-wishlist"></i>
+                            <img th:src="@{/img/deal-3.jpg}" alt="Huggies" />
+
+                            <h3 class="product-name">
+                                Siro Gadopax Forte tăng sức đề kháng 100ml
+                            </h3>
+                            <div class="product-info-footer">
+                                <p class="product-price">274.000đ</p>
+                                <button class="add-to-cart">
+                                    <i class="fa-solid fa-bag-shopping"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="product-card">
+                            <div class="discount-badge">-5%</div>
+
+                            <i class="far fa-heart product-wishlist"></i>
+                            <img th:src="@{/img/deal-4.jpg}" alt="Huggies" />
+
+                            <h3 class="product-name">
+                                Máy hâm sữa tiệt trùng Fatzbaby Duo 3 FB3093VN
+                            </h3>
+                            <div class="product-info-footer">
+                                <p class="product-price">584.000đ</p>
+                                <button class="add-to-cart">
+                                    <i class="fa-solid fa-bag-shopping"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        class="carousel-nav carousel-nav--prev"
+                        id="hotDealPrev"
+                    >
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button
+                        class="carousel-nav carousel-nav--next"
+                        id="hotDealNext"
+                    >
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <div class="footer__container">
+                <div class="footer__col footer__col--info">
+                    <a href="/" class="footer__logo">
+                        <img
+                            th:src="@{/img/logo.png}"
+                            alt="Logo Mẹ & Bé"
+                            class="logo__image"
+                        />
+                    </a>
+                    <p class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i> Địa chỉ: Ngõ 218,
+                        Lĩnh Nam, Hoàng Mai,Hà Nội
+                    </p>
+                    <p class="contact-item">
+                        <i class="fas fa-phone-alt"></i> Hotline: 1900 6868
+                    </p>
+                    <p class="contact-item">
+                        <i class="fas fa-envelope"></i> Email: cskh@mevabe.vn
+                    </p>
+                </div>
+
+                <div class="footer__col">
+                    <h4 class="footer__heading">Hỗ trợ Khách hàng</h4>
+                    <ul class="footer__links">
+                        <li><a href="#">Trung tâm trợ giúp</a></li>
+                        <li><a href="#">Chính sách đổi trả</a></li>
+                        <li><a href="#">Chính sách bảo hành</a></li>
+                        <li><a href="#">Phương thức thanh toán</a></li>
+                        <li><a href="#">Vận chuyển và giao nhận</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer__col">
+                    <h4 class="footer__heading">Về Mẹ & Bé Yêu</h4>
+                    <ul class="footer__links">
+                        <li><a href="#">Giới thiệu về chúng tôi</a></li>
+                        <li><a href="#">Tuyển dụng</a></li>
+                        <li><a href="#">Điều khoản sử dụng</a></li>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer__col">
+                    <h4 class="footer__heading">Kết nối với chúng tôi</h4>
+                    <div class="social-links">
+                        <a
+                            href="https://www.facebook.com/BiBoMart.com.vn"
+                            target="_blank"
+                            class="social-icon"
+                            ><i class="fab fa-facebook-f"></i
+                        ></a>
+                        <a
+                            href="https://www.tiktok.com/@bibomartofficial"
+                            target="_blank"
+                            class="social-icon"
+                            ><i class="fa-brands fa-tiktok"></i
+                        ></a>
+                        <a
+                            href="https://www.youtube.com/@bibomartchannel"
+                            target="_blank"
+                            class="social-icon"
+                            ><i class="fab fa-youtube"></i
+                        ></a>
+                    </div>
+
+                    <h4 class="footer__heading app-download-heading">
+                        Tải ứng dụng nhận ngay nhiều ưu đãi hấp dẫn
+                    </h4>
+                    <div class="app-badges">
+                        <a
+                            href="https://apps.apple.com/vn/app/bibo-mart-si%C3%AAu-th%E1%BB%8B-m%E1%BA%B9-v%C3%A0-b%C3%A9/id1464298193?l=vi"
+                            target="_blank"
+                        >
+                            <img
+                                th:src="@{/img/app-store.png}"
+                                alt="App Store"
+                                class="app-badge"
+                            />
+                        </a>
+                        <a
+                            href="https://play.google.com/store/apps/details?id=vn.com.bibomart.bibomart"
+                            target="_blank"
+                        >
+                            <img
+                                th:src="@{/img/google-play.png}"
+                                alt="Google Play"
+                                class="app-badge"
+                            />
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer__bottom">
+                <p>&copy; 2025 Me & Be Yeu. Tất cả quyền được bảo lưu.</p>
+            </div>
+        </footer>
+
+        <script th:src="@{/assets/js/user.js}"></script>
+    </body>
+</html>
