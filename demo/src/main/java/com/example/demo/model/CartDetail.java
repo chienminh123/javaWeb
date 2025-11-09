@@ -20,6 +20,6 @@ public class CartDetail {
     private Integer productId;
     private Integer sizeId;
     private Integer quantity;
-    private Double price;
+    private float price;
 
 }

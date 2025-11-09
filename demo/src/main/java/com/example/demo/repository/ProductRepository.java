@@ -22,6 +22,12 @@ List<Product> findByProviderIdWithSizes(@Param("providerId") Integer providerId)
            "LEFT JOIN FETCH p.genre " +
            "LEFT JOIN FETCH p.provider")
     List<Product> findAllWithDetails();
+@Query("SELECT p FROM Product p " +
+           "LEFT JOIN FETCH p.sizes " +
+           "LEFT JOIN FETCH p.genre " +
+           "LEFT JOIN FETCH p.provider")
+    List<Product> findAllWithPrices();
+
 @Query("SELECT new map(" +
        "p.productName as productName, " +
        "p.genre.genreId as genreId, " +

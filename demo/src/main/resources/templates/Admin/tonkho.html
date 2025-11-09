@@ -5,6 +5,7 @@
     <title>Quản Lý Tồn Kho</title>
 
     <style>
+      /* (CSS giữ nguyên như cũ) */
       .container {
         margin-left: 270px;
         padding: 20px;
@@ -33,11 +34,6 @@
       }
       th {
         background-color: #f2f2f2;
-      }
-      .size-list {
-        padding: 0;
-        margin: 0;
-        list-style: none;
       }
       .size-item {
         margin: 3px 0;
@@ -69,7 +65,6 @@
     <div class="container" th:fragment="tonkhoContent">
       <h2>Quản Lý Tồn Kho</h2>
 
-      <!-- BỘ LỌC -->
       <div class="filters">
         <div>
           <label>NCC:</label>
@@ -82,7 +77,6 @@
             ></option>
           </select>
         </div>
-
         <div>
           <label>Thể loại:</label>
           <select id="filterGenre">
@@ -94,18 +88,18 @@
             ></option>
           </select>
         </div>
-
         <div>
           <label>Tìm tên SP:</label>
           <input type="text" id="searchName" placeholder="Nhập tên..." />
         </div>
-
         <div>
-          <label>
-            <input type="checkbox" id="inStockOnly" /> Chỉ hiện còn hàng
-          </label>
+          <label>Tình trạng:</label>
+          <select id="stockFilter">
+            <option value="all">Tất cả</option>
+            <option value="in_stock">Còn hàng</option>
+            <option value="out_of_stock">Hết hàng</option>
+          </select>
         </div>
-
         <button onclick="applyFilters()" style="padding: 8px 15px">Lọc</button>
         <button
           onclick="resetFilters()"
@@ -115,7 +109,6 @@
         </button>
       </div>
 
-      <!-- BẢNG TỒN KHO -->
       <table id="inventoryTable">
         <thead>
           <tr>
@@ -127,9 +120,7 @@
             <th>Hình ảnh</th>
           </tr>
         </thead>
-        <tbody id="inventoryTableBody">
-          <!-- JS sẽ render toàn bộ sản phẩm ngay khi load -->
-        </tbody>
+        <tbody id="inventoryTableBody"></tbody>
       </table>
     </div>
 
@@ -141,16 +132,15 @@
       const providers = /*[[${providers}]]*/ [];
       const genres = /*[[${genres}]]*/ [];
 
-      // HIỂN THỊ TOÀN BỘ KHI MỞ TRANG
+      // HÀM RENDER BẢNG (Giữ nguyên)
       function renderTable(filteredProducts) {
+        // (Code renderTable giữ nguyên, không cần sửa)
         const tbody = document.getElementById("inventoryTableBody");
         tbody.innerHTML = "";
-
         if (filteredProducts.length === 0) {
           tbody.innerHTML = `<tr><td colspan="6" class="no-data">Không có sản phẩm nào phù hợp</td></tr>`;
           return;
         }
-
         filteredProducts.forEach((p, index) => {
           const providerName =
             providers.find((pr) => pr.providerId === p.provider.providerId)
@@ -158,7 +148,6 @@
           const genreName =
             genres.find((g) => g.genreId === p.genre.genreId)?.genreName ||
             "N/A";
-
           let sizeHtml = "";
           if (p.sizes && p.sizes.length > 0) {
             p.sizes.forEach((size) => {
@@ -170,11 +159,9 @@
           } else {
             sizeHtml = `<div class="size-item out-of-stock">Chưa có size</div>`;
           }
-
           const imgHtml = p.imageUrl
             ? `<img src="${p.imageUrl}" alt="SP" class="product-image" />`
             : `<span>Không có ảnh</span>`;
-
           const row = document.createElement("tr");
           row.innerHTML = `
           <td>${index + 1}</td>
@@ -188,16 +175,15 @@
         });
       }
 
-      // LỌC KHI NGƯỜI DÙNG CHỌN
+      // HÀM LỌC (Giữ nguyên)
       function applyFilters() {
         let filtered = products;
-
         const providerId = document.getElementById("filterProvider").value;
         const genreId = document.getElementById("filterGenre").value;
         const searchText = document
           .getElementById("searchName")
           .value.toLowerCase();
-        const inStockOnly = document.getElementById("inStockOnly").checked;
+        const stockStatus = document.getElementById("stockFilter").value;
 
         if (providerId) {
           filtered = filtered.filter(
@@ -212,25 +198,48 @@
             p.productName.toLowerCase().includes(searchText)
           );
         }
-        if (inStockOnly) {
+        if (stockStatus === "in_stock") {
           filtered = filtered.filter(
             (p) => p.sizes && p.sizes.some((s) => s.quantity > 0)
           );
+        } else if (stockStatus === "out_of_stock") {
+          filtered = filtered.filter(
+            (p) =>
+              !p.sizes ||
+              p.sizes.length === 0 ||
+              p.sizes.every((s) => s.quantity <= 0)
+          );
         }
-
         renderTable(filtered);
       }
 
+      // HÀM RESET LỌC (Giữ nguyên)
       function resetFilters() {
         document.getElementById("filterProvider").value = "";
         document.getElementById("filterGenre").value = "";
         document.getElementById("searchName").value = "";
-        document.getElementById("inStockOnly").checked = false;
-        renderTable(products); // HIỂN THỊ LẠI TẤT CẢ
+        document.getElementById("stockFilter").value = "all"; // Reset về "Tất cả"
+        applyFilters(); // Chạy lại bộ lọc (sẽ hiển thị tất cả)
       }
 
-      // MỞ TRANG → HIỂN THỊ TOÀN BỘ SẢN PHẨM NGAY
-      window.onload = () => renderTable(products);
+      // === SỬA LỖI HÀM NÀY: Đọc URL khi tải trang ===
+      window.onload = () => {
+        // 1. Đọc tham số 'filter' từ URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterParam = urlParams.get("filter"); // (VD: 'out_of_stock' hoặc null)
+
+        if (filterParam === "out_of_stock") {
+          // 2a. Nếu link từ trang Home, đặt dropdown là "Hết hàng"
+          document.getElementById("stockFilter").value = "out_of_stock";
+        } else {
+          // 2b. Mặc định (truy cập trực tiếp), đặt là "Tất cả"
+          document.getElementById("stockFilter").value = "all";
+        }
+
+        // 3. Chạy bộ lọc dựa trên giá trị đã đặt
+        applyFilters();
+      };
+      // === KẾT THÚC SỬA LỖI ===
     </script>
   </body>
 </html>

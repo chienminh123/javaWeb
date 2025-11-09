@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "spring.servlet.multipart.max-parts",
+      "type": "java.lang.String",
+      "description": "A description for 'spring.servlet.multipart.max-parts'"
+    }
+  ]
+}

@@ -17,8 +17,12 @@ public class OrderDetail {
     @ManyToOne
     @JoinColumn(name = "orderId", referencedColumnName = "orderId") 
     private Orders orders; // Quan hệ nhiều-một với Đơn hàng
-    private Integer productId;
-    private Integer sizeId;
+    @ManyToOne
+    @JoinColumn(name = "productId", referencedColumnName = "productId")
+    private Product product; 
+    @ManyToOne
+    @JoinColumn(name = "sizeId", referencedColumnName = "sizeId")
+    private Sizes sizes;
     private Integer quantity;
     private Double price;
 }

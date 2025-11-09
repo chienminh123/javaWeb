@@ -50,8 +50,9 @@ public class SecurityConfig {
 public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
         .authorizeHttpRequests((requests) -> requests
-            .requestMatchers("/", "/Auth/**", "/register", "/css/**", "/js/**").permitAll()
+            .requestMatchers("/", "/Auth/**", "/register", "/css/**", "/js/**").permitAll() 
             .requestMatchers("/Admin/addProvider", "/Admin/addGenre").permitAll()
+            // trang ai cx xem ddc
             .requestMatchers("/Admin/**").hasRole("ADMIN")
             .requestMatchers("/User/**").hasRole("USER")
             .anyRequest().authenticated()

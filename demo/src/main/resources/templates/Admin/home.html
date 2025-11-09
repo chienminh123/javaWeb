@@ -88,43 +88,48 @@
   </style>
   <div th:replace="Admin/header::Header"></div>
   <div th:replace="Admin/sidebar::sideBar"></div>
-  <div class="home">
-    <div class="banner">
-      <img th:src="@{/img/OIP.png}" alt="Star" />
-    </div>
-    <h3>Quản trị</h3>
-    <div class="cards">
-      <div class="card">
-        <p>Tổng tồn kho</p>
-        <div class="value">giá vốn * số lượng tồn</div>
-        <div class="card1">
-          <h3>Hết hàng</h3>
-          <div class="value">0 HH</div>
-          <a href="">Chi tiết</a>
-        </div>
+  <div id="content-right">
+    <div class="home">
+      <div class="banner">
+        <img th:src="@{/img/OIP.png}" alt="Star" />
       </div>
-    </div>
-    <h3>Cần theo dõi</h3>
-    <div class="cards">
-      <div class="card order-card">
-        <div>
-          <div>
-            <img th:src="@{/img/delivery-time.png}" alt="Time" />
+      <h3>Quản trị</h3>
+      <div class="cards">
+        <div class="card">
+          <p>Tổng giá trị tồn kho (Giá gốc * SL tồn)</p>
+          <div
+            class="value"
+            th:text="${#numbers.formatDecimal(totalInventoryValue, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+          ></div>
+          <div class="card1">
+            <h3>Hết hàng</h3>
+            <div class="value" th:text="${outOfStockCount} + ' HH'">0 HH</div>
+            <a th:href="@{/Admin/tonkho(filter='out_of_stock')}">Chi tiết</a>
           </div>
-          <h3>Đơn hàng đã hủy</h3>
-          <div class="value">0 ĐH</div>
-          <a href="">Chi tiết</a>
         </div>
       </div>
-      <div class="card order-card">
-        <div>
-          <img th:src="@{/img/shipping.png}" alt="Chờ xác nhận" />
-          <h3>Đơn hàng chờ xác nhận</h3>
-          <div class="value">0 ĐH</div>
-          <a href="">Xem tất cả</a>
+      <h3>Cần theo dõi</h3>
+      <div class="cards">
+        <div class="card order-card">
+          <div>
+            <div>
+              <img th:src="@{/img/delivery-time.png}" alt="Time" />
+            </div>
+            <h3>Đơn hàng đã hủy</h3>
+            <div class="value">0 ĐH</div>
+            <a href="">Chi tiết</a>
+          </div>
+        </div>
+        <div class="card order-card">
+          <div>
+            <img th:src="@{/img/shipping.png}" alt="Chờ xác nhận" />
+            <h3>Đơn hàng chờ xác nhận</h3>
+            <div class="value">0 ĐH</div>
+            <a href="">Xem tất cả</a>
+          </div>
         </div>
       </div>
     </div>
+    <div th:replace="Admin/footer::Footer"></div>
   </div>
-  <div th:replace="Admin/footer::Footer"></div>
 </div>

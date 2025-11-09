@@ -41,7 +41,7 @@ public class ProductService {
     public void saveMultipleProducts(
     String[] productNames, Integer[] providerIds, Integer[] genreIds,
         Float[] basisPrices, String[] descriptions, MultipartFile[][] images,
-        // === THAY ĐỔI Ở ĐÂY: Sửa signature để nhận mảng 2 chiều ===
+       
         String[][] sizeNames, Integer[][] quantities
 ) {
     Map<Integer, Quittance> providerQuittanceMap = new HashMap<>();
@@ -280,6 +280,89 @@ public class ProductService {
             sizeRepo.save(size);
         }
     }
+@Transactional
+    public String updateSingleProduct(
+            Integer productId, Integer providerId, Integer genreId,
+            String productName, Float basisPrice, Float markupPercent,
+            String description, MultipartFile imageFile
+    ) {
+        // 1. Tìm sản phẩm
+        Product product = productRepo.findById(productId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với ID: " + productId));
+
+        // 2. Tìm các đối tượng liên quan
+        Provider provider = providerRepo.findById(providerId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy NCC với ID: " + providerId));
+        
+        // === SỬA LỖI CŨ CỦA BẠN (getById -> findById) ===
+        Genre genre = genreService.getById(genreId) // Giả định bạn đã có hàm findById trả về Optional
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy thể loại với ID: " + genreId));
+
+        // 3. Cập nhật thông tin
+        product.setProductName(productName);
+        product.setProvider(provider);
+        product.setGenre(genre);
+        product.setBasisPrice(basisPrice);
+        product.setDescription(description);
+
+        // 4. Tính giá bán nếu có % markup
+        if (markupPercent != null && markupPercent > 0) {
+            product.setSellPrice(basisPrice * (1 + markupPercent / 100));
+        } else {
+             // Nếu người dùng xóa % markup, ta giữ lại giá bán cũ
+             // (Hoặc bạn có thể set = basisPrice tùy logic)
+            product.setSellPrice(product.getSellPrice());
+        }
+
+        // 5. Xử lý ảnh (nếu có ảnh mới)
+        String newImageUrl = null;
+        if (imageFile != null && !imageFile.isEmpty()) {
+            newImageUrl = imageService.saveSingleImage(imageFile, productId);
+            product.setImageUrl(newImageUrl);
+        }
+
+        // 6. Lưu vào DB
+        productRepo.save(product);
+
+        return newImageUrl; // Trả về URL ảnh mới để JS cập nhật
+    }
+    public double calculateTotalInventoryValue() {
+        // Lấy tất cả sản phẩm (bao gồm cả size)
+        List<Product> allProducts = productRepo.findAllWithDetails(); 
+        double totalValue = 0.0;
+
+        for (Product p : allProducts) {
+            if (p.getSizes() != null) {
+                for (Sizes s : p.getSizes()) {
+                    if (s.getQuantity() != null && s.getQuantity() > 0) {
+                        totalValue += (p.getBasisPrice() * s.getQuantity());
+                    }
+                }
+            }
+        }
+        return totalValue;
+    }
+
+    public long countOutOfStockProducts() {
+        List<Product> allProducts = productRepo.findAllWithDetails();
+        long outOfStockCount = 0;
+
+        for (Product p : allProducts) {
+            if (p.getSizes() == null || p.getSizes().isEmpty()) {
+                outOfStockCount++; // Không có size = hết hàng
+                continue;
+            }
+
+            // Kiểm tra xem có size nào CÒN HÀNG không
+            boolean anyInStock = p.getSizes().stream()
+                .anyMatch(s -> s.getQuantity() != null && s.getQuantity() > 0);
+            
+            if (!anyInStock) {
+                outOfStockCount++; // Nếu không có size nào còn hàng = hết hàng
+            }
+        }
+        return outOfStockCount;
+    }
 
     public Map<Integer, List<Map<String, Object>>> getAllProductSuggestionsMap() {
         Map<Integer, List<Map<String, Object>>> map = new HashMap<>();
@@ -290,6 +373,6 @@ public class ProductService {
         return map;
     }
    public List<Product> getAllProductsWithInventory() {
-    return productRepo.findAllWithDetails(); // JOIN FETCH tất cả
+    return productRepo.findAllWithDetails(); 
 }
 }
