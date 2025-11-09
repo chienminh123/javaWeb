@@ -1,0 +1,168 @@
+/* BLOCK: .product-list */
+.product-list {
+    margin-bottom: 40px;
+}
+
+.product-list__heading {
+    text-align: center;
+    color: #ff69b4;
+    margin-bottom: 30px;
+    font-size: 2em;
+}
+
+.product-list__container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+/* BLOCK: .product-card */
+.product-card {
+    background-color: white;
+    border: 1px solid #eee;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
+}
+
+.product-card__image {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.product-card__title {
+    font-size: 1.2em;
+    color: #333;
+    margin-bottom: 10px;
+    height: 40px; /* Cố định chiều cao để không bị lệch */
+    overflow: hidden;
+}
+
+.product-card__price {
+    color: #e91e63; /* Giá nổi bật */
+    font-size: 1.3em;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+/* ... (Giữ nguyên các style .product-list, .product-card) ... */
+
+/* BLOCK: .category-list */
+.category-list {
+    margin-bottom: 40px;
+}
+
+.category-list__heading {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #4a4a4a;
+    margin-bottom: 15px;
+}
+
+.category-list__container {
+    display: flex;
+    gap: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Element: .category-item */
+.category-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #4a4a4a;
+    transition: opacity 0.3s;
+    text-align: center;
+}
+
+.category-item:hover {
+    opacity: 0.7;
+}
+
+.category-item__icon {
+    font-size: 2.5em;
+    margin-bottom: 5px;
+}
+
+.category-item__name {
+    font-size: 0.9em;
+}
+
+/* Điều chỉnh lại .product-list__heading theo mẫu */
+.product-list__heading {
+    text-align: left; /* Theo mẫu */
+    color: #4a4a4a;
+    font-size: 1.2em;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+/* Điều chỉnh .product-card để phù hợp với mẫu */
+.product-card {
+    padding: 10px;
+    border: none;
+    box-shadow: none; /* Bỏ shadow để trông nhẹ nhàng hơn */
+    border-radius: 0;
+}
+
+.product-card__title {
+    font-size: 0.9em;
+    height: auto;
+    margin-bottom: 5px;
+}
+
+.product-card__price {
+    font-size: 1em;
+    color: #4a4a4a;
+}
+.product-card__price::before {
+    content: "₫"; /* Thêm ký hiệu tiền tệ */
+}
+
+/* BLOCK: .voucher-block */
+.voucher-block {
+    background-color: #fff;
+    border-left: 5px solid #ff69b4;
+    padding: 15px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 400px;
+}
+
+.voucher-block__info {
+    display: flex;
+    flex-direction: column;
+}
+
+.voucher-block__code {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #ff69b4;
+    line-height: 1;
+}
+
+.voucher-block__discount {
+    font-size: 0.9em;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.voucher-block__button {
+    background-color: #28a745;
+    padding: 8px 15px;
+    font-size: 0.9em;
+}

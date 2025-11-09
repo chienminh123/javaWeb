@@ -90,7 +90,7 @@ public class SecurityConfig {
                         response.sendRedirect(request.getContextPath() + "/Admin/home");
                         return;
                     } else if ("ROLE_USER".equals(role)) {
-                        response.sendRedirect(request.getContextPath() + "/User/home");
+                        response.sendRedirect(request.getContextPath() + "/User/index");
                         return;
                     }
                 }
