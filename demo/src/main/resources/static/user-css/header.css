@@ -1,126 +1,126 @@
 /* HEADER CƠ BẢN */
 .header {
-    background-color: white;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 /* BLOCK: .top-bar (Hàng trên) */
 .top-bar {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 10px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .logo__image {
-    width: 200px; /* tăng kích thước logo */
-    height: auto; /* giữ tỉ lệ hình ảnh */
-    object-fit: contain; /* tránh méo hình */
-    image-rendering: -webkit-optimize-contrast; /* hiển thị nét hơn trên trình duyệt WebKit */
-    image-rendering: crisp-edges; /* tối ưu độ nét */
-    transition: transform 0.3s ease;
+  width: 200px; /* tăng kích thước logo */
+  height: auto; /* giữ tỉ lệ hình ảnh */
+  object-fit: contain; /* tránh méo hình */
+  image-rendering: -webkit-optimize-contrast; /* hiển thị nét hơn trên trình duyệt WebKit */
+  image-rendering: crisp-edges; /* tối ưu độ nét */
+  transition: transform 0.3s ease;
 }
 
 /* BLOCK: .search-form */
 .search-form {
-    display: flex;
-    border: 1px solid #dc3545; /* Màu đỏ thương hiệu */
-    border-radius: 5px;
-    overflow: hidden;
-    width: 500px;
+  display: flex;
+  border: 1px solid #dc3545; /* Màu đỏ thương hiệu */
+  border-radius: 5px;
+  overflow: hidden;
+  width: 500px;
 }
 
 .search-form__input {
-    border: none;
-    padding: 10px 15px;
-    flex-grow: 1;
-    font-size: 0.9em;
+  border: none;
+  padding: 10px 15px;
+  flex-grow: 1;
+  font-size: 0.9em;
 }
 
 .search-form__button {
-    background-color: #dc3545; /* Màu đỏ */
-    border: none;
-    color: white;
-    padding: 10px 18px;
-    cursor: pointer;
+  background-color: #dc3545; /* Màu đỏ */
+  border: none;
+  color: white;
+  padding: 10px 18px;
+  cursor: pointer;
 }
 
 .search-form__icon {
-    font-size: 1.1em;
+  font-size: 1.1em;
 }
 
 /* Element: .top-bar__action */
 .top-bar__right {
-    display: flex;
-    align-items: center;
-    /* GIẢM KHOẢNG CÁCH: Từ 20px xuống 15px để các icon gần nhau hơn */
-    gap: 15px; /* Tăng khoảng cách giữa các action: Thông báo - Giỏ hàng - Đăng nhập */
+  display: flex;
+  align-items: center;
+  /* GIẢM KHOẢNG CÁCH: Từ 20px xuống 15px để các icon gần nhau hơn */
+  gap: 15px; /* Tăng khoảng cách giữa các action: Thông báo - Giỏ hàng - Đăng nhập */
 }
 
 .top-bar__action {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-decoration: none;
-    color: #495057;
-    font-size: 0.8em; /* Giảm kích thước chữ */
-    white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #495057;
+  font-size: 0.8em; /* Giảm kích thước chữ */
+  white-space: nowrap;
 }
 
 .top-bar__icon {
-    margin-bottom: 2px;
-    margin-right: 0; /* Loại bỏ margin-right cũ */
-    font-size: 1.6em; /* Icon to hơn */
-    color: #495057;
-    transition: color 0.2s;
+  margin-bottom: 2px;
+  margin-right: 0; /* Loại bỏ margin-right cũ */
+  font-size: 1.6em; /* Icon to hơn */
+  color: #495057;
+  transition: color 0.2s;
 }
 
 .top-bar__action--cart .top-bar__icon,
 .top-bar__action--account .top-bar__icon {
-    color: #dc3545;
+  color: #dc3545;
 }
 
 /* BLOCK: .category-menu (Hàng dưới) */
 .category-menu {
-    border-top: 1px solid #f8f9fa;
-    text-decoration: none;
-    background-color: #fff;
-    padding: 10px 0;
+  border-top: 1px solid #f8f9fa;
+  text-decoration: none;
+  background-color: #fff;
+  padding: 10px 0;
 }
 
 .category-menu__list {
-    list-style: none;
-    display: flex;
-    padding: 0 20px;
-    justify-content: space-between;
+  list-style: none;
+  display: flex;
+  padding: 0 20px;
+  justify-content: space-between;
 }
 
 .category-menu__item {
-    border-right: 1px solid #eee;
-    padding: 10px 10px;
-    white-space: nowrap;
+  border-right: 1px solid #eee;
+  padding: 10px 10px;
+  white-space: nowrap;
 }
 
 .category-menu__item:last-child {
-    border-right: none;
+  border-right: none;
 }
 
 .category-menu__link {
-    display: block;
+  display: block;
 
-    padding: 0;
-    text-decoration: none;
-    color: #495057;
-    font-size: 14px;
-    font-weight: 400;
-    white-space: nowrap;
-    line-height: 1.2;
+  padding: 0;
+  text-decoration: none;
+  color: #495057;
+  font-size: 14px;
+  font-weight: 400;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .category-menu__link:hover,
 .category-menu__link--active {
-    color: #dc3545;
-    font-weight: 500;
+  color: #dc3545;
+  font-weight: 500;
 }

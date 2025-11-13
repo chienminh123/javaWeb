@@ -35,4 +35,11 @@ List<Product> findByProviderIdWithSizes(@Param("providerId") Integer providerId)
        "p.productId as productId) " +
        "FROM Product p WHERE p.provider.providerId = :providerId")
 List<Map<String, Object>> findSuggestionsByProvider(@Param("providerId") Integer providerId);
+
+@Query("SELECT p FROM Product p LEFT JOIN FETCH p.sizes WHERE p.genre.genreId = :genreId")
+    List<Product> findByGenreGenreId(Integer genreId);
+    
+    List<Product> findFirst10ByProductNameContainingIgnoreCase(String keyword);
+
+List<Product> findFirst10ByGenreGenreIdAndProductNameContainingIgnoreCase(Integer genreId, String keyword);
 }

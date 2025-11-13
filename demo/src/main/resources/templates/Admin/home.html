@@ -116,19 +116,27 @@
               <img th:src="@{/img/delivery-time.png}" alt="Time" />
             </div>
             <h3>Đơn hàng đã hủy</h3>
-            <div class="value">0 ĐH</div>
-            <a href="">Chi tiết</a>
+            <div class="value" th:text="${cancelledOrdersCount} + ' ĐH'">0 ĐH</div>
+            <a th:href="@{/Admin/orders(status='Đã hủy')}">Chi tiết</a>
           </div>
         </div>
         <div class="card order-card">
           <div>
             <img th:src="@{/img/shipping.png}" alt="Chờ xác nhận" />
             <h3>Đơn hàng chờ xác nhận</h3>
-            <div class="value">0 ĐH</div>
-            <a href="">Xem tất cả</a>
+            <div class="value" th:text="${pendingOrdersCount} + ' ĐH'">0 ĐH</div>
+            <a th:href="@{/Admin/orders(status='Đang xử lý')}">Xem tất cả</a>
           </div>
         </div>
       </div>
+      <div style="margin-top: 30px; margin-bottom: 20px; text-align: center; border-top: 1px solid #ddd; padding-top: 20px;">
+        <a th:href="@{/Admin/orders}" 
+          style="padding: 15px 30px; background-color: #007bff; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">
+          <i class="fas fa-list-alt"></i> Xem tất cả Đơn hàng
+        </a>
+      </div>
+    </div>
+    
     </div>
     <div th:replace="Admin/footer::Footer"></div>
   </div>

@@ -40,4 +40,5 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
     List<Object[]> findRevenueByDateRange(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
+
 }

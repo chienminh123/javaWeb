@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title th:text="${product.productName}">Chi Tiết Sản Phẩm</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      th:href="@{/img/favicon.png}"
+    />
+    <link rel="shortcut icon" type="image/png" th:href="@{/img/favicon.png}" />
+
+    <link rel="stylesheet" th:href="@{/user-css/reset.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/main.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/header.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/footer.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/product.css}" />
+
+    <!-- CSS riêng cho trang chi tiết -->
+    <style>
+      .product-detail-layout {
+        display: flex;
+        max-width: 1200px;
+        margin: 30px auto;
+        gap: 40px;
+      }
+      .product-image-gallery {
+        width: 450px;
+        flex-shrink: 0;
+      }
+      .product-image-gallery .main-image {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid #eee;
+      }
+      .product-info-main {
+        flex-grow: 1;
+      }
+      .product-info-main .brand {
+        font-size: 14px;
+        color: #555;
+      }
+      .product-info-main .brand span {
+        color: #007bff;
+        font-weight: bold;
+      }
+      .product-info-main .product-title {
+        font-size: 28px;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+      .product-info-main .sku {
+        font-size: 13px;
+        color: #888;
+      }
+      .product-info-main .main-price {
+        font-size: 32px;
+        font-weight: bold;
+        color: #ff4d4f; /* (Màu chủ đạo) */
+        margin: 15px 0;
+      }
+      .size-selector,
+      .quantity-selector {
+        margin-bottom: 20px;
+      }
+      .size-selector h4,
+      .quantity-selector h4 {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      .size-options {
+        display: flex;
+        gap: 10px;
+      }
+      .size-options .size-option {
+        padding: 8px 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      /* Style cho size được chọn */
+      .size-options .size-option.selected {
+        border-color: #ff4d4f;
+        background-color: #fff5f5;
+        font-weight: bold;
+      }
+
+      .quantity-control {
+        display: flex;
+        width: 120px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      .quantity-control button {
+        width: 40px;
+        font-size: 20px;
+        background: #f5f5f5;
+        border: none;
+        cursor: pointer;
+      }
+      .quantity-control input {
+        width: 40px;
+        text-align: center;
+        border: none;
+        font-size: 16px;
+      }
+      .add-to-cart-btn {
+        background: #ff4d4f;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+      }
+      .add-to-cart-btn:hover {
+        background: #e04346;
+      }
+      .product-description {
+        margin-top: 30px;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div th:replace="User/userHeader::user-header"></div>
+
+    <main class="main-content" th:object="${product}">
+      <div class="product-detail-layout">
+        <div class="product-image-gallery">
+          <img
+            class="main-image"
+            th:src="@{${product.imageUrl != null ? product.imageUrl : '/img/placeholder.png'}}"
+            alt="Ảnh sản phẩm"
+          />
+        </div>
+
+        <div class="product-info-main">
+          <div class="product-info-main">
+          <p class="brand">
+            Thương hiệu:
+            <span th:text="*{provider?.providerName ?: 'Chưa cập nhật'}"
+              >Huggies</span
+            >
+          </p>
+          <h1 class="product-title" th:text="*{productName}">Tên sản phẩm</h1>
+          <p class="sku" th:text="'Mã SP: ' + *{productId}">Mã SP: 12345</p>
+
+          <div
+            class="main-price"
+            th:text="${#numbers.formatDecimal(product.sellPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"
+          >
+            500.000đ
+          </div>
+
+          <form th:action="@{/cart/add}" method="POST">
+            <input type="hidden" name="productId" th:value="*{productId}" />
+
+            <div class="size-selector">
+              <h4>Kích cỡ:</h4>
+              <div
+                class="size-options"
+                th:if="*{sizes != null and !sizes.isEmpty()}"
+              >
+                <th:block th:each="size, iter : *{sizes}">
+                  <input
+                    type="radio"
+                    th:id="|size_${size.sizeId}|"
+                    name="sizeId"
+                    th:value="${size.sizeId}"
+                    th:checked="${iter.index == 0}"
+                    th:data-stock="${size.quantity}"
+                    style="display: none"
+                  />
+                  <label
+                    th:for="|size_${size.sizeId}|"
+                    class="size-option"
+                    th:text="${size.sizeName}"
+                    onclick="selectSize(this)"
+                  >
+                  </label>
+                </th:block>
+              </div>
+            </div>
+
+            <div class="quantity-selector">
+              <h4>Số lượng:</h4>
+              <div class="quantity-control">
+                <button type="button" onclick="changeQty(-1)">-</button>
+                <input
+                  type="number"
+                  id="quantity"
+                  name="quantity"
+                  value="1"
+                  max="99"
+                />
+                <button type="button" onclick="changeQty(1)">+</button>
+              </div>
+            </div>
+            <button type="submit" class="add-to-cart-btn">Thêm vào giỏ hàng</button>
+          </form>
+          <div class="product-description">
+            <h3>Mô tả sản phẩm</h3>
+            <p th:text="*{description}">Mô tả chi tiết...</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div th:replace="User/userFooter::user-footer"></div>
+
+    <script>
+      // JS cho tăng/giảm số lượng
+      function changeQty(amount) {
+        const qtyInput = document.getElementById("quantity");
+        const maxStock = parseInt(qtyInput.getAttribute("max")) || 999; // Lấy max từ size đã chọn
+
+        let currentQty = parseInt(qtyInput.value);
+        currentQty += amount;
+
+        if (currentQty < 1) {
+          currentQty = 1; // Tối thiểu là 1
+        }
+        if (currentQty > maxStock) {
+          currentQty = maxStock; // Tối đa là tồn kho
+          alert("Số lượng đã đạt tối đa tồn kho!");
+        }
+        qtyInput.value = currentQty;
+      }
+
+      // JS cho chọn size
+      function selectSize(label) {
+        // 1. Xóa 'selected' khỏi tất cả
+        document.querySelectorAll(".size-option").forEach((opt) => {
+          opt.classList.remove("selected");
+        });
+        // 2. Thêm 'selected' cho cái được click
+        label.classList.add("selected");
+
+        // 3. Lấy radio button tương ứng (bằng for của label)
+        const radioId = label.getAttribute("for");
+        const radio = document.getElementById(radioId);
+
+        // 4. Lấy số lượng tồn kho từ 'data-stock' của radio
+        const stock = radio.getAttribute("data-stock");
+
+        // 5. Cập nhật thuộc tính 'max' của ô số lượng
+        const qtyInput = document.getElementById("quantity");
+        qtyInput.setAttribute("max", stock);
+
+        // 6. Reset số lượng về 1 nếu số hiện tại vượt quá
+        if (parseInt(qtyInput.value) > stock) {
+          qtyInput.value = 1;
+        }
+      }
+
+      // Hàm chạy khi tải trang để set max-stock cho size đầu tiên
+      window.onload = function () {
+        const firstSelected = document.querySelector(
+          'input[name="sizeId"]:checked'
+        );
+        if (firstSelected) {
+          const stock = firstSelected.getAttribute("data-stock");
+          document.getElementById("quantity").setAttribute("max", stock);
+          // Thêm class 'selected' cho label của radio đầu tiên
+          document
+            .querySelector('label[for="' + firstSelected.id + '"]')
+            .classList.add("selected");
+        }
+      };
+    </script>
+  </body>
+</html>

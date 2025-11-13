@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import java.security.Principal;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,9 +15,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.demo.model.Carts;
+import com.example.demo.model.Orders;
 import com.example.demo.model.User;
+import com.example.demo.repository.OrdersRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.CartService;
 import com.example.demo.service.UserService;
+
 
 
 
@@ -32,6 +38,10 @@ public class AuthController {
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private OrdersRepository ordersRepo;
+    @Autowired
+    private CartService cartService;
     
     @GetMapping("/Auth/login")
     public String loginForm(Model model) {
@@ -135,10 +145,46 @@ public class AuthController {
     }
     
     @ModelAttribute
-    public void addGlobalAttributes(Model model, Principal principal) {
-        if (principal != null) {
-            // principal.getName() chính là SĐT (vì bạn đăng nhập bằng SĐT)
-            model.addAttribute("currentUserPhone", principal.getName());
-        }
+public void addGlobalAttributes(Model model, Principal principal) {
+    if (principal != null) {
+        String userPhone = principal.getName();
+        // 1. Gửi SĐT
+        System.out.println("DEBUG CHECKOUT: Giá trị principal.getName() (SĐT) là: " + userPhone);
+        model.addAttribute("currentUserPhone", userPhone);
+        
+        // 2. Lấy 5 đơn hàng mới nhất
+        List<Orders> notifications = ordersRepo.findFirst5ByUserPhoneOrderByOrderDateDesc(userPhone);
+        model.addAttribute("notificationOrders", notifications);
+        
+        // ===============================================
+        // 3. LOGIC MỚI: TÍNH VÀ GỬI TỔNG SỐ LƯỢNG SẢN PHẨM
+        // ===============================================
+        Carts userCart = cartService.getCart(userPhone);
+        int itemCount = cartService.calculateItemCount(userCart);
+        model.addAttribute("cartItemCount", itemCount);
+    } else {
+        // Nếu chưa đăng nhập, luôn gửi itemCount = 0
+        model.addAttribute("cartItemCount", 0); 
+    }
+    if (principal != null) {
+    String userPhone = principal.getName();
+    System.out.println("DEBUG: Principal Name (SĐT) là: " + userPhone);
     }
 }
+    
+    @GetMapping("/User/orders")
+    public String userOrders(Model model, Principal principal) {
+        if (principal == null) {
+            return "redirect:/Auth/login";
+        }
+        
+        String userPhone = principal.getName();
+        
+        // (Dùng hàm cũ để lấy TẤT CẢ)
+        List<Orders> orderList = ordersRepo.findByUserPhoneOrderByOrderDateDesc(userPhone);
+        
+        model.addAttribute("orders", orderList);
+        return "User/orders"; 
+    }
+}
+

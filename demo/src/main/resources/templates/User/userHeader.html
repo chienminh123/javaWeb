@@ -1,0 +1,364 @@
+<div th:fragment="user-header" class="header">
+  <!-- === CSS CHO GỢI Ý TÌM KIẾM VÀ THÔNG BÁO === -->
+  <style>
+    /* (Style cho search-form, search-suggestions, suggestion-item giữ nguyên) */
+    .search-form {
+      position: relative;
+    }
+    .search-suggestions {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      z-index: 1000;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .suggestion-item {
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+    .suggestion-item:hover {
+      background-color: #f5f5f5;
+    }
+
+    /* (Style MỚI cho dropdown thông báo) */
+    .header-action-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+    .notification-dropdown {
+      display: none; /* Ẩn ban đầu */
+      position: absolute;
+      right: 0;
+      top: 40px;
+      width: 300px;
+      background-color: #f9f9f9;
+      box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .notification-dropdown.show {
+      display: block;
+    }
+    .notification-header {
+      padding: 10px 15px;
+      font-weight: bold;
+      border-bottom: 1px solid #ddd;
+      background: #f1f1f1;
+    }
+    .notification-item {
+      padding: 10px 15px;
+      border-bottom: 1px solid #eee;
+      display: block;
+      text-decoration: none;
+      color: #333;
+    }
+    .notification-item:hover {
+      background-color: #e9e9e9;
+    }
+    .notification-item p {
+      margin: 0;
+      font-size: 13px;
+    }
+    .notification-item .status {
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .notification-footer {
+      padding: 10px;
+      text-align: center;
+    }
+    .notification-footer a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .status-processing {
+      color: #f39c12;
+    }
+    .status-completed {
+      color: #27ae60;
+    }
+    .status-cancelled {
+      color: #e74c3c;
+    }
+  </style>
+  <!-- === KẾT THÚC CSS === -->
+
+  <div class="header__top-bar top-bar">
+    <div class="top-bar__left">
+      <a href="/User/index" class="logo">
+        <img
+          th:src="@{/img/logo.png}"
+          alt="Logo Bibo Mart"
+          class="logo__image"
+        />
+      </a>
+    </div>
+
+    <div class="top-bar__center">
+      <!-- 1. THANH TÌM KIẾM (Đã đúng) -->
+      <form class="search-form" th:action="@{/search}" method="GET">
+        <input
+          type="text"
+          placeholder="Ba mẹ cần tìm gì cho bé hôm nay?"
+          class="search-form__input"
+          name="keyword"
+          autocomplete="off"
+          oninput="fetchSuggestions(this)"
+          onblur="hideSuggestions()"
+        />
+        <input
+          type="hidden"
+          name="genreId"
+          th:if="${currentGenreId != null}"
+          th:value="${currentGenreId}"
+        />
+        <button type="submit" class="search-form__button">
+          <i class="fa-solid fa-magnifying-glass search-form__icon"></i>
+        </button>
+        <div class="search-suggestions" id="searchSuggestions"></div>
+      </form>
+    </div>
+
+    <div class="top-bar__right header-actions">
+      <!-- 2. ICON THÔNG BÁO (Đã sửa thành Dropdown) -->
+      <div class="header-action-wrapper">
+        <div
+          class="top-bar__action top-bar__action--notification"
+          onclick="toggleNotificationMenu()"
+        >
+          <i class="fa-regular fa-bell top-bar__icon"></i>
+          <span>Thông báo</span>
+        </div>
+
+        <!-- Dropdown Thông báo -->
+        <div id="notificationMenu" class="notification-dropdown">
+          <div class="notification-header">Thông báo Đơn hàng</div>
+          <div
+            th:if="${notificationOrders != null and !notificationOrders.isEmpty()}"
+          >
+            <!-- Lặp qua 5 đơn hàng mới nhất -->
+            <a
+              th:each="order : ${notificationOrders}"
+              th:href="@{/User/orders}"
+              class="notification-item"
+            >
+              <p>Mã đơn: <strong th:text="${order.orderId}">#123</strong></p>
+              <p>
+                Trạng thái:
+                <span
+                  th:text="${order.status}"
+                  class="status"
+                  th:classappend="${order.status == 'Đang xử lý'} ? 'status-processing' : 
+                                         (${order.status == 'Hoàn thành'} ? 'status-completed' : 
+                                         (${order.status == 'Đã hủy'} ? 'status-cancelled' : ''))"
+                >
+                </span>
+              </p>
+            </a>
+          </div>
+          <div
+            th:unless="${notificationOrders != null and !notificationOrders.isEmpty()}"
+            class="notification-item"
+          >
+            <p style="text-align: center">Không có thông báo mới.</p>
+          </div>
+          <div class="notification-footer">
+            <a th:href="@{/User/orders}">Xem tất cả đơn hàng</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. ICON GIỎ HÀNG (Đã đúng) -->
+      <a
+        th:href="@{/cart}"
+        class="top-bar__action top-bar__action--cart"
+        style="position: relative"
+      >
+        <i class="fa-solid fa-cart-shopping top-bar__icon"></i>
+        <span>Giỏ hàng</span>
+
+        <span
+          class="cart-count-badge"
+          style="
+            /* Styles cố định cho dot */
+            position: absolute;
+            top: -5px;
+            right: 35px;
+            background: #ff4d4f;
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            line-height: 1;
+            text-align: center;
+            z-index: 10;
+
+            /* Dùng flex để căn giữa, đảm bảo dot là hình tròn */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px; /* Đảm bảo có kích thước tối thiểu */
+            min-width: 15px;
+            min-height: 15px;
+          "
+        >
+          <span
+            th:if="${cartItemCount > 0}"
+            th:text="${cartItemCount}"
+            style="font-size: 10px"
+          >
+            0
+          </span>
+        </span>
+      </a>
+
+      <!-- Icon Đăng nhập/Tài khoản (Giữ nguyên) -->
+      <div class="header-action-wrapper">
+        <div
+          class="top-bar__action top-bar__action--account"
+          onclick="toggleProfileMenu()"
+        >
+          <i class="fa-regular fa-circle-user top-bar__icon"></i>
+          <span>Tài khoản</span>
+        </div>
+
+        <!-- (Dropdown Tài Khoản mà chúng ta đã làm ở lần trước) -->
+        <div
+          id="profileMenu"
+          class="notification-dropdown"
+          style="width: 200px"
+        >
+          <div th:if="${currentUserPhone}">
+            <div class="notification-item">
+              Đăng nhập bằng:<br />
+              <strong th:text="${currentUserPhone}"></strong>
+            </div>
+            <a th:href="@{/Auth/profile}" class="notification-item"
+              >Thông tin tài khoản</a
+            >
+            <form th:action="@{/logout}" method="post" style="margin: 0">
+              <button
+                type="submit"
+                class="notification-item"
+                style="width: 100%; border: 0; background: none"
+              >
+                Đăng xuất
+              </button>
+            </form>
+          </div>
+          <div th:unless="${currentUserPhone}">
+            <a th:href="@{/Auth/login}" class="notification-item">Đăng nhập</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- (Menu <nav> giữ nguyên) -->
+  <nav class="category-menu">
+    <ul class="category-menu__list">
+      <li class="category-menu__item" th:each="g : ${genres}">
+        <a
+          th:href="@{/products(genreId=${g.genreId})}"
+          class="category-menu__link"
+          th:text="${g.genreName}"
+        >
+        </a>
+      </li>
+    </ul>
+  </nav>
+</div>
+
+<!-- === JAVASCRIPT (Cho cả 2 dropdown) === -->
+<script th:inline="javascript">
+  /* (Code cho Gợi ý Tìm kiếm giữ nguyên) */
+  let suggestionTimer;
+  function fetchSuggestions(input) {
+    clearTimeout(suggestionTimer);
+    const keyword = input.value.trim();
+    const suggestionsBox = document.getElementById("searchSuggestions");
+
+    if (keyword.length < 2) {
+      suggestionsBox.style.display = "none";
+      return;
+    }
+
+    // === PHẦN SỬA ĐỔI ===
+    // 1. Tìm form gần nhất
+    const form = input.closest("form");
+    // 2. Tìm input ẩn 'genreId' bên trong form đó
+    const genreIdInput = form.querySelector('input[name="genreId"]');
+    const genreId = genreIdInput ? genreIdInput.value : null;
+    // === KẾT THÚC SỬA ĐỔI ===
+
+    suggestionTimer = setTimeout(() => {
+      // 3. Xây dựng URL động
+      let apiUrl = `/api/products/suggest?keyword=${encodeURIComponent(
+        keyword
+      )}`;
+      if (genreId) {
+        apiUrl += `&genreId=${encodeURIComponent(genreId)}`;
+      }
+
+      fetch(apiUrl) // 4. Dùng URL mới
+        .then((response) => response.json())
+        .then((data) => {
+          suggestionsBox.innerHTML = "";
+          if (data.length > 0) {
+            data.forEach((name) => {
+              const item = document.createElement("div");
+              item.className = "suggestion-item";
+              item.textContent = name;
+              item.onmousedown = () => {
+                input.value = name;
+                input.closest("form").submit();
+              };
+              suggestionsBox.appendChild(item);
+            });
+            suggestionsBox.style.display = "block";
+          } else {
+            suggestionsBox.style.display = "none";
+          }
+        })
+        .catch((err) => console.error("Lỗi fetch gợi ý:", err));
+    }, 300);
+  }
+
+  function hideSuggestions() {
+    setTimeout(() => {
+      document.getElementById("searchSuggestions").style.display = "none";
+    }, 200);
+  }
+
+  /* (Code MỚI cho 2 dropdown) */
+  function toggleProfileMenu() {
+    document.getElementById("notificationMenu").classList.remove("show"); // Tắt cái kia
+    document.getElementById("profileMenu").classList.toggle("show");
+  }
+
+  function toggleNotificationMenu() {
+    document.getElementById("profileMenu").classList.remove("show"); // Tắt cái kia
+    document.getElementById("notificationMenu").classList.toggle("show");
+  }
+
+  // Tắt pop-up nếu người dùng nhấn ra bên ngoài
+  window.onclick = function (event) {
+    // Đảm bảo là không nhấn vào chính cái icon
+    if (!event.target.matches(".top-bar__icon")) {
+      var dropdowns = document.getElementsByClassName("notification-dropdown");
+      for (var i = 0; i < dropdowns.length; i++) {
+        var openDropdown = dropdowns[i];
+        if (openDropdown.classList.contains("show")) {
+          openDropdown.classList.remove("show");
+        }
+      }
+    }
+  };
+</script>

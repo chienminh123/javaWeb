@@ -11,15 +11,21 @@ import lombok.Data;
 @Entity
 @Data
 public class CartDetail {
-@Id
-@GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer cartDetailId;
+    
     @ManyToOne
     @JoinColumn(name = "cartId", referencedColumnName = "cartId") 
-    private Carts carts; // Quan hệ nhiều-một vớiCart
-    private Integer productId;
-    private Integer sizeId;
-    private Integer quantity;
-    private float price;
+    private Carts carts; // Quan hệ nhiều-một với Cart
+    @ManyToOne
+    @JoinColumn(name = "productId", referencedColumnName = "productId")
+    private Product product; // Thay vì Integer productId
 
+    @ManyToOne
+    @JoinColumn(name = "sizeId", referencedColumnName = "sizeId")
+    private Sizes sizes; // Thay vì Integer sizeId
+
+    private Integer quantity;
+    private float price; // (Lưu giá tại thời điểm thêm vào)
 }

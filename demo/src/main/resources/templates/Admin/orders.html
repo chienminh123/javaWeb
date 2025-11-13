@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html
+  lang="vi"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title th:text="${pageTitle}">Danh sách Đơn hàng</title>
+    <link rel="stylesheet" th:href="@{/admin-css/reset.css}" />
+    <link rel="stylesheet" th:href="@{/admin-css/main.css}" />
+    <link rel="stylesheet" th:href="@{/admin-css/sidebar.css}" />
+    <link rel="stylesheet" th:href="@{/admin-css/header.css}" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <style>
+      .orders-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background-color: white;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .orders-table th,
+      .orders-table td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+        font-size: 14px;
+      }
+      .orders-table th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+      }
+      .orders-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+      .orders-table tr:hover {
+        background-color: #f1f1f1;
+      }
+      .status-badge {
+        /* CSS cho status badge giống như orders.html */
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        color: white; /* Đảm bảo chữ màu trắng */
+      }
+
+      /* === QUY TẮC MỚI THEO YÊU CẦU CỦA BẠN === */
+
+      /* MÀU ĐỎ: Hủy */
+      .status-Đã_hủy {
+        background-color: #ff4d4f; /* Đỏ */
+      }
+
+      /* MÀU VÀNG: Chờ thanh toán, Đang xử lý */
+      .status-Chờ_thanh_toán,
+      .status-Đang_xử_lý {
+        background-color: #faad14; /* Vàng cam */
+      }
+
+      /* MÀU XANH LÁ/DƯƠNG: Các trạng thái còn lại (Đang chuẩn bị, Đã xác nhận, Đang giao hàng, Đã hoàn thành) */
+      .status-Đã_hoàn_thành,
+      .status-Đang_chuẩn_bị,
+      .status-Đã_xác_nhận,
+      .status-Đang_giao_hàng {
+        background-color: #52c41a; /* Xanh lá */
+      }
+      .detail-btn {
+        background-color: #1890ff;
+        color: white;
+        border: none;
+        padding: 6px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div th:replace="Admin/header::Header"></div>
+    <div th:replace="Admin/sidebar::sideBar"></div>
+    <div id="content-right">
+      <div class="home">
+        <h1><i class="fas fa-list"></i> Danh sách Đơn hàng</h1>
+        <p th:text="${pageTitle}"></p>
+
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>Mã ĐH</th>
+              <th>Mã User</th>
+              <th>Ngày đặt hàng</th>
+              <th>Tổng tiền</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="order : ${orders}">
+              <td th:text="${order.orderId}">#1001</td>
+              <td th:text="${order.user?.userId}">U001</td>
+              <td
+                th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"
+              >
+                12/11/2025 10:00
+              </td>
+              <td>
+                <span
+                  th:text="${#numbers.formatDecimal(#aggregates.sum(order.orderDetails.![price * quantity]), 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                ></span>
+              </td>
+              <td>
+                <span
+                  class="status-badge"
+                  th:classappend="'status-' + ${#strings.replace(order.status, ' ', '_')}"
+                  th:text="${order.status}"
+                >
+                  Đang xử lý
+                </span>
+              </td>
+              <td>
+                <a
+                  th:href="@{/Admin/order-detail(orderId=${order.orderId})}"
+                  class="detail-btn"
+                  >Chi tiết</a
+                >
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div th:replace="Admin/footer::Footer"></div>
+  </body>
+</html>

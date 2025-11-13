@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.demo.model.Genre;
 import com.example.demo.model.InventoryCheck;
 import com.example.demo.model.InventoryDetail;
+import com.example.demo.model.OrderDetail;
+import com.example.demo.model.Orders;
 import com.example.demo.model.Product;
 import com.example.demo.model.Provider;
 import com.example.demo.model.Quittance;
@@ -372,7 +375,45 @@ public class ProductService {
         }
         return map;
     }
-   public List<Product> getAllProductsWithInventory() {
-    return productRepo.findAllWithDetails(); 
+    
+    public List<Product> getAllProductsWithInventory() {
+        return productRepo.findAllWithDetails(); 
+    }
+    
+    public List<Product> findProductsByGenre(Integer genreId) {
+        return productRepo.findByGenreGenreId(genreId);
+    }
+    public Optional<Product> findById(Integer id) {
+        return productRepo.findById(id);
+    }
+
+public List<Product> searchSuggestions(String keyword, Integer genreId) {
+    if (keyword == null || keyword.trim().isEmpty()) {
+        return List.of(); // Trả về danh sách rỗng
+    }
+    String trimmedKeyword = keyword.trim();
+    
+    if (genreId != null) {
+        // Nếu có genreId, gọi hàm mới
+        return productRepo.findFirst10ByGenreGenreIdAndProductNameContainingIgnoreCase(genreId, trimmedKeyword);
+    } else {
+        // Nếu không (ví dụ: ở trang chủ), dùng hàm cũ
+        return productRepo.findFirst10ByProductNameContainingIgnoreCase(trimmedKeyword);
+    }
 }
+
+/**
+     * Kiểm tra tồn kho cho các sản phẩm trong đơn hàng vừa tạo.
+     */
+    public List<Sizes> checkLowStockAfterOrder(Orders order, int threshold) {
+        if (order.getOrderDetails() == null) {
+            return List.of();
+        }
+        
+        return order.getOrderDetails().stream()
+            // Lấy đối tượng Sizes từ OrderDetails 
+            .map(OrderDetail::getSizes) 
+            .filter(size -> size != null && size.getQuantity() != null && size.getQuantity() < threshold)
+            .toList();
+    }
 }

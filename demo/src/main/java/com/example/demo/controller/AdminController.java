@@ -18,11 +18,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.demo.dto.TopProductDTO;
 import com.example.demo.model.Genre;
+import com.example.demo.model.Orders;
 import com.example.demo.model.Provider;
+import com.example.demo.service.EmailService;
 import com.example.demo.service.GenreService;
+import com.example.demo.service.OrderService;
 import com.example.demo.service.ProductService;
 import com.example.demo.service.ProviderService;
 import com.example.demo.service.ReportService;
@@ -42,21 +46,27 @@ public class AdminController {
 
     @Autowired
     private ReportService reportService;
+    @Autowired
+    private OrderService orderService;
+@Autowired
+    private EmailService emailService;
 
+    // @Autowired
+    // private OrdersService ordersService;
 
 
     // === CÁC MAPPING ===
-    @GetMapping("/home")
-    public String home(Model model) {
-        double totalInventoryValue = productService.calculateTotalInventoryValue();
-        long outOfStockCount = productService.countOutOfStockProducts();
+    // @GetMapping("/home")
+    // public String home(Model model) {
+    //     double totalInventoryValue = productService.calculateTotalInventoryValue();
+    //     long outOfStockCount = productService.countOutOfStockProducts();
 
-        // 2. Đưa dữ liệu vào Model
-        model.addAttribute("totalInventoryValue", totalInventoryValue);
-        model.addAttribute("outOfStockCount", outOfStockCount);
+    //     // 2. Đưa dữ liệu vào Model
+    //     model.addAttribute("totalInventoryValue", totalInventoryValue);
+    //     model.addAttribute("outOfStockCount", outOfStockCount);
         
-        return "Admin/home";
-    }
+    //     return "Admin/home";
+    // }
 
     @GetMapping("/addproduct")
     public String addProduct(Model model) {
@@ -275,4 +285,95 @@ public class AdminController {
         }
     }
    
+    @GetMapping("/home")
+    public String home(Model model) {
+        double totalInventoryValue = productService.calculateTotalInventoryValue();
+        long outOfStockCount = productService.countOutOfStockProducts();
+
+        // === CODE MỚI: Lấy số lượng đơn hàng theo trạng thái ===
+        long cancelledOrdersCount = orderService.countOrdersByStatus("Đã hủy");
+        long pendingOrdersCount = orderService.countOrdersByStatus("Đang xử lý"); // Hoặc "Chờ thanh toán" tùy vào logic bạn muốn
+        
+        // 2. Đưa dữ liệu vào Model
+        model.addAttribute("totalInventoryValue", totalInventoryValue);
+        model.addAttribute("outOfStockCount", outOfStockCount);
+        
+        // === CODE MỚI: Đưa dữ liệu đếm vào Model ===
+        model.addAttribute("cancelledOrdersCount", cancelledOrdersCount);
+        model.addAttribute("pendingOrdersCount", pendingOrdersCount);
+        
+        return "Admin/home";
+    }
+
+    @GetMapping("/order-detail")
+public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model model) {
+    // 1. Lấy đơn hàng theo ID
+    Orders order = orderService.findOrderById(orderId)
+        .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng ID: " + orderId));
+
+    // 2. Định nghĩa danh sách các trạng thái có thể có
+    // Đây là danh sách các trạng thái cố định (bạn có thể tùy chỉnh)
+    List<String> statusList = List.of(
+        "Chờ thanh toán",
+        "Đang xử lý",
+        "Đã xác nhận",
+        "Đang giao hàng",
+        "Đã giao hàng",
+        "Đã hủy"
+    );
+
+    // 3. Truyền dữ liệu sang view
+    model.addAttribute("order", order);
+    model.addAttribute("statusList", statusList); // <--- ĐÂY LÀ PHẦN QUAN TRỌNG
+
+    return "Admin/order-detail";
+}
+
+    // === MAPPING MỚI: Xử lý cập nhật trạng thái đơn hàng (POST) ===
+    @PostMapping("/updateOrderStatus")
+    public String updateOrderStatus(
+            @RequestParam Integer orderId,
+            @RequestParam String newStatus,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            Orders updatedOrder = orderService.updateOrderStatus(orderId, newStatus);
+            redirectAttributes.addFlashAttribute("successMessage", 
+                "Cập nhật trạng thái đơn hàng #" + orderId + " thành công sang: " + updatedOrder.getStatus());
+                try {
+                // newStatus sẽ được truyền vào template
+                emailService.sendOrderStatusUpdate(updatedOrder, newStatus); 
+            } catch (Exception e) {
+                // Log lỗi gửi email nhưng vẫn tiếp tục
+                System.err.println("LỖI GỬI EMAIL CẬP NHẬT TRẠNG THÁI: " + e.getMessage());
+            }
+        } catch (RuntimeException e) {
+            // Xử lý lỗi (ví dụ: không tìm thấy đơn hàng)
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+        
+        // Chuyển hướng về trang chi tiết đơn hàng để thấy kết quả
+        return "redirect:/Admin/order-detail?orderId=" + orderId;
+    }
+    
+    // Đảm bảo hàm showOrdersByStatus đã có (đã tạo ở bước trước)
+    // Nếu bạn muốn hiển thị tất cả đơn hàng cho /Admin/orders, bạn cần dùng hàm sau:
+    @GetMapping("/orders")
+    public String showOrdersByStatus(@RequestParam(required = false) String status, Model model) {
+        String title = "Danh sách Đơn hàng";
+        List<Orders> orders;
+        
+        if (status != null && !status.isEmpty()) {
+            orders = orderService.findOrdersByStatus(status);
+            title += " (" + status + ")";
+        } else {
+            // Nếu không có status, lấy tất cả đơn hàng
+            orders = orderService.findAllOrderByOrderDateDesc();
+        }
+        
+        model.addAttribute("orders", orders);
+        model.addAttribute("pageTitle", title);
+        
+        return "Admin/orders"; // Trả về file orders.html
+    }
 }

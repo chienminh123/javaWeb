@@ -1,0 +1,199 @@
+package com.example.demo.controller;
+
+import java.security.Principal; // Thêm import
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired; // Thêm import
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes; // Thêm import
+
+import com.example.demo.model.Carts;
+import com.example.demo.model.Orders;
+import com.example.demo.model.Sizes;
+import com.example.demo.service.CartService;
+import com.example.demo.service.EmailService;
+import com.example.demo.service.OrderService;
+import com.example.demo.service.ProductService;
+
+import jakarta.mail.MessagingException; 
+
+@Controller
+public class CartController {
+
+    @Autowired
+    private CartService cartService; // Inject Service mới
+    @Autowired
+    private OrderService orderService; // Inject OrderService để xử lý đặt hàng
+    @Autowired
+    private EmailService emailService;
+    @Autowired
+    private ProductService productService;
+
+    private static final Logger logger = LoggerFactory.getLogger(CartController.class);
+    
+    @PostMapping("/cart/add")
+    public String addToCart(
+            @RequestParam("productId") Integer productId,
+            @RequestParam(name = "sizeId", required = false) Integer sizeId,
+            @RequestParam("quantity") Integer quantity,
+            Principal principal, // Lấy user đang đăng nhập
+            RedirectAttributes redirectAttributes) { // Dùng để gửi thông báo lỗi
+        
+        // Yêu cầu đăng nhập (Spring Security sẽ xử lý, nhưng check lại)
+        if (principal == null) {
+            return "redirect:/Auth/login";
+        }
+        if (sizeId == null) {
+            redirectAttributes.addFlashAttribute("error", "Sản phẩm này chưa có size, không thể thêm");
+            return "redirect:/product/" + productId;
+        }
+
+        try {
+            // Gọi Service để xử lý logic
+            cartService.addToCart(principal.getName(), productId, sizeId, quantity);
+        } catch (Exception e) {
+            // Gửi thông báo lỗi (ví dụ: Hết hàng) về trang chi tiết
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/product/" + productId;
+        }
+
+        return "redirect:/cart";
+    }
+
+    @GetMapping("/cart")
+    public String showCart(Model model, Principal principal) {
+        if (principal == null) {
+            return "redirect:/Auth/login";
+        }
+        
+        // Lấy giỏ hàng của user
+        Carts cart = cartService.getCart(principal.getName());
+        
+        // Tính tổng tiền
+        float total = cartService.calculateTotal(cart);
+        
+        model.addAttribute("cart", cart);
+        model.addAttribute("totalPrice", total);
+        
+        return "User/cart";
+    }
+    @PostMapping("/cart/update")
+    @ResponseBody // Yêu cầu Spring trả về dữ liệu (String) thay vì tên view
+    public String updateCartItemQuantity(
+            @RequestParam Integer cartDetailId,
+            @RequestParam Integer quantity) {
+        
+        try {
+            cartService.updateQuantity(cartDetailId, quantity);
+            return "SUCCESS";
+        } catch (Exception e) {
+            // Trả về thông báo lỗi cho JavaScript xử lý
+            return "ERROR: " + e.getMessage();
+        }
+    }
+
+    @PostMapping("/cart/delete")
+    @ResponseBody 
+    public String deleteCartItem(@RequestParam Integer cartDetailId) {
+        try {
+            cartService.deleteItem(cartDetailId);
+            return "SUCCESS";
+        } catch (Exception e) {
+            return "ERROR: " + e.getMessage();
+        }
+    }
+
+    @GetMapping("/checkout")
+    public String showCheckout(Model model, Principal principal) {
+        // 1. Kiểm tra đăng nhập
+        if (principal == null) {
+            return "redirect:/Auth/login";
+        }
+        
+        // 2. Lấy giỏ hàng của user
+        // Giả định CartService đã có các hàm này
+        Carts cart = cartService.getCart(principal.getName());
+        
+        // Kiểm tra giỏ hàng rỗng
+        if (cart == null || cart.getCartDetails() == null || cart.getCartDetails().isEmpty()) {
+            // Có thể chuyển hướng về trang giỏ hàng hoặc báo lỗi
+            return "redirect:/cart?error=Giỏ hàng rỗng";
+        }
+        
+        // 3. Tính tổng tiền và chuẩn bị dữ liệu (ví dụ: thông tin User, địa chỉ mặc định)
+        float total = cartService.calculateTotal(cart);
+        // (Bạn cần thêm logic lấy thông tin User như tên, địa chỉ, SĐT để điền vào form)
+        
+        model.addAttribute("cart", cart);
+        model.addAttribute("totalPrice", total);
+        
+        return "User/checkout"; 
+    }
+
+    @PostMapping("/checkout/confirm")
+    public String confirmCheckout(
+    @RequestParam("address") String address,
+    @RequestParam("phone") String phone, // Số điện thoại nhận hàng
+    @RequestParam("paymentMethod") String paymentMethod,
+    Principal principal, 
+    RedirectAttributes redirectAttributes) {
+
+    if (principal == null) {
+        return "redirect:/Auth/login"; // Yêu cầu đăng nhập
+    }
+
+    try {
+        String userPhone = principal.getName();
+
+        // 1. Gọi OrderService để xử lý toàn bộ quy trình
+        Orders newOrder = orderService.createOrderFromCart(userPhone, address, phone, paymentMethod); 
+        
+        // 2. Đặt trạng thái tùy thuộc vào phương thức thanh toán
+        if ("Chuyển khoản".equals(paymentMethod)) {
+            newOrder.setStatus("Chờ thanh toán"); 
+        } else {
+            newOrder.setStatus("Đang xử lý"); 
+        }
+        
+        // 3. GỬI EMAIL (nếu đã cấu hình)
+        try {
+            emailService.sendOrderConfirmation(newOrder); 
+            emailService.sendNewOrderNotification(newOrder); 
+            List<Sizes> lowStockItems = productService.checkLowStockAfterOrder(newOrder, 5); // Ngưỡng: 5
+                if (!lowStockItems.isEmpty()) {
+                    emailService.sendLowStockNotification(lowStockItems);
+                    logger.warn("ĐÃ GỬI CẢNH BÁO TỒN KHO THẤP CHO ADMIN SAU ĐƠN HÀNG #" + newOrder.getOrderId());
+                }
+                // =================================================================
+                
+            
+        } catch (MessagingException e) {
+            logger.warn("LỖI GỬI EMAIL XÁC NHẬN:", e);
+        }
+                
+        // 4. Thành công: Gửi thông báo và chuyển hướng
+        redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn hàng: #" + newOrder.getOrderId());
+
+        // Chuyển hướng đến trang đơn hàng của user
+        return "redirect:/User/order"; 
+
+    } catch (Exception e) {
+        // === THỰC HIỆN LOGGING CHI TIẾT TẠI ĐÂY ===
+        logger.error("LỖI XỬ LÝ ĐẶT HÀNG:", e);
+        // ==========================================
+        
+        // 5. Thất bại: Gửi thông báo lỗi (ví dụ: hết hàng) và quay lại trang giỏ hàng
+        String errorMessage = "Lỗi đặt hàng: " + (e.getMessage() != null ? e.getMessage() : "Lỗi không xác định. Vui lòng kiểm tra Console.");
+        redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+        
+        return "redirect:/cart"; 
+    }
+    }
+}

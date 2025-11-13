@@ -1,0 +1,95 @@
+<div th:fragment="user-footer" class="footer">
+  <div class="footer__container">
+    <div class="footer__col footer__col--info">
+      <a href="/" class="footer__logo">
+        <img th:src="@{/img/logo.png}" alt="Logo Mẹ & Bé" class="logo__image" />
+      </a>
+      <p class="contact-item" type="address">
+        <i class="fas fa-map-marker-alt"></i> Địa chỉ: Ngõ 218, Lĩnh Nam, Hoàng
+        Mai,Hà Nội
+      </p>
+      <p class="contact-item" type="phone">
+        <i class="fas fa-phone-alt"></i> Hotline: 1900 6868
+      </p>
+      <p class="contact-item" type="email">
+        <i class="fas fa-envelope"></i> Email: cskh@mevabe.vn
+      </p>
+    </div>
+
+    <div class="footer__col">
+      <h4 class="footer__heading">Hỗ trợ Khách hàng</h4>
+      <ul class="footer__links">
+        <li><a href="#">Trung tâm trợ giúp</a></li>
+        <li><a href="#">Chính sách đổi trả</a></li>
+        <li><a href="#">Chính sách bảo hành</a></li>
+        <li><a href="#">Phương thức thanh toán</a></li>
+        <li><a href="#">Vận chuyển và giao nhận</a></li>
+      </ul>
+    </div>
+
+    <div class="footer__col">
+      <h4 class="footer__heading">Về Mẹ & Bé Yêu</h4>
+      <ul class="footer__links">
+        <li><a href="#">Giới thiệu về chúng tôi</a></li>
+        <li><a href="#">Tuyển dụng</a></li>
+        <li><a href="#">Điều khoản sử dụng</a></li>
+        <li><a href="#">Chính sách bảo mật</a></li>
+      </ul>
+    </div>
+
+    <div class="footer__col">
+      <h4 class="footer__heading">Kết nối với chúng tôi</h4>
+      <div class="social-links">
+        <a
+          href="https://www.facebook.com/BiBoMart.com.vn"
+          target="_blank"
+          class="social-icon"
+          ><i class="fab fa-facebook-f"></i
+        ></a>
+        <a
+          href="https://www.tiktok.com/@bibomartofficial"
+          target="_blank"
+          class="social-icon"
+          ><i class="fa-brands fa-tiktok"></i
+        ></a>
+        <a
+          href="https://www.youtube.com/@bibomartchannel"
+          target="_blank"
+          class="social-icon"
+          ><i class="fab fa-youtube"></i
+        ></a>
+      </div>
+
+      <h4 class="footer__heading app-download-heading">
+        Tải ứng dụng nhận ngay nhiều ưu đãi hấp dẫn
+      </h4>
+      <div class="app-badges">
+        <a
+          href="https://apps.apple.com/vn/app/bibo-mart-si%C3%AAu-th%E1%BB%8B-m%E1%BA%B9-v%C3%A0-b%C3%A9/id1464298193?l=vi"
+          target="_blank"
+        >
+          <img
+            th:src="@{/img/app-store.png}"
+            alt="App Store"
+            class="app-badge"
+          />
+        </a>
+        <a
+          href="https://play.google.com/store/apps/details?id=vn.com.bibomart.bibomart"
+          target="_blank"
+        >
+          <img
+            th:src="@{/img/google-play.png}"
+            alt="Google Play"
+            class="app-badge"
+          />
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer__bottom">
+    <p>&copy; 2025 Me & Be Yeu. Tất cả quyền được bảo lưu.</p>
+  </div>
+</div>
+<script th:src="@{/assets/js/user.js}"></script>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cập nhật Trạng thái Đơn hàng</title>
+  </head>
+  <body
+    style="
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      padding: 20px;
+    "
+  >
+    <div
+      style="
+        max-width: 600px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        border-top: 5px solid #007bff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      "
+    >
+      <h2
+        style="
+          color: #007bff;
+          border-bottom: 2px solid #007bff;
+          padding-bottom: 10px;
+        "
+      >
+        Cập Nhật Trạng Thái Đơn Hàng
+      </h2>
+      <p>Kính gửi <span th:text="${order.user.userName}">Khách hàng</span>,</p>
+      <p>
+        Đơn hàng **#<span th:text="${order.orderId}">123</span>** của bạn đã
+        được cập nhật trạng thái.
+      </p>
+
+      <div
+        style="
+          background-color: #e9ecef;
+          padding: 15px;
+          border-radius: 5px;
+          text-align: center;
+          margin: 20px 0;
+        "
+      >
+        <h3 style="color: #28a745; margin: 0">
+          Trạng thái mới: <span th:text="${newStatus}">Đang xử lý</span>
+        </h3>
+      </div>
+
+      <table style="width: 100%; border-collapse: collapse; margin-top: 15px">
+        <tr>
+          <td
+            style="
+              padding: 5px 0;
+              border-bottom: 1px solid #eee;
+              font-weight: bold;
+              width: 30%;
+            "
+          >
+            Mã Đơn hàng:
+          </td>
+          <td
+            style="
+              padding: 5px 0;
+              border-bottom: 1px solid #eee;
+              text-align: right;
+            "
+          >
+            #<span th:text="${order.orderId}"></span>
+          </td>
+        </tr>
+        <tr>
+          <td
+            style="
+              padding: 5px 0;
+              border-bottom: 1px solid #eee;
+              font-weight: bold;
+            "
+          >
+            Ngày đặt:
+          </td>
+          <td
+            style="
+              padding: 5px 0;
+              border-bottom: 1px solid #eee;
+              text-align: right;
+            "
+          >
+            <span
+              th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"
+            ></span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 5px 0; font-weight: bold">Địa chỉ nhận hàng:</td>
+          <td style="padding: 5px 0; text-align: right">
+            <span th:text="${order.address}"></span>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin-top: 20px">
+        Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi để được
+        hỗ trợ.
+      </p>
+      <p>Trân trọng,<br />Đội ngũ hỗ trợ.</p>
+    </div>
+  </body>
+</html>

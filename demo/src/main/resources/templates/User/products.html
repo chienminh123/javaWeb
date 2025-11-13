@@ -1,73 +1,222 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
-    </head>
-    <body>
-        <header class="header">
-            <div class="header__logo">
-                <a href="/">Mẹ & Bé Yêu</a>
-            </div>
-            <nav class="header__nav nav">
-                <ul class="nav__list">
-                    <li class="nav__item">
-                        <a href="/" class="nav__link">Trang Chủ</a>
-                    </li>
-                    <li class="nav__item">
-                        <a href="products.html" class="nav__link">Sản Phẩm</a>
-                    </li>
-                    <li class="nav__item">
-                        <a href="#" class="nav__link">Khuyến Mãi</a>
-                    </li>
-                    <li class="nav__item">
-                        <a href="#" class="nav__link">Liên Hệ</a>
-                    </li>
-                </ul>
-            </nav>
-            <div class="header__user-actions">
-                <a href="#" class="header__action-link">Đăng Nhập</a>
-                <a
-                    href="#"
-                    class="header__action-link header__action-link--cart"
-                    >🛒 (0)</a
-                >
-            </div>
-        </header>
-        <main class="main-content">
-            <section class="product-list">
-                <h2 class="product-list__heading">
-                    🛒 Tất Cả Sản Phẩm Mẹ & Bé
-                </h2>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <!-- (Phần <head> y hệt index.html) -->
+    <title>Sản Phẩm - Mẹ & Bé Yêu</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
 
-                <div class="filter-bar">
-                    <select class="filter-bar__select">
-                        <option>Sắp xếp theo Giá</option>
-                        <option>Giá tăng dần</option>
-                        <option>Giá giảm dần</option>
-                    </select>
-                    <select class="filter-bar__select">
-                        <option>Chọn Danh mục</option>
-                        <option>Bình Sữa</option>
-                        <option>Tã/Bỉm</option>
-                        <option>Đồ Chơi</option>
-                    </select>
-                </div>
-                <div class="product-list__container"></div>
-            </section>
-        </main>
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      th:href="@{/img/favicon.png}"
+    />
+    <link rel="shortcut icon" type="image/png" th:href="@{/img/favicon.png}" />
 
-        <footer class="footer">
-            <div class="footer__content">
-                <p class="footer__copyright">
-                    &copy; 2025 Mẹ & Bé Yêu. Bảo lưu mọi quyền.
-                </p>
-                <div class="footer__social-links">
-                    <a href="#" class="footer__social-link">Facebook</a>
-                    <a href="#" class="footer__social-link">Instagram</a>
-                </div>
+    <link rel="stylesheet" th:href="@{/user-css/reset.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/main.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/header.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/footer.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/product.css}" />
+
+    <!-- CSS mới cho trang product (giống ảnh) -->
+    <style>
+      .product-page-layout {
+        display: flex;
+        gap: 20px;
+        max-width: 1200px;
+        margin: 20px auto;
+      }
+      .filter-sidebar {
+        width: 250px;
+        flex-shrink: 0;
+      }
+      .filter-sidebar .filter-group {
+        background: #f9f9f9;
+        border: 1px solid #eee;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+      }
+      .filter-sidebar h3 {
+        font-size: 16px;
+        font-weight: bold;
+        margin: 0 0 10px 0;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #ddd;
+      }
+      .filter-sidebar ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .filter-sidebar li {
+        margin-bottom: 8px;
+      }
+      .filter-sidebar a {
+        text-decoration: none;
+        color: #333;
+      }
+      /* Style cho thể loại đang được chọn */
+      .filter-sidebar li.active a,
+      .category-menu__item a.active-link-style {
+        color: #ff4d4f; /* Màu chủ đạo của Bibo Mart */
+        font-weight: bold;
+      }
+
+      .product-grid-main {
+        flex-grow: 1;
+      }
+      .grid-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 10px;
+      }
+      .grid-header h2 {
+        font-size: 20px;
+        margin: 0;
+      }
+      /* (Style cho các nút sắp xếp giống ảnh) */
+      .sort-options {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+      }
+      .sort-options .sort-btn {
+        padding: 5px 10px;
+        border: 1px solid #ddd;
+        background: #fff;
+        cursor: pointer;
+      }
+      .sort-options .sort-btn.active {
+        background: #ff4d4f;
+        color: white;
+        border-color: #ff4d4f;
+      }
+
+      /* Dùng lại style .hot-deal-grid từ file product.css */
+      .hot-deal-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr); /* 4 cột (Giống ảnh) */
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      /* Breadcrumbs (Thanh Trang Chủ > Sữa cho bé) */
+      .breadcrumbs {
+        padding: 15px 0;
+        color: #888;
+        font-size: 14px;
+      }
+      .breadcrumbs a {
+        text-decoration: none;
+        color: #555;
+      }
+      .breadcrumbs a:hover {
+        color: #ff4d4f;
+      }
+      .breadcrumbs span {
+        margin: 0 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div th:replace="User/userHeader::user-header"></div>
+
+    <!-- Container chính của trang (max-width 1200px) -->
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 10px">
+      <div class="breadcrumbs">
+        <a th:href="@{/User/index}">Trang Chủ</a>
+        <span>&gt;</span>
+        <span th:text="${pageTitle}">Sữa cho bé</span>
+      </div>
+    </div>
+
+    <main class="main-content product-page-layout">
+      <!-- === CỘT LỌC BÊN TRÁI (Giống ảnh) === -->
+      <aside class="filter-sidebar">
+        <!-- (Bộ lọc giả, bạn có thể nâng cấp sau) -->
+        <div class="filter-group">
+          <h3>Khoảng giá</h3>
+          <p>0đ - 10.000.000đ</p>
+        </div>
+        <div class="filter-group">
+          <h3>Thương hiệu</h3>
+          <ul>
+            <li>
+              <label><input type="checkbox" /> Aptamil (10)</label>
+            </li>
+            <li>
+              <label><input type="checkbox" /> Meiji (12)</label>
+            </li>
+          </ul>
+        </div>
+      </aside>
+
+      <!-- === LƯỚI SẢN PHẨM BÊN PHẢI === -->
+      <section class="product-grid-main">
+        <div class="grid-header">
+          <!-- Tiêu đề động (ví dụ: "Sữa cho bé") -->
+          <h2 th:text="${pageTitle}">Sản Phẩm</h2>
+          <div class="sort-options">
+            <button class="sort-btn">Giá cao - thấp</button>
+            <button class="sort-btn">Giá thấp - cao</button>
+          </div>
+        </div>
+
+        <!-- Lưới sản phẩm (Dùng lại code của index.html) -->
+        <div class="hot-deal-grid" id="productGrid">
+          <!-- Lặp qua danh sách sản phẩm đã lọc -->
+          <a
+            th:href="@{/product/{id}(id=${product.productId})}"
+            class="product-card"
+            th:each="product : ${products}"
+          >
+            <i class="far fa-heart product-wishlist"></i>
+            <img
+              th:src="@{${product.imageUrl != null ? product.imageUrl : '/img/placeholder.png'}}"
+              alt="Ảnh sản phẩm"
+            />
+            <h3 class="product-name" th:text="${product.productName}">...</h3>
+            <div class="product-info-footer">
+              <p
+                class="product-price"
+                th:text="${#numbers.formatDecimal(product.sellPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"
+              >
+                ...
+              </p>
+              <button type="submit" class="add-to-cart">
+                <i class="fa-solid fa-bag-shopping"></i>
+              </button>
             </div>
-        </footer>
-    </body>
+          </a>
+
+          <!-- Thông báo nếu thể loại này không có SP -->
+          <div
+            th:if="${#lists.isEmpty(products)}"
+            style="
+              text-align: center;
+              width: 100%;
+              padding: 50px;
+              grid-column: 1 / -1;
+            "
+          >
+            <p>Không tìm thấy sản phẩm nào thuộc thể loại này.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+    <div th:replace="User/userFooter::user-footer"></div>
+    <script th:src="@{/assets/js/user.js}"></script>
+  </body>
 </html>

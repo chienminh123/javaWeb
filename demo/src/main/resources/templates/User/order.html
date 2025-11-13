@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Đơn Hàng Của Tôi</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      th:href="@{/img/favicon.png}"
+    />
+    <link rel="shortcut icon" type="image/png" th:href="@{/img/favicon.png}" />
+
+    <link rel="stylesheet" th:href="@{/user-css/reset.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/main.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/header.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/footer.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/product.css}" />
+    <style>
+      .container {
+        max-width: 1200px;
+        margin: 30px auto;
+        padding: 20px;
+      }
+      h1 {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 20px;
+      }
+      .order-item {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin-bottom: 15px;
+      }
+      .order-header {
+        background: #f9f9f9;
+        padding: 10px 15px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .order-header span {
+        font-weight: bold;
+      }
+      .order-body {
+        padding: 15px;
+      }
+      .order-body p {
+        margin: 5px 0;
+      }
+      .status-processing {
+        color: #f39c12;
+        font-weight: bold;
+      }
+      .status-completed {
+        color: #27ae60;
+        font-weight: bold;
+      }
+      .status-cancelled {
+        color: #e74c3c;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div th:replace="User/userHeader::user-header"></div>
+
+    <main class="main-content container">
+      <h1>Đơn Hàng Của Tôi</h1>
+
+      <!-- Nếu không có đơn hàng -->
+      <div th:if="${#lists.isEmpty(orders)}">
+        <p>Bạn chưa có đơn hàng nào.</p>
+      </div>
+
+      <!-- Lặp qua các đơn hàng -->
+      <div class="order-item" th:each="order : ${orders}">
+        <div class="order-header">
+          <span th:text="'Mã đơn: #' + ${order.orderId}">Mã đơn: #123</span>
+          <span
+            th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"
+            >Ngày đặt</span
+          >
+        </div>
+        <div class="order-body">
+          <p>
+            <strong>Người nhận:</strong>
+            <span th:text="${order.user?.userName ?: order.phone}"></span>
+          </p>
+          <p>
+            <strong>Địa chỉ:</strong> <span th:text="${order.address}"></span>
+          </p>
+          <p>
+            <strong>Trạng thái:</strong>
+            <span
+              th:text="${order.status}"
+              th:classappend="${order.status == 'Đang xử lý'} ? 'status-processing' : 
+                                           (${order.status == 'Hoàn thành'} ? 'status-completed' : 
+                                           (${order.status == 'Đã hủy'} ? 'status-cancelled' : ''))"
+            >
+              Đang xử lý
+            </span>
+          </p>
+          <!-- (Bạn có thể thêm 1 link để xem chi tiết đơn hàng ở đây) -->
+        </div>
+      </div>
+    </main>
+
+    <div th:replace="User/userFooter::user-footer"></div>
+  </body>
+</html>
