@@ -1,113 +1,12 @@
-// package com.example.demo.service;
 
-// import java.time.LocalDateTime;
-// import java.util.List;
-
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.stereotype.Service;
-// import org.springframework.transaction.annotation.Transactional;
-
-// import com.example.demo.model.CartDetail;
-// import com.example.demo.model.Carts;
-// import com.example.demo.model.OrderDetail;
-// import com.example.demo.model.Orders;
-// import com.example.demo.model.Sizes;
-// import com.example.demo.model.User;
-// import com.example.demo.repository.CartDetailRepository;
-// import com.example.demo.repository.CartRepository;
-// import com.example.demo.repository.OrderDetailRepository;
-// import com.example.demo.repository.OrdersRepository;
-// import com.example.demo.repository.SizesRepository;
-// import com.example.demo.repository.UserRepository;
-// @Service
-// public class OrderService {
-
-//     @Autowired private OrdersRepository ordersRepo;
-//     @Autowired private OrderDetailRepository orderDetailRepo;
-//     @Autowired private CartRepository cartRepo;
-//     @Autowired private CartDetailRepository cartDetailRepo;
-//     @Autowired private SizesRepository sizesRepo;
-//     @Autowired private UserRepository userRepo; // Cần để lấy đối tượng User
-
-//     /**
-//      * Tạo đơn hàng mới từ giỏ hàng: Lưu Orders, OrderDetail, Giảm tồn kho Sizes, Xóa CartDetail và Carts.
-//      */
-//     @Transactional
-//     public Orders createOrderFromCart(String userPhone, String address, String phone, String paymentMethod) throws Exception {
-        
-//         // 1. Lấy User và Cart
-//         User user = userRepo.findByPhone(userPhone);
-//         if (user == null) {
-//             throw new Exception("Không tìm thấy thông tin người dùng.");
-//         }
-        
-//         Carts cart = cartRepo.findByUser(user)
-//                           .orElseThrow(() -> new Exception("Giỏ hàng không tồn tại."));
-                          
-//         List<CartDetail> cartDetails = cart.getCartDetails();
-
-//         if (cartDetails == null || cartDetails.isEmpty()) {
-//             throw new Exception("Giỏ hàng rỗng, không thể tạo đơn hàng.");
-//         }
-
-//         // 2. Tạo đối tượng Orders
-//         Orders newOrder = new Orders();
-//         newOrder.setUser(user);
-//         newOrder.setOrderDate(LocalDateTime.now());
-//         newOrder.setStatus("Đang xử lý"); // Trạng thái ban đầu
-//         newOrder.setAddress(address);
-//         newOrder.setPhone(phone); 
-//         newOrder.setPaymentMethod(paymentMethod);
-        
-//         // Lưu Orders trước để lấy orderId
-//         newOrder = ordersRepo.save(newOrder);
-
-//         // Chuẩn bị lưu OrderDetail
-//         List<OrderDetail> orderDetails = new java.util.ArrayList<>();
-        
-//         // 3. Xử lý từng sản phẩm trong giỏ
-//         for (CartDetail item : cartDetails) {
-//             Sizes size = item.getSizes();
-//             Integer orderedQuantity = item.getQuantity();
-            
-//             // 3a. Kiểm tra tồn kho và NÉM LỖI nếu không đủ
-//             if (size.getQuantity() == null || size.getQuantity() < orderedQuantity) {
-//                 // Transaction sẽ được rollback (hủy) ngay lập tức
-//                 throw new Exception("Sản phẩm " + item.getProduct().getProductName() + " (Size: " + size.getSizeName() + ") chỉ còn " + (size.getQuantity() != null ? size.getQuantity() : 0) + " sản phẩm trong kho. Đặt hàng thất bại.");
-//             }
-            
-//             // 3b. Tạo OrderDetail và thêm vào danh sách
-//             OrderDetail detail = new OrderDetail();
-//             detail.setOrders(newOrder);
-//             detail.setProduct(item.getProduct());
-//             detail.setSizes(size);
-//             detail.setQuantity(orderedQuantity);
-//             detail.setPrice((double)item.getPrice()); 
-//             orderDetails.add(detail);
-            
-//             // 3c. Giảm tồn kho Sizes và lưu lại
-//             size.setQuantity(size.getQuantity() - orderedQuantity);
-//             sizesRepo.save(size); 
-            
-//             // 3d. Xóa CartDetail đã được đặt hàng
-//             cartDetailRepo.delete(item);
-//         }
-        
-//         // 4. Lưu tất cả OrderDetail
-//         orderDetailRepo.saveAll(orderDetails);
-        
-//         // 5. Xóa đối tượng Carts chính (vì tất cả CartDetail đã bị xóa)
-//         cartRepo.delete(cart); 
-        
-//         return newOrder;
-//     }
-// }
 package com.example.demo.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -125,24 +24,24 @@ import com.example.demo.repository.OrdersRepository;
 import com.example.demo.repository.SizesRepository;
 import com.example.demo.repository.UserRepository;
 
+import jakarta.mail.MessagingException;
+
 @Service
 public class OrderService {
 
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
+    
+    @Autowired private EmailService emailService; // Để gửi email thông báo
     @Autowired private OrdersRepository ordersRepo;
     @Autowired private OrderDetailRepository orderDetailRepo;
     @Autowired private CartRepository cartRepo;
     @Autowired private CartDetailRepository cartDetailRepo;
     @Autowired private SizesRepository sizesRepo;
-    @Autowired private UserRepository userRepo; // Cần để lấy đối tượng User và lưu User đã sửa đổi
-
-    /**
-     * Tạo đơn hàng mới từ giỏ hàng.
-     * FIX: Xử lý TransientObjectException bằng cách ngắt liên kết User->Carts trước khi xóa.
-     */
-    @Transactional
+    @Autowired private UserRepository userRepo; 
+    
+   @Transactional
     public Orders createOrderFromCart(String userPhone, String address, String phone, String paymentMethod) throws Exception {
         
-        // 1. Lấy User và Cart
         User user = userRepo.findByPhone(userPhone);
         if (user == null) {
             throw new Exception("Không tìm thấy thông tin người dùng.");
@@ -161,35 +60,25 @@ public class OrderService {
         Orders newOrder = new Orders();
         newOrder.setUser(user);
         newOrder.setOrderDate(LocalDateTime.now());
-        // Trạng thái: Chờ thanh toán nếu là Chuyển khoản, ngược lại là Đang xử lý (COD)
-        newOrder.setStatus("Chuyển khoản".equals(paymentMethod) ? "Chờ thanh toán" : "Đang xử lý");
+        
+        // [SỬA ĐỔI] Gán trạng thái mặc định. Controller sẽ quyết định trạng thái cuối cùng.
+        newOrder.setStatus("Mới tạo"); 
+        
         newOrder.setAddress(address);
         newOrder.setPhone(phone); 
         newOrder.setPaymentMethod(paymentMethod);
         
         newOrder = ordersRepo.save(newOrder);
-
-        // Chuẩn bị lưu OrderDetail
         List<OrderDetail> orderDetails = new java.util.ArrayList<>();
-        
-        // 3. Xử lý từng sản phẩm trong giỏ (tạo OrderDetail, giảm tồn kho, xóa CartDetail)
         for (CartDetail item : cartDetails) {
             Sizes size = item.getSizes();
             Integer orderedQuantity = item.getQuantity();
             
-            // 3a. Kiểm tra tồn kho và NÉM LỖI
             if (size.getQuantity() == null || size.getQuantity() < orderedQuantity) {
                 String errorMsg = "Sản phẩm " + item.getProduct().getProductName() + " (Size: " + size.getSizeName() + ") chỉ còn " + (size.getQuantity() != null ? size.getQuantity() : 0) + " sản phẩm trong kho.";
-                
-                // === BỔ SUNG: GỬI EMAIL/THÔNG BÁO HẾT HÀNG CHO ADMIN ===
-                // Bạn cần inject EmailService hoặc NotificationService vào OrderService
-                // emailService.sendOutOfStockNotification(item.getProduct(), size, orderedQuantity); 
-                // =======================================================
-                
                 throw new Exception(errorMsg + ". Đặt hàng thất bại.");
             }
             
-            // 3b. Tạo OrderDetail
             OrderDetail detail = new OrderDetail();
             detail.setOrders(newOrder);
             detail.setProduct(item.getProduct());
@@ -198,24 +87,20 @@ public class OrderService {
             detail.setPrice((double)item.getPrice()); 
             orderDetails.add(detail);
             
-            // 3c. Giảm tồn kho Sizes và lưu lại
             size.setQuantity(size.getQuantity() - orderedQuantity);
             sizesRepo.save(size); 
             
-            // 3d. Xóa CartDetail đã được đặt hàng
             cartDetailRepo.delete(item);
         }
         
-        // 4. LƯU TẤT CẢ ORDER DETAIL
         orderDetailRepo.saveAll(orderDetails);
         newOrder.setOrderDetails(orderDetails);
+        
+        // ... (Logic xóa Cart giữ nguyên)
         user.setCarts(null); 
         userRepo.save(user); 
-        
-        // Xóa đối tượng Carts chính (vì tất cả CartDetail đã bị xóa)
         cartRepo.delete(cart); 
         
-        // 6. Hoàn tất và trả về
         return newOrder;
     }
 
@@ -230,27 +115,93 @@ public class OrderService {
     /**
      * [ADMIN] Cập nhật trạng thái (Gửi thông báo ngược lại User)
      */
-    @Transactional
+   @Transactional
     public Orders updateOrderStatus(Integer orderId, String newStatus) {
         Orders order = ordersRepo.findById(orderId)
             .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng ID: " + orderId));
         
-        if (!order.getStatus().equals(newStatus)) {
+        String oldStatus = order.getStatus();
+
+        if (oldStatus.equals(newStatus)) {
+            return order; // Không thay đổi gì, không chạy logic bên dưới
+        }
+        
+        // === [LOGIC HOÀN KHO MỚI] ===
+        
+        // 1. Các trạng thái đã bị trừ kho (cần hoàn lại nếu hủy)
+        List<String> stockOutStates = List.of(
+            "Đang xử lý", 
+            "Đã xác nhận", 
+            "Đang giao hàng", 
+            "Đã giao hàng",
+            "Đã thanh toán (VNPay)",
+            "Chờ thanh toán VNPay"
+        );
+
+        // 2. Các trạng thái kích hoạt việc hoàn kho
+        List<String> restoreTriggerStates = List.of("Đã hủy", "Đã trả hàng");
+
+        // 3. Kiểm tra sự thay đổi (transition)
+        boolean isTriggeringRestore = restoreTriggerStates.contains(newStatus);
+        boolean wasStockOut = stockOutStates.contains(oldStatus);
+
+        // CHỈ hoàn kho nếu:
+        // Trạng thái MỚI là Hủy/Trả HÀNG VÀ trạng thái CŨ là một trạng thái ĐÃ TRỪ KHO
+        if (isTriggeringRestore && wasStockOut) {
+            try {
+                restoreStockForOrder(order);
+                logger.info("Đã hoàn kho thành công cho Đơn hàng #{}", orderId);
+            } catch (Exception e) {
+                logger.error("LỖI nghiêm trọng: Không thể hoàn kho cho Đơn hàng #{}. Lỗi: {}", orderId, e.getMessage());
+                // (Nếu muốn, bạn có thể ném lỗi ở đây để ngăn việc đổi trạng thái nếu hoàn kho thất bại)
+            }
+        }
+        // ============================
+
+        // Cập nhật trạng thái mới
         order.setStatus(newStatus);
         Orders updatedOrder = ordersRepo.save(order);
         
-        // === BỔ SUNG: GỬI EMAIL THÔNG BÁO CHO USER ===
-        // Bạn cần tạo hàm sendStatusUpdate(updatedOrder) trong EmailService.java
-        // try {
-        //     emailService.sendStatusUpdate(updatedOrder); 
-        // } catch (MessagingException e) {
-        //     logger.error("Lỗi gửi email cập nhật trạng thái", e);
-        // }
-        // ===========================================
+        try {
+            if (newStatus.equals("Đã trả hàng")) {
+                // Nếu là USER TRẢ HÀNG, gửi thông báo đặc biệt cho Admin
+                emailService.sendUserReturnNotification(updatedOrder); 
+            }
+            
+            // Gửi thông báo cập nhật trạng thái chung cho User (kể cả khi trả hàng)
+            emailService.sendOrderStatusUpdate(updatedOrder, newStatus);
+            
+        } catch (MessagingException e) {
+            logger.error("Lỗi gửi email cập nhật trạng thái đơn hàng #{}: {}", orderId, e.getMessage());
+        }
         
         return updatedOrder;
     }
-    return order;
+
+    @Transactional
+    protected void restoreStockForOrder(Orders order) throws Exception {
+        // Tải lại đơn hàng và chi tiết của nó (vì 'order' có thể chưa load)
+        Orders orderWithDetails = ordersRepo.findByIdWithDetails(order.getOrderId())
+            .orElseThrow(() -> new Exception("Không tìm thấy chi tiết đơn hàng # " + order.getOrderId()));
+
+        if (orderWithDetails.getOrderDetails() == null || orderWithDetails.getOrderDetails().isEmpty()) {
+            throw new Exception("Đơn hàng không có chi tiết sản phẩm để hoàn kho.");
+        }
+
+        for (OrderDetail detail : orderWithDetails.getOrderDetails()) {
+            Sizes size = detail.getSizes();
+            Integer returnedQuantity = detail.getQuantity();
+            
+            if (size == null) {
+                logger.warn("Bỏ qua hoàn kho: Không tìm thấy 'Sizes' cho OrderDetail ID: {}", detail.getOrderDetailId());
+                continue;
+            }
+            
+            int currentStock = size.getQuantity() != null ? size.getQuantity() : 0;
+            size.setQuantity(currentStock + returnedQuantity);
+            
+            sizesRepo.save(size);
+        }
     }
     /**
      * [ADMIN] Đếm số đơn hàng theo trạng thái
@@ -259,22 +210,23 @@ public class OrderService {
         return ordersRepo.countByStatus(status);
     }
     
-    // /**
-    //  * [ADMIN] Lấy danh sách đơn hàng theo trạng thái
-    //  */
-    // public List<Orders> findOrdersByStatus(String status) {
-    //     return ordersRepo.findByStatusOrderByOrderDateDesc(status);
-    // }
+    //[ADMIN] Lấy danh sách đơn hàng theo trạng thái
+
     public List<Orders> findAllOrderByOrderDateDesc() {
-        // THAY THẾ: return ordersRepo.findAll(Sort.by(Sort.Direction.DESC, "orderDate"));
-        return ordersRepo.findAllWithDetailsOrderByOrderDateDesc(); // <--- ĐÃ SỬA DÙNG JOIN FETCH
+        return ordersRepo.findAllWithDetailsOrderByOrderDateDesc();
     }
     
     /**
-     * [ADMIN] Lấy danh sách đơn hàng theo trạng thái (Hàm này có thể thiếu, nên thêm vào)
+     * [ADMIN] Lấy danh sách đơn hàng theo trạng thái 
      */
     public List<Orders> findOrdersByStatus(String status) {
-        // THAY THẾ: return ordersRepo.findByStatusOrderByOrderDateDesc(status); (Nếu bạn có hàm này)
-        return ordersRepo.findByStatusWithDetailsOrderByOrderDateDesc(status); // <--- ĐÃ SỬA DÙNG JOIN FETCH
+        return ordersRepo.findByStatusWithDetailsOrderByOrderDateDesc(status); 
+    }
+    public Optional<Orders> findOrderDetailsById(Integer orderId) {
+        return ordersRepo.findByIdWithDetails(orderId); 
+    }
+    @Transactional
+    public Orders save(Orders order) {
+        return ordersRepo.save(order);
     }
 }

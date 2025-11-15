@@ -21,8 +21,10 @@ import com.example.demo.service.CartService;
 import com.example.demo.service.EmailService;
 import com.example.demo.service.OrderService;
 import com.example.demo.service.ProductService;
+import com.example.demo.service.VNPayService;
 
-import jakarta.mail.MessagingException; 
+import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest; 
 
 @Controller
 public class CartController {
@@ -35,6 +37,8 @@ public class CartController {
     private EmailService emailService;
     @Autowired
     private ProductService productService;
+    @Autowired
+    private VNPayService vnpayService;
 
     private static final Logger logger = LoggerFactory.getLogger(CartController.class);
     
@@ -137,63 +141,133 @@ public class CartController {
         return "User/checkout"; 
     }
 
-    @PostMapping("/checkout/confirm")
-    public String confirmCheckout(
-    @RequestParam("address") String address,
-    @RequestParam("phone") String phone, // Số điện thoại nhận hàng
-    @RequestParam("paymentMethod") String paymentMethod,
-    Principal principal, 
-    RedirectAttributes redirectAttributes) {
+    // @PostMapping("/checkout/confirm")
+    // public String confirmCheckout(
+    // @RequestParam("address") String address,
+    // @RequestParam("phone") String phone, // Số điện thoại nhận hàng
+    // @RequestParam("paymentMethod") String paymentMethod,
+    // Principal principal, 
+    // RedirectAttributes redirectAttributes) {
 
-    if (principal == null) {
-        return "redirect:/Auth/login"; // Yêu cầu đăng nhập
-    }
+    // if (principal == null) {
+    //     return "redirect:/Auth/login"; // Yêu cầu đăng nhập
+    // }
 
-    try {
-        String userPhone = principal.getName();
+    // try {
+    //     String userPhone = principal.getName();
 
-        // 1. Gọi OrderService để xử lý toàn bộ quy trình
-        Orders newOrder = orderService.createOrderFromCart(userPhone, address, phone, paymentMethod); 
+    //     // 1. Gọi OrderService để xử lý toàn bộ quy trình
+    //     Orders newOrder = orderService.createOrderFromCart(userPhone, address, phone, paymentMethod); 
         
-        // 2. Đặt trạng thái tùy thuộc vào phương thức thanh toán
-        if ("Chuyển khoản".equals(paymentMethod)) {
-            newOrder.setStatus("Chờ thanh toán"); 
-        } else {
-            newOrder.setStatus("Đang xử lý"); 
-        }
+    //     // 2. Đặt trạng thái tùy thuộc vào phương thức thanh toán
+    //     if ("Chuyển khoản".equals(paymentMethod)) {
+    //         newOrder.setStatus("Chờ thanh toán"); 
+    //     } else {
+    //         newOrder.setStatus("Đang xử lý"); 
+    //     }
         
-        // 3. GỬI EMAIL (nếu đã cấu hình)
-        try {
-            emailService.sendOrderConfirmation(newOrder); 
-            emailService.sendNewOrderNotification(newOrder); 
-            List<Sizes> lowStockItems = productService.checkLowStockAfterOrder(newOrder, 5); // Ngưỡng: 5
-                if (!lowStockItems.isEmpty()) {
-                    emailService.sendLowStockNotification(lowStockItems);
-                    logger.warn("ĐÃ GỬI CẢNH BÁO TỒN KHO THẤP CHO ADMIN SAU ĐƠN HÀNG #" + newOrder.getOrderId());
-                }
-                // =================================================================
+    //     // 3. GỬI EMAIL (nếu đã cấu hình)
+    //     try {
+    //         emailService.sendOrderConfirmation(newOrder); 
+    //         emailService.sendNewOrderNotification(newOrder); 
+    //         List<Sizes> lowStockItems = productService.checkLowStockAfterOrder(newOrder, 5); // Ngưỡng: 5
+    //             if (!lowStockItems.isEmpty()) {
+    //                 emailService.sendLowStockNotification(lowStockItems);
+    //                 logger.warn("ĐÃ GỬI CẢNH BÁO TỒN KHO THẤP CHO ADMIN SAU ĐƠN HÀNG #" + newOrder.getOrderId());
+    //             }
+    //             // =================================================================
                 
             
+    //     } catch (MessagingException e) {
+    //         logger.warn("LỖI GỬI EMAIL XÁC NHẬN:", e);
+    //     }
+                
+    //     // 4. Thành công: Gửi thông báo và chuyển hướng
+    //     redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn hàng: #" + newOrder.getOrderId());
+
+    //     // Chuyển hướng đến trang đơn hàng của user
+    //     return "redirect:/order"; 
+
+    // } catch (Exception e) {
+    //     // === THỰC HIỆN LOGGING CHI TIẾT TẠI ĐÂY ===
+    //     logger.error("LỖI XỬ LÝ ĐẶT HÀNG:", e);
+    //     // ==========================================
+        
+    //     // 5. Thất bại: Gửi thông báo lỗi (ví dụ: hết hàng) và quay lại trang giỏ hàng
+    //     String errorMessage = "Lỗi đặt hàng: " + (e.getMessage() != null ? e.getMessage() : "Lỗi không xác định. Vui lòng kiểm tra Console.");
+    //     redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+        
+    //     return "redirect:/cart"; 
+    // }
+    // }
+    @PostMapping("/checkout/confirm")
+    public String confirmCheckout(
+        @RequestParam("address") String address,
+        @RequestParam("phone") String phone, 
+        @RequestParam("paymentMethod") String paymentMethod,
+        Principal principal, 
+        RedirectAttributes redirectAttributes,
+        HttpServletRequest request // [THÊM DÒNG NÀY]
+    ) {
+
+        if (principal == null) {
+            return "redirect:/Auth/login"; 
+        }
+
+        Orders newOrder = null;
+        try {
+            String userPhone = principal.getName();
+
+            // 1. TẠO ĐƠN HÀNG (Trừ kho, tạo Order)
+            newOrder = orderService.createOrderFromCart(userPhone, address, phone, paymentMethod);
+
+            // 2. XỬ LÝ LUỒNG THANH TOÁN
+            if ("VNPay".equals(paymentMethod)) {
+                
+                newOrder.setStatus("Chờ thanh toán VNPay");
+                orderService.save(newOrder); // Lưu trạng thái
+                
+                String orderInfo = "Thanh toan don hang #" + newOrder.getOrderId();
+                // Gọi hàm createPaymentUrl thật (cần request để lấy IP)
+                String vnpayUrl = vnpayService.createPaymentUrl(newOrder, request); 
+                
+                // Chuyển hướng người dùng đến Cổng VNPay Sandbox
+                return "redirect:" + vnpayUrl; 
+
+            } else if ("Chuyển khoản".equals(paymentMethod)) {
+                newOrder.setStatus("Chờ thanh toán"); 
+                orderService.save(newOrder); 
+
+            } else { // COD
+                newOrder.setStatus("Đang xử lý"); 
+                orderService.save(newOrder); 
+            }
+            
+            // 3. GỬI EMAIL (Chỉ gửi cho COD và Chuyển khoản thủ công)
+            sendOrderEmails(newOrder);
+                    
+            redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn hàng: #" + newOrder.getOrderId());
+            return "redirect:/User/order"; 
+
+        } catch (Exception e) {
+            logger.error("LỖI XỬ LÝ ĐẶT HÀNG:", e);
+            String errorMessage = "Lỗi đặt hàng: " + (e.getMessage() != null ? e.getMessage() : "Lỗi không xác định.");
+            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+            
+            return "redirect:/cart"; 
+        }
+    }
+
+    private void sendOrderEmails(Orders order) {
+        try {
+             emailService.sendOrderConfirmation(order); 
+             emailService.sendNewOrderNotification(order); 
+             List<Sizes> lowStockItems = productService.checkLowStockAfterOrder(order, 5); 
+             if (!lowStockItems.isEmpty()) {
+                 emailService.sendLowStockNotification(lowStockItems);
+             }
         } catch (MessagingException e) {
             logger.warn("LỖI GỬI EMAIL XÁC NHẬN:", e);
         }
-                
-        // 4. Thành công: Gửi thông báo và chuyển hướng
-        redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn hàng: #" + newOrder.getOrderId());
-
-        // Chuyển hướng đến trang đơn hàng của user
-        return "redirect:/User/order"; 
-
-    } catch (Exception e) {
-        // === THỰC HIỆN LOGGING CHI TIẾT TẠI ĐÂY ===
-        logger.error("LỖI XỬ LÝ ĐẶT HÀNG:", e);
-        // ==========================================
-        
-        // 5. Thất bại: Gửi thông báo lỗi (ví dụ: hết hàng) và quay lại trang giỏ hàng
-        String errorMessage = "Lỗi đặt hàng: " + (e.getMessage() != null ? e.getMessage() : "Lỗi không xác định. Vui lòng kiểm tra Console.");
-        redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
-        
-        return "redirect:/cart"; 
-    }
     }
 }

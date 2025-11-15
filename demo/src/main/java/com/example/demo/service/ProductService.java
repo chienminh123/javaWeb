@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -380,8 +381,46 @@ public class ProductService {
         return productRepo.findAllWithDetails(); 
     }
     
-    public List<Product> findProductsByGenre(Integer genreId) {
-        return productRepo.findByGenreGenreId(genreId);
+    // public List<Product> findProductsByGenre(Integer genreId) {
+    //     return productRepo.findByGenreGenreId(genreId);
+    // }
+    public List<Product> findProductsByGenre(
+        Integer genreId, String sortParam, String priceRange, Integer brandId) {
+        
+        // 1. Xây dựng Sort
+        Sort sorting = Sort.unsorted();
+        if ("price_asc".equals(sortParam)) {
+            sorting = Sort.by(Sort.Direction.ASC, "sellPrice");
+        } else if ("price_desc".equals(sortParam)) {
+            sorting = Sort.by(Sort.Direction.DESC, "sellPrice");
+        } else {
+             // Sắp xếp mặc định theo ID mới nhất
+             sorting = Sort.by(Sort.Direction.DESC, "productId");
+        }
+        
+        // 2. Xử lý Khoảng giá (Phân tích chuỗi 'min-max')
+        Float minPrice = null;
+        Float maxPrice = null;
+        if (priceRange != null && !priceRange.isEmpty()) {
+            String[] parts = priceRange.split("-");
+            try {
+                if (parts.length > 0 && !parts[0].equalsIgnoreCase("min")) {
+                    minPrice = Float.parseFloat(parts[0]);
+                }
+                if (parts.length > 1 && !parts[1].equalsIgnoreCase("max")) {
+                    // Nếu giá trị là 'max', ta để maxPrice là null (không giới hạn trên)
+                    if (!parts[1].equalsIgnoreCase("max")) {
+                       maxPrice = Float.parseFloat(parts[1]);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Bỏ qua nếu giá trị không hợp lệ
+            }
+        }
+        
+        // 3. Gọi hàm Repository mới
+        return productRepo.findFilteredProducts(
+            genreId, brandId, minPrice, maxPrice, sorting);
     }
     public Optional<Product> findById(Integer id) {
         return productRepo.findById(id);
@@ -394,10 +433,8 @@ public List<Product> searchSuggestions(String keyword, Integer genreId) {
     String trimmedKeyword = keyword.trim();
     
     if (genreId != null) {
-        // Nếu có genreId, gọi hàm mới
         return productRepo.findFirst10ByGenreGenreIdAndProductNameContainingIgnoreCase(genreId, trimmedKeyword);
     } else {
-        // Nếu không (ví dụ: ở trang chủ), dùng hàm cũ
         return productRepo.findFirst10ByProductNameContainingIgnoreCase(trimmedKeyword);
     }
 }

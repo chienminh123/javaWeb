@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Chi Tiết Đơn Hàng #[[${order.orderId}]]</title>
+    <link rel="stylesheet" th:href="@{/user-css/reset.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/main.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/header.css}" />
+    <link rel="stylesheet" th:href="@{/user-css/footer.css}" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+
+    <style>
+      /* CSS DÀNH RIÊNG CHO TRANG CHI TIẾT ĐƠN HÀNG */
+      .order-detail-container {
+        max-width: 900px;
+        margin: 30px auto;
+        padding: 25px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+      .detail-header {
+        text-align: center;
+        border-bottom: 3px solid #ff4d4f;
+        padding-bottom: 15px;
+        margin-bottom: 25px;
+      }
+      .detail-header h2 {
+        color: #333;
+        font-size: 1.8em;
+        margin: 0;
+      }
+
+      .info-section {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .info-section h3 {
+        color: #007bff;
+        border-bottom: 1px dashed #eee;
+        padding-bottom: 5px;
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.3em;
+      }
+      .info-section p {
+        margin: 8px 0;
+        line-height: 1.6;
+      }
+      .info-section strong {
+        font-weight: 600;
+        color: #333;
+        min-width: 150px;
+        display: inline-block;
+      }
+
+      /* Bảng sản phẩm */
+      .product-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      .product-table th,
+      .product-table td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+      }
+      .product-table th {
+        background-color: #f8f8f8;
+        color: #333;
+        font-weight: 700;
+      }
+      .product-table td:nth-child(4),
+      .product-table td:nth-child(5) {
+        text-align: right;
+      }
+      .product-table td:nth-child(3) {
+        text-align: center;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-weight: bold;
+        color: white;
+      }
+      .status-processing {
+        background-color: #ffc107;
+        color: #333;
+      }
+      .status-completed {
+        background-color: #28a745;
+      }
+      .status-cancelled {
+        background-color: #dc3545;
+      }
+      .status-default {
+        background-color: #6c757d;
+      }
+
+      .total-row {
+        border-top: 3px double #333;
+        font-size: 1.6em;
+        text-align: right;
+        padding-top: 15px;
+        margin-top: 20px;
+      }
+      .back-button {
+        margin-top: 25px;
+        text-align: right;
+      }
+      .btn-back {
+        background-color: #6c757d;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background-color 0.3s;
+      }
+      .btn-back:hover {
+        background-color: #5a6268;
+      }
+      .btn-cancel {
+        background-color: #dc3545; /* Màu đỏ */
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background-color 0.3s;
+        border: none; /* Dùng cho button */
+        cursor: pointer;
+        font-family: Arial, sans-serif; /* Đảm bảo font chữ giống */
+        font-size: 1em; /* Đảm bảo cỡ chữ giống */
+      }
+      .btn-cancel:hover {
+        background-color: #c82333;
+      }
+      .action-buttons {
+        margin-top: 25px;
+        text-align: right;
+        display: flex; /* Dùng flexbox để căn chỉnh 2 nút */
+        justify-content: flex-end;
+        gap: 10px; /* Khoảng cách giữa 2 nút */
+      }
+    </style>
+  </head>
+  <body>
+    <div th:replace="User/userHeader::user-header"></div>
+    <main class="main-content">
+      <div class="order-detail-container">
+        <div class="detail-header">
+          <h2>Chi Tiết Đơn Hàng</h2>
+          <p style="color: #ff4d4f">
+            Mã đơn hàng: **#<span th:text="${order.orderId}">123</span>**
+          </p>
+          <p>
+            Ngày đặt:
+            <span
+              th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"
+              >14/11/2025 10:00</span
+            >
+          </p>
+        </div>
+
+        <div class="info-section">
+          <h3>Thông tin giao hàng</h3>
+          <p>
+            <strong>Người nhận:</strong>
+            <span th:text="${order.user?.userName ?: 'Không rõ'}"
+              >Tên Khách hàng</span
+            >
+          </p>
+          <p>
+            <strong>Số điện thoại:</strong>
+            <span th:text="${order.phone}">090xxxxxxx</span>
+          </p>
+          <p>
+            <strong>Địa chỉ:</strong>
+            <span th:text="${order.address}">Địa chỉ giao hàng</span>
+          </p>
+          <p>
+            <strong>PT Thanh toán:</strong>
+            <span th:text="${order.paymentMethod}">Tiền mặt</span>
+          </p>
+          <p>
+            <strong>Trạng thái:</strong>
+            <span
+              class="status-badge"
+              th:text="${order.status}"
+              th:classappend="${order.status == 'Đang xử lý' or order.status == 'Chờ thanh toán' or order.status == 'Đã xác nhận' or order.status == 'Đang giao hàng'} ? 'status-processing' : 
+                                       (${order.status == 'Đã giao hàng'} ? 'status-completed' : 
+                                       (${order.status == 'Đã hủy'} ? 'status-cancelled' : 'status-default'))"
+              >Đang xử lý</span
+            >
+          </p>
+        </div>
+
+        <div class="info-section">
+          <h3>Sản phẩm đã đặt</h3>
+          <table class="product-table">
+            <thead>
+              <tr>
+                <th>Ảnh</th>
+                <th>Tên sản phẩm</th>
+                <th style="text-align: center">Size</th>
+                <th style="text-align: right">Đơn giá</th>
+                <th style="text-align: center">Số lượng</th>
+                <th style="text-align: right">Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="detail : ${order.orderDetails}">
+                <td style="width: 80px">
+                  <img
+                    th:src="@{${detail.product.imageUrl}}"
+                    alt="Product Image"
+                    style="width: 100%; height: auto; border-radius: 4px"
+                  />
+                </td>
+                <td>
+                  <span th:text="${detail.product.productName}"
+                    >Tên Sản Phẩm</span
+                  >
+                </td>
+                <td style="text-align: center">
+                  <span th:text="${detail.sizes.sizeName}">S</span>
+                </td>
+                <td
+                  th:text="${#numbers.formatDecimal(detail.price, 0, 'COMMA', 0, 'POINT')} + 'đ'"
+                >
+                  100.000đ
+                </td>
+                <td style="text-align: center">
+                  <span th:text="${detail.quantity}">1</span>
+                </td>
+                <td
+                  th:text="${#numbers.formatDecimal(detail.price * detail.quantity, 0, 'COMMA', 0, 'POINT')} + 'đ'"
+                >
+                  100.000đ
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="total-row">
+            Tổng cộng:
+            <span
+              th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"
+              >1.000.000đ</span
+            >
+          </div>
+        </div>
+
+        <div classs="action-buttons">
+          <form
+            th:action="@{/User/order/return}"
+            method="POST"
+            th:if="${order.status == 'Đã giao hàng'}"
+            style="display: inline"
+            onsubmit="return confirm('Bạn có chắc chắn muốn trả hàng cho đơn hàng này? Hàng sẽ được hoàn kho.');"
+          >
+            <input type="hidden" name="orderId" th:value="${order.orderId}" />
+            <button type="submit" class="btn-cancel">
+              <i class="fa-solid fa-box"></i> Yêu cầu Trả hàng
+            </button>
+          </form>
+          <a th:href="@{/User/order}" class="btn-back">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại Đơn hàng
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <div th:replace="User/userFooter::user-footer"></div>
+  </body>
+</html>

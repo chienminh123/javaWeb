@@ -290,8 +290,12 @@ public class AdminController {
         double totalInventoryValue = productService.calculateTotalInventoryValue();
         long outOfStockCount = productService.countOutOfStockProducts();
 
-        // === CODE MỚI: Lấy số lượng đơn hàng theo trạng thái ===
-        long cancelledOrdersCount = orderService.countOrdersByStatus("Đã hủy");
+        long adminCancelledCount = orderService.countOrdersByStatus("Đã hủy");
+        // 2. Đếm số đơn User Trả
+        long userReturnedCount = orderService.countOrdersByStatus("Đã trả hàng");
+        
+        // 3. Gộp tổng số lượng
+        long totalCancelledAndReturned = adminCancelledCount + userReturnedCount;
         long pendingOrdersCount = orderService.countOrdersByStatus("Đang xử lý"); // Hoặc "Chờ thanh toán" tùy vào logic bạn muốn
         
         // 2. Đưa dữ liệu vào Model
@@ -299,7 +303,7 @@ public class AdminController {
         model.addAttribute("outOfStockCount", outOfStockCount);
         
         // === CODE MỚI: Đưa dữ liệu đếm vào Model ===
-        model.addAttribute("cancelledOrdersCount", cancelledOrdersCount);
+        model.addAttribute("cancelledOrdersCount", totalCancelledAndReturned);
         model.addAttribute("pendingOrdersCount", pendingOrdersCount);
         
         return "Admin/home";
@@ -324,7 +328,7 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
 
     // 3. Truyền dữ liệu sang view
     model.addAttribute("order", order);
-    model.addAttribute("statusList", statusList); // <--- ĐÂY LÀ PHẦN QUAN TRỌNG
+    model.addAttribute("statusList", statusList);
 
     return "Admin/order-detail";
 }
@@ -363,17 +367,33 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
         String title = "Danh sách Đơn hàng";
         List<Orders> orders;
         
-        if (status != null && !status.isEmpty()) {
-            orders = orderService.findOrdersByStatus(status);
-            title += " (" + status + ")";
-        } else {
-            // Nếu không có status, lấy tất cả đơn hàng
-            orders = orderService.findAllOrderByOrderDateDesc();
-        }
+        if ("Đã hủy".equals(status)) {
+        // Nếu admin bấm xem "Đã hủy", gộp cả 2 danh sách
+        List<Orders> cancelled = orderService.findOrdersByStatus("Đã hủy");
+        List<Orders> returned = orderService.findOrdersByStatus("Đã trả hàng");
         
-        model.addAttribute("orders", orders);
-        model.addAttribute("pageTitle", title);
+        // Gộp 2 danh sách
+        orders = new java.util.ArrayList<>(cancelled);
+        orders.addAll(returned);
         
-        return "Admin/orders"; // Trả về file orders.html
+        // Sắp xếp lại theo ngày (nếu cần)
+        orders.sort((o1, o2) -> o2.getOrderDate().compareTo(o1.getOrderDate()));
+        
+        title = "Đơn hàng Hủy & Trả hàng";
+        
+    } else if (status != null && !status.isEmpty()) {
+        // Logic cũ cho các trạng thái khác (Đang xử lý, Đã trả hàng)
+        orders = orderService.findOrdersByStatus(status);
+        title = "Đơn hàng (" + status + ")";
+    } else {
+        // Lấy tất cả
+        orders = orderService.findAllOrderByOrderDateDesc();
+        title = "Danh sách Đơn hàng";
+    }
+    
+    model.addAttribute("orders", orders);
+    model.addAttribute("pageTitle", title);
+    
+    return "Admin/orders";// Trả về file orders.html
     }
 }

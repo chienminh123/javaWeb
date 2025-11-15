@@ -67,11 +67,53 @@
         color: #e74c3c;
         font-weight: bold;
       }
+      .order-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 5px;
+        border-top: 1px solid #f0f0f0;
+      }
+      .btn-detail {
+        background-color: #007bff;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: background-color 0.3s;
+      }
+      .btn-detail:hover {
+        background-color: #0056b3;
+      }
+      .btn-detail i {
+        margin-right: 5px;
+      }
+      .btn-back-main {
+        background-color: #6c757d;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      .btn-back-main:hover {
+        background-color: #5a6268;
+      }
+      .btn-back-main i {
+        margin-right: 5px;
+      }
     </style>
   </head>
   <body>
     <div th:replace="User/userHeader::user-header"></div>
-
+    <div class="back-button">
+      <button type="button" onclick="window.history.back()" class="btn-back">
+        <i class="fa-solid fa-arrow-left"></i> Quay lại Trang trước
+      </button>
+    </div>
     <main class="main-content container">
       <h1>Đơn Hàng Của Tôi</h1>
 
@@ -108,7 +150,14 @@
               Đang xử lý
             </span>
           </p>
-          <!-- (Bạn có thể thêm 1 link để xem chi tiết đơn hàng ở đây) -->
+          <div class="order-footer">
+            <a
+              th:href="@{'/User/order-detail/' + ${order.orderId}}"
+              class="btn-detail"
+            >
+              <i class="fa-solid fa-file-invoice"></i> Xem chi tiết
+            </a>
+          </div>
         </div>
       </div>
     </main>

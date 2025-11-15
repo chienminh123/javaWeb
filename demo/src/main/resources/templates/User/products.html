@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
   <head>
-    <!-- (Phần <head> y hệt index.html) -->
     <title>Sản Phẩm - Mẹ & Bé Yêu</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -27,7 +26,6 @@
     <link rel="stylesheet" th:href="@{/user-css/footer.css}" />
     <link rel="stylesheet" th:href="@{/user-css/product.css}" />
 
-    <!-- CSS mới cho trang product (giống ảnh) -->
     <style>
       .product-page-layout {
         display: flex;
@@ -64,11 +62,12 @@
       .filter-sidebar a {
         text-decoration: none;
         color: #333;
+        display: block; /* Giúp toàn bộ dòng là link */
       }
       /* Style cho thể loại đang được chọn */
       .filter-sidebar li.active a,
-      .category-menu__item a.active-link-style {
-        color: #ff4d4f; /* Màu chủ đạo của Bibo Mart */
+      .filter-sidebar a.active-link-style {
+        color: #ff4d4f; /* Màu chủ đạo */
         font-weight: bold;
       }
 
@@ -92,13 +91,17 @@
         gap: 5px;
         align-items: center;
       }
-      .sort-options .sort-btn {
+      .sort-options a.sort-btn {
+        /* Dùng <a> thay vì <button> */
         padding: 5px 10px;
         border: 1px solid #ddd;
         background: #fff;
         cursor: pointer;
+        text-decoration: none;
+        color: #333;
+        border-radius: 3px;
       }
-      .sort-options .sort-btn.active {
+      .sort-options a.sort-btn.active {
         background: #ff4d4f;
         color: white;
         border-color: #ff4d4f;
@@ -133,7 +136,6 @@
   <body>
     <div th:replace="User/userHeader::user-header"></div>
 
-    <!-- Container chính của trang (max-width 1200px) -->
     <div style="max-width: 1200px; margin: 0 auto; padding: 0 10px">
       <div class="breadcrumbs">
         <a th:href="@{/User/index}">Trang Chủ</a>
@@ -143,40 +145,95 @@
     </div>
 
     <main class="main-content product-page-layout">
-      <!-- === CỘT LỌC BÊN TRÁI (Giống ảnh) === -->
       <aside class="filter-sidebar">
-        <!-- (Bộ lọc giả, bạn có thể nâng cấp sau) -->
         <div class="filter-group">
           <h3>Khoảng giá</h3>
-          <p>0đ - 10.000.000đ</p>
+          <ul>
+            <li>
+              <a
+                th:href="@{/products(genreId=${currentGenreId}, sort=${param.sort}, brandId=${param.brandId}, priceRange='0-500000')}"
+                th:classappend="${param.priceRange == '0-500000'} ? 'active-link-style' : ''"
+              >
+                Dưới 500.000đ
+              </a>
+            </li>
+            <li>
+              <a
+                th:href="@{/products(genreId=${currentGenreId}, sort=${param.sort}, brandId=${param.brandId}, priceRange='500000-1000000')}"
+                th:classappend="${param.priceRange == '500000-1000000'} ? 'active-link-style' : ''"
+              >
+                500.000đ - 1.000.000đ
+              </a>
+            </li>
+            <li>
+              <a
+                th:href="@{/products(genreId=${currentGenreId}, sort=${param.sort}, brandId=${param.brandId}, priceRange='1000000-max')}"
+                th:classappend="${param.priceRange == '1000000-max'} ? 'active-link-style' : ''"
+              >
+                Trên 1.000.000đ
+              </a>
+            </li>
+            <li>
+              <a
+                th:href="@{/products(genreId=${currentGenreId}, sort=${param.sort}, brandId=${param.brandId})}"
+                style="color: #dc3545; font-size: 0.9em"
+                th:if="${param.priceRange != null}"
+              >
+                (Xóa lọc giá)
+              </a>
+            </li>
+          </ul>
         </div>
+
         <div class="filter-group">
           <h3>Thương hiệu</h3>
           <ul>
-            <li>
-              <label><input type="checkbox" /> Aptamil (10)</label>
+            <li th:each="provider : ${providerList}">
+              <a
+                th:href="@{/products(genreId=${currentGenreId}, sort=${param.sort}, priceRange=${param.priceRange}, brandId=${provider.providerId})}"
+                th:classappend="${param.brandId != null and param.brandId == provider.providerId} ? 'active-link-style' : ''"
+              >
+                <span th:text="${provider.providerName}">Tên NCC</span>
+              </a>
             </li>
             <li>
-              <label><input type="checkbox" /> Meiji (12)</label>
+              <a
+                th:href="@{/products(genreId=${currentGenreId}, sort=${param.sort}, priceRange=${param.priceRange})}"
+                style="color: #dc3545; font-size: 0.9em"
+                th:if="${param.brandId != null}"
+              >
+                (Xóa lọc thương hiệu)
+              </a>
             </li>
           </ul>
         </div>
       </aside>
 
-      <!-- === LƯỚI SẢN PHẨM BÊN PHẢI === -->
       <section class="product-grid-main">
         <div class="grid-header">
-          <!-- Tiêu đề động (ví dụ: "Sữa cho bé") -->
           <h2 th:text="${pageTitle}">Sản Phẩm</h2>
           <div class="sort-options">
-            <button class="sort-btn">Giá cao - thấp</button>
-            <button class="sort-btn">Giá thấp - cao</button>
+            <span style="font-size: 14px">Sắp xếp:</span>
+
+            <a
+              th:href="@{/products(genreId=${currentGenreId}, brandId=${param.brandId}, priceRange=${param.priceRange}, sort='price_asc')}"
+              th:classappend="${param.sort == 'price_asc'} ? 'active' : ''"
+              class="sort-btn"
+            >
+              Giá thấp - cao
+            </a>
+
+            <a
+              th:href="@{/products(genreId=${currentGenreId}, brandId=${param.brandId}, priceRange=${param.priceRange}, sort='price_desc')}"
+              th:classappend="${param.sort == 'price_desc'} ? 'active' : ''"
+              class="sort-btn"
+            >
+              Giá cao - thấp
+            </a>
           </div>
         </div>
 
-        <!-- Lưới sản phẩm (Dùng lại code của index.html) -->
         <div class="hot-deal-grid" id="productGrid">
-          <!-- Lặp qua danh sách sản phẩm đã lọc -->
           <a
             th:href="@{/product/{id}(id=${product.productId})}"
             class="product-card"
@@ -201,7 +258,6 @@
             </div>
           </a>
 
-          <!-- Thông báo nếu thể loại này không có SP -->
           <div
             th:if="${#lists.isEmpty(products)}"
             style="
@@ -211,7 +267,7 @@
               grid-column: 1 / -1;
             "
           >
-            <p>Không tìm thấy sản phẩm nào thuộc thể loại này.</p>
+            <p>Không tìm thấy sản phẩm nào theo tiêu chí lọc này.</p>
           </div>
         </div>
       </section>

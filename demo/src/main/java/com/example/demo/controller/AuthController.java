@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -21,6 +22,7 @@ import com.example.demo.model.User;
 import com.example.demo.repository.OrdersRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.CartService;
+import com.example.demo.service.OrderService;
 import com.example.demo.service.UserService;
 
 
@@ -31,6 +33,8 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private OrderService orderService;
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
@@ -172,7 +176,7 @@ public void addGlobalAttributes(Model model, Principal principal) {
     }
 }
     
-    @GetMapping("/User/orders")
+    @GetMapping("/User/order")
     public String userOrders(Model model, Principal principal) {
         if (principal == null) {
             return "redirect:/Auth/login";
@@ -184,7 +188,73 @@ public void addGlobalAttributes(Model model, Principal principal) {
         List<Orders> orderList = ordersRepo.findByUserPhoneOrderByOrderDateDesc(userPhone);
         
         model.addAttribute("orders", orderList);
-        return "User/orders"; 
+        return "User/order"; 
+    }
+
+    @GetMapping("/User/order-detail/{orderId}")
+    public String orderDetail(@PathVariable("orderId") Integer orderId, Model model, Principal principal) {
+        if (principal == null) {
+            return "redirect:/Auth/login";
+        }
+        
+        // 1. Lấy đơn hàng và chi tiết
+        Orders order = orderService.findOrderDetailsById(orderId) 
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng ID: " + orderId));
+        
+        String userPhone = principal.getName();
+        
+        // 2. Kiểm tra quyền sở hữu
+        if (!order.getUser().getPhone().equals(userPhone)) {
+            // Ngăn người dùng xem đơn hàng của người khác
+            throw new RuntimeException("Bạn không có quyền xem đơn hàng này."); 
+        }
+        double totalPrice = order.getOrderDetails().stream()
+                                            .mapToDouble(d -> d.getPrice() * d.getQuantity())
+                                            .sum();
+                                            
+        model.addAttribute("order", order);
+        model.addAttribute("totalPrice", totalPrice);
+        
+        return "User/order-detail"; 
+    }
+
+    @PostMapping("/User/order/return")
+    public String returnOrder(
+            @RequestParam("orderId") Integer orderId,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
+
+        if (principal == null) {
+            return "redirect:/Auth/login";
+        }
+
+        try {
+            Orders order = orderService.findOrderById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng."));
+
+            // 1. Kiểm tra bảo mật: Đơn hàng này có phải của user đang đăng nhập không?
+            if (!order.getUser().getPhone().equals(principal.getName())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: Bạn không có quyền thực hiện thao tác này.");
+                return "redirect:/User/orders";
+            }
+
+            // 2. Kiểm tra nghiệp vụ: Chỉ cho phép trả hàng khi "Đã giao hàng"
+            if (!order.getStatus().equals("Đã giao hàng")) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể trả hàng cho đơn hàng đang ở trạng thái: " + order.getStatus());
+                return "redirect:/User/order-detail/" + orderId;
+            }
+            
+            // 3. Thực hiện cập nhật trạng thái (Logic hoàn kho sẽ chạy trong service này)
+            orderService.updateOrderStatus(orderId, "Đã trả hàng");
+
+            redirectAttributes.addFlashAttribute("successMessage", "Yêu cầu trả hàng cho đơn hàng #" + orderId + " đã được gửi. Kho đã được cập nhật.");
+
+        } catch (Exception e) {
+            logger.error("Lỗi khi xử lý trả hàng: ", e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+
+        return "redirect:/User/order-detail/" + orderId;
     }
 }
 

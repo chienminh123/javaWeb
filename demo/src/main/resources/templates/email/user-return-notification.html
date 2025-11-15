@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Thông Báo Trả Hàng</title>
+  </head>
+  <body
+    style="
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      padding: 20px;
+    "
+  >
+    <div
+      style="
+        max-width: 600px;
+        margin: auto;
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        border-top: 5px solid #dc3545; /* Màu đỏ cảnh báo */
+      "
+    >
+      <h2 style="color: #dc3545; text-align: center">
+        THÔNG BÁO: YÊU CẦU TRẢ HÀNG
+      </h2>
+      <p>Kính gửi Admin,</p>
+      <p>
+        Hệ thống vừa ghi nhận một yêu cầu trả hàng/hoàn hàng từ khách hàng đối
+        với đơn hàng:
+      </p>
+
+      <div
+        style="
+          background-color: #fdf6f6;
+          border: 1px dashed #dc3545;
+          padding: 15px;
+          border-radius: 5px;
+          margin: 20px 0;
+        "
+      >
+        <p style="margin: 5px 0">
+          <strong>Mã đơn hàng:</strong>
+          <span
+            style="color: #dc3545; font-weight: bold"
+            th:text="'#' + ${order.orderId}"
+            >#123</span
+          >
+        </p>
+        <p style="margin: 5px 0">
+          <strong>Khách hàng:</strong>
+          <span th:text="${order.user.userName}">Tên khách hàng</span>
+        </p>
+        <p style="margin: 5px 0">
+          <strong>Điện thoại:</strong>
+          <span th:text="${order.phone}">090xxxxxxx</span>
+        </p>
+        <p style="margin: 5px 0">
+          <strong>Trạng thái mới:</strong>
+          <span style="font-weight: bold" th:text="${order.status}"
+            >Đã trả hàng</span
+          >
+        </p>
+      </div>
+
+      <h3
+        style="
+          border-bottom: 2px solid #eee;
+          padding-bottom: 5px;
+          margin-top: 25px;
+        "
+      >
+        Các sản phẩm được trả lại:
+      </h3>
+      <table style="width: 100%; border-collapse: collapse">
+        <thead>
+          <tr style="background-color: #f9f9f9">
+            <th style="padding: 10px; text-align: left">Sản phẩm</th>
+            <th style="padding: 10px; text-align: center">Size</th>
+            <th style="padding: 10px; text-align: center">Số lượng (Trả)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="detail : ${order.orderDetails}">
+            <td style="padding: 8px; border-bottom: 1px solid #eee">
+              <span th:text="${detail.product.productName}">Tên Sản Phẩm</span>
+            </td>
+            <td
+              style="
+                padding: 8px;
+                border-bottom: 1px solid #eee;
+                text-align: center;
+              "
+            >
+              <span th:text="${detail.sizes.sizeName}">S</span>
+            </td>
+            <td
+              style="
+                padding: 8px;
+                border-bottom: 1px solid #eee;
+                text-align: center;
+                font-weight: bold;
+              "
+              th:text="${detail.quantity}"
+            >
+              1
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="margin-top: 25px; font-weight: bold; color: #333">
+        LƯU Ý: Hệ thống đã tự động cộng lại số lượng của các sản phẩm trên vào
+        tồn kho.
+      </p>
+      <p style="font-size: 12px; color: #888">
+        Đây là email tự động. Vui lòng kiểm tra trang quản trị Admin để xem chi
+        tiết và xử lý các bước tiếp theo (nếu cần).
+      </p>
+    </div>
+  </body>
+</html>

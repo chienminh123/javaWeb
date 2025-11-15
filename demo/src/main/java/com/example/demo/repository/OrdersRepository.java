@@ -1,6 +1,7 @@
 package com.example.demo.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,4 +24,7 @@ public interface OrdersRepository extends JpaRepository<Orders, Integer> {
      */
     @Query("SELECT o FROM Orders o JOIN FETCH o.orderDetails od JOIN FETCH o.user u WHERE o.status = :status ORDER BY o.orderDate DESC")
     List<Orders> findByStatusWithDetailsOrderByOrderDateDesc(@Param("status") String status);
+    
+    @Query("SELECT o FROM Orders o JOIN FETCH o.orderDetails od JOIN FETCH o.user u JOIN FETCH od.sizes s JOIN FETCH od.product p WHERE o.orderId = :orderId")
+    Optional<Orders> findByIdWithDetails(@Param("orderId") Integer orderId);
 }

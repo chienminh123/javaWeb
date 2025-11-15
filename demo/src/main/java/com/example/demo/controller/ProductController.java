@@ -11,53 +11,56 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.demo.model.Genre;
 import com.example.demo.model.Product;
+import com.example.demo.model.Provider;
 import com.example.demo.service.GenreService;
 import com.example.demo.service.ProductService;
+import com.example.demo.service.ProviderService;
 
 @Controller
 public class ProductController {
 
     @Autowired
     private ProductService productService;
+    @Autowired
+    private ProviderService providerService;
 
     @Autowired
-    private GenreService genreService; // [cite: GenreService.java]
+    private GenreService genreService;
 
     @GetMapping("/products") 
     public String showProductsByGenre(Model model, 
-    @RequestParam(name = "genreId") Integer genreId) {
+        @RequestParam(name = "genreId") Integer genreId,
+        @RequestParam(name = "sort", required = false) String sort,
+        @RequestParam(name = "priceRange", required = false) String priceRange, 
+        @RequestParam(name = "brandId", required = false) Integer brandId 
+    ) {
         
-        // 1. Lấy sản phẩm theo thể loại
-        List<Product> products = productService.findProductsByGenre(genreId); // [cite: ProductService.java, line 386]
+        // 1. Gọi Service với các tham số mới
+        List<Product> products = productService.findProductsByGenre(
+            genreId, sort, priceRange, brandId); 
         
-        // 2. Lấy TẤT CẢ thể loại để hiển thị menu
+        // 2. Lấy TẤT CẢ Thể loại và NCC
         List<Genre> genres = genreService.findAllGenres();
+        List<Provider> providerList = providerService.findAll(); 
         
-        // 3. Lấy tên thể loại (SỬA LỖI Ở ĐÂY)
-        // (Giả định bạn đã có hàm findById trả về Optional<Genre> trong GenreService)
-        Genre currentGenre = genreService.getById(genreId).orElse(null); 
-        String pageTitle = (currentGenre != null) ? currentGenre.getGenreName() : "Sản Phẩm";
-
-        // 4. Gửi dữ liệu
+        // 3. Gửi dữ liệu vào Model
         model.addAttribute("products", products);
         model.addAttribute("genres", genres);
-        model.addAttribute("pageTitle", pageTitle);
-        model.addAttribute("currentGenreId", genreId); // Gửi ID để biết đang ở mục nào
+        model.addAttribute("providerList", providerList); // [GỬI LIST PROVIDER CHO BỘ LỌC]
+        model.addAttribute("currentGenreId", genreId); // Giữ lại genreId để header hoạt động đúng
 
-        return "User/products"; // Trả về file products.html
+        return "User/products"; 
     }
 
     
     @GetMapping("/product/{id}")
     public String showProductDetail(@PathVariable("id") Integer id, Model model) {
         
-        // (Giả định ProductService đã có findProductDetailsById)
-        // (Hoặc dùng hàm findById có sẵn của JpaRepository)
-        Product product = productService.findById(id) // (Bạn cần tạo hàm này)
+        Product product = productService.findById(id) 
              .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm: " + id));
 
         model.addAttribute("product", product);
-        return "User/product-detail"; // Trả về file HTML mới
+        return "User/product-detail"; 
     }
     @GetMapping("/search")
 public String searchProducts(
@@ -65,10 +68,7 @@ public String searchProducts(
     @RequestParam(name = "genreId", required = false) Integer genreId,
     Model model) {
 
-    // 1. Lấy sản phẩm bằng hàm Service mới
     List<Product> products = productService.searchSuggestions(keyword, genreId);
-
-    // 2. Lấy TẤT CẢ thể loại để hiển thị menu/sidebar (đã có logic này)
     List<Genre> genres = genreService.findAllGenres();
 
     // 3. Gửi dữ liệu tới view products.html

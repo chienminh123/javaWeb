@@ -34,7 +34,9 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
      */
    @Query("SELECT FUNCTION('DATE', o.orderDate), SUM(od.quantity * od.price) " +
        "FROM OrderDetail od JOIN od.orders o " +
-       "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
+       "WHERE (o.orderDate BETWEEN :startDate AND :endDate) " +
+       // [ĐIỀU KIỆN LỌC] Chỉ tính doanh thu cho các đơn hàng GIAO THÀNH CÔNG
+       "AND o.status IN ('Hoàn thành', 'Đã giao hàng') " + 
        "GROUP BY FUNCTION('DATE', o.orderDate) " +
        "ORDER BY FUNCTION('DATE', o.orderDate) ASC")
     List<Object[]> findRevenueByDateRange(

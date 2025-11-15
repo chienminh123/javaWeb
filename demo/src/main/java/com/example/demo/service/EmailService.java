@@ -117,4 +117,19 @@ public class EmailService {
 
         mailSender.send(message);
     }
+    public void sendUserReturnNotification(Orders order) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setFrom(FROM_EMAIL);
+        helper.setTo(ADMIN_EMAIL); // Gửi cho Admin
+        helper.setSubject("[THÔNG BÁO] Khách hàng yêu cầu trả hàng - Đơn #" + order.getOrderId());
+        
+        Context context = new Context();
+        context.setVariable("order", order);
+        String htmlContent = templateEngine.process("email/user-return-notification", context); 
+        helper.setText(htmlContent, true);
+
+        mailSender.send(message);
+    }
 }
