@@ -1,12 +1,17 @@
 package com.example.demo.controller;
 
+import java.io.ByteArrayInputStream;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -25,11 +30,13 @@ import com.example.demo.model.Genre;
 import com.example.demo.model.Orders;
 import com.example.demo.model.Provider;
 import com.example.demo.service.EmailService;
+import com.example.demo.service.ExcelExportService;
 import com.example.demo.service.GenreService;
 import com.example.demo.service.OrderService;
 import com.example.demo.service.ProductService;
 import com.example.demo.service.ProviderService;
 import com.example.demo.service.ReportService;
+
 
 @Controller
 @RequestMapping("/Admin")
@@ -50,23 +57,8 @@ public class AdminController {
     private OrderService orderService;
 @Autowired
     private EmailService emailService;
-
-    // @Autowired
-    // private OrdersService ordersService;
-
-
-    // === CÁC MAPPING ===
-    // @GetMapping("/home")
-    // public String home(Model model) {
-    //     double totalInventoryValue = productService.calculateTotalInventoryValue();
-    //     long outOfStockCount = productService.countOutOfStockProducts();
-
-    //     // 2. Đưa dữ liệu vào Model
-    //     model.addAttribute("totalInventoryValue", totalInventoryValue);
-    //     model.addAttribute("outOfStockCount", outOfStockCount);
-        
-    //     return "Admin/home";
-    // }
+    @Autowired
+    private ExcelExportService excelExportService;
 
     @GetMapping("/addproduct")
     public String addProduct(Model model) {
@@ -395,5 +387,33 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
     model.addAttribute("pageTitle", title);
     
     return "Admin/orders";// Trả về file orders.html
+    }
+    @GetMapping("/export/inventory")
+    public ResponseEntity<InputStreamResource> exportInventory() {
+        List<com.example.demo.model.Product> products = productService.getAllProductsWithInventory();
+        ByteArrayInputStream in = excelExportService.exportInventory(products);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=Bao_Cao_Ton_Kho.xlsx");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
+    }
+
+    // 2. API Xuất Excel Phiếu Kiểm Kê
+    @GetMapping("/export/stocktake")
+    public ResponseEntity<InputStreamResource> exportStocktake() {
+        List<com.example.demo.model.Product> products = productService.getAllProductsWithInventory();
+        ByteArrayInputStream in = excelExportService.exportStocktakeTemplate(products);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=Phieu_Kiem_Ke.xlsx");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
     }
 }
