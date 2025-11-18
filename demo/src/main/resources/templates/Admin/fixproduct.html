@@ -1,381 +1,370 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sửa đổi thông tin sản phẩm</title>
-    <link rel="stylesheet" th:href="@{/css/Admin.css}" />
-    <meta name="csrf-token" th:content="${_csrf.token}" />
-    <meta name="csrf-header" th:content="${_csrf.headerName}" />
-    <style>
-      /* (CSS giữ nguyên) */
-      .container {
-        margin-left: 270px;
-        padding: 20px;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-        table-layout: fixed;
-      }
-      th,
-      td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-        vertical-align: top;
-      }
-      th {
-        background-color: #f2f2f2;
-      }
-      td input,
-      td select,
-      td textarea {
-        width: 95%;
-        box-sizing: border-box;
-      }
-      td input[type="file"] {
-        width: auto;
-        font-size: 12px;
-      }
-      td textarea {
-        height: 60px;
-      }
-      .product-image {
-        max-width: 60px;
-        height: auto;
-        display: block;
-        margin-bottom: 5px;
-      }
-      .price-input {
-        width: 70px !important;
-      }
-      .action-btn {
-        padding: 8px 12px;
-        background-color: #4caf50;
-        color: white;
-        border: none;
-        cursor: pointer;
-      }
-      .search-bar {
-        padding: 8px;
-        font-size: 16px;
-        margin-bottom: 20px;
-      }
-      .global-markup {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        margin-bottom: 15px;
-      }
-
-      /* Style cho nút Lưu trong hàng */
-      .save-btn {
-        background: #007bff;
-        color: white;
-        padding: 8px;
-        border: none;
-        cursor: pointer;
-      }
-      .save-btn:disabled {
-        background: #ccc;
-      }
-    </style>
-  </head>
-  <body>
-    <div th:replace="Admin/header :: Header"></div>
-    <div th:replace="Admin/sidebar :: sideBar"></div>
-    <div class="container">
-      <h2>Sửa thông tin sản phẩm</h2>
-
-      <input
-        type="text"
-        id="searchInput"
-        class="search-bar"
-        onkeyup="searchTable()"
-        placeholder="Tìm theo tên sản phẩm..."
-      />
-      <div class="global-markup">
-        <label for="globalMarkup">Nhập % Giá Bán Chung:</label>
-        <input
-          type="number"
-          id="globalMarkup"
-          class="price-input"
-          placeholder="30"
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Sửa đổi thông tin sản phẩm</title>
+        <meta name="csrf-token" th:content="${_csrf.token}" />
+        <meta name="csrf-header" th:content="${_csrf.headerName}" />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+            integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA== "
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
         />
-        <button type="button" class="action-btn" onclick="applyGlobalMarkup()">
-          Áp dụng cho tất cả
-        </button>
-      </div>
+        <link rel="stylesheet" th:href="@{/assets/css/admin.css}" />
+    </head>
+    <body class="admin-layout">
+        <div th:replace="Admin/sidebar :: sideBar"></div>
+        <div class="admin-content-wrapper">
+            <div th:replace="Admin/header :: Header"></div>
 
-      <div>
-        <table>
-          <thead>
-            <tr>
-              <th>STT</th>
-              <th>NCC</th>
-              <th>Thể Loại</th>
-              <th>Tên Sản Phẩm</th>
-              <th>Giá gốc</th>
-              <th>Giá bán (%)</th>
-              <th>Giá bán (VND)</th>
-              <th>Hình ảnh</th>
-              <th>Mô tả</th>
-              <th>Lưu</th>
-            </tr>
-          </thead>
-          <tbody id="product-table-body">
-            <tr th:each="p, iter : ${products}">
-              <td th:text="${iter.index + 1}"></td>
-              <input
-                type="hidden"
-                th:name="|productId[${iter.index}]|"
-                th:value="${p.productId}"
-              />
+            <main class="admin-main">
+                <div class="product-edit-container">
+                    <h2 class="page-title">
+                        <i class="fa-solid fa-screwdriver-wrench"></i> Sửa đổi
+                        thông tin sản phẩm
+                    </h2>
 
-              <td>
-                <select
-                  th:name="|providerId[${iter.index}]|"
-                  onchange="markRowAsChanged(this)"
-                >
-                  <option
-                    th:each="provider : ${providers}"
-                    th:value="${provider.providerId}"
-                    th:text="${provider.providerName}"
-                    th:selected="${p.provider != null && p.provider.providerId == provider.providerId}"
-                  ></option>
-                </select>
-              </td>
+                    <div class="tools-bar">
+                        <div class="search-group">
+                            <i
+                                class="fa-solid fa-magnifying-glass search-icon"
+                            ></i>
+                            <input
+                                type="text"
+                                id="searchInput"
+                                class="search-bar form-input"
+                                onkeyup="searchTable()"
+                                placeholder="Tìm theo tên sản phẩm..."
+                            />
+                        </div>
 
-              <td>
-                <select
-                  th:name="|genreId[${iter.index}]|"
-                  onchange="markRowAsChanged(this)"
-                >
-                  <option
-                    th:each="genre : ${genres}"
-                    th:value="${genre.genreId}"
-                    th:text="${genre.genreName}"
-                    th:selected="${p.genre != null && p.genre.genreId == genre.genreId}"
-                  ></option>
-                </select>
-              </td>
+                        <div class="global-markup-group">
+                            <label for="globalMarkup">Giá Bán Chung (%):</label>
+                            <input
+                                type="number"
+                                id="globalMarkup"
+                                class="price-input form-input small-input text-right"
+                                placeholder="30"
+                            />
+                            <button
+                                type="button"
+                                class="btn btn-primary action-btn"
+                                onclick="applyGlobalMarkup()"
+                            >
+                                <i class="fa-solid fa-tags"></i> Áp dụng cho tất
+                                cả
+                            </button>
+                        </div>
+                    </div>
 
-              <td>
-                <input
-                  type="text"
-                  th:name="|productName[${iter.index}]|"
-                  th:value="${p.productName}"
-                />
-              </td>
-              <td>
-                <input
-                  type="number"
-                  class="price-input"
-                  th:name="|basisPrice[${iter.index}]|"
-                  th:value="${p.basisPrice}"
-                  oninput="calculateSellPrice(this)"
-                />
-              </td>
-              <td>
-                <input
-                  type="number"
-                  class="price-input"
-                  th:name="|markupPercent[${iter.index}]|"
-                  placeholder="50"
-                  oninput="calculateSellPrice(this)"
-                />
-              </td>
-              <td>
-                <span
-                  class="sell-price-display"
-                  th:text="${#numbers.formatDecimal(p.sellPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'"
-                ></span>
-              </td>
-              <td>
-                <img
-                  th:if="${p.imageUrl}"
-                  th:src="@{${p.imageUrl}}"
-                  class="product-image"
-                />
-                <input
-                  type="file"
-                  th:name="|imageFile[${iter.index}]|"
-                  accept="image/*"
-                />
-              </td>
-              <td>
-                <textarea
-                  th:name="|description[${iter.index}]|"
-                  th:text="${p.description}"
-                ></textarea>
-              </td>
-              <td>
-                <button
-                  class="save-btn"
-                  th:onclick="saveProduct(this, [[${p.productId}]], [[${iter.index}]])"
-                >
-                  Lưu
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+                    <div class="table-wrapper">
+                        <table id="editTable" class="data-table edit-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 3%">STT</th>
+                                    <th style="width: 10%">NCC</th>
+                                    <th style="width: 10%">Thể Loại</th>
+                                    <th style="width: 20%">Tên Sản Phẩm</th>
+                                    <th style="width: 10%">Giá gốc (VND)</th>
+                                    <th style="width: 8%">Giá bán (%)</th>
+                                    <th style="width: 12%">Giá bán (VND)</th>
+                                    <th style="width: 5%">Ảnh</th>
+                                    <th style="width: 15%">Mô tả</th>
+                                    <th style="width: 7%">Lưu</th>
+                                </tr>
+                            </thead>
+                            <tbody id="product-table-body">
+                                <tr th:each="p, iter : ${products}">
+                                    <td
+                                        th:text="${iter.index + 1}"
+                                        class="text-center"
+                                    ></td>
+                                    <input
+                                        type="hidden"
+                                        th:name="|productId[${iter.index}]|"
+                                        th:value="${p.productId}"
+                                    />
 
-    <div th:replace="Admin/footer :: Footer"></div>
+                                    <td>
+                                        <select
+                                            th:name="|providerId[${iter.index}]|"
+                                            onchange="markRowAsChanged(this)"
+                                            class="form-select inline-select"
+                                        >
+                                            <option
+                                                th:each="provider : ${providers}"
+                                                th:value="${provider.providerId}"
+                                                th:text="${provider.providerName}"
+                                                th:selected="${p.provider != null && p.provider.providerId == provider.providerId}"
+                                            ></option>
+                                        </select>
+                                    </td>
 
-    <script>
-      // (Các hàm searchTable, calculateSellPrice, applyGlobalMarkup giữ nguyên)
-      function searchTable() {
-        const input = document.getElementById("searchInput");
-        const filter = input.value.toLowerCase();
-        const tableBody = document.getElementById("product-table-body");
-        const rows = tableBody.getElementsByTagName("tr");
-        for (let i = 0; i < rows.length; i++) {
-          const nameCell = rows[i].querySelector('input[name*="productName"]');
-          if (nameCell) {
-            const name = nameCell.value.toLowerCase();
-            if (name.includes(filter)) {
-              rows[i].style.display = "";
-            } else {
-              rows[i].style.display = "none";
-            }
-          }
-        }
-      }
-      function calculateSellPrice(input) {
-        const row = input.closest("tr");
-        const basisPrice =
-          parseFloat(row.querySelector('input[name*="basisPrice"]').value) || 0;
-        const markup =
-          parseFloat(row.querySelector('input[name*="markupPercent"]').value) ||
-          0;
-        const sellPrice = basisPrice * (1 + markup / 100);
-        const display = row.querySelector(".sell-price-display");
-        display.textContent =
-          new Intl.NumberFormat("vi-VN").format(sellPrice.toFixed(0)) + " đ";
-      }
-      function applyGlobalMarkup() {
-        const globalPercent = document.getElementById("globalMarkup").value;
-        if (globalPercent === "" || globalPercent < 0) return;
-        const tableBody = document.getElementById("product-table-body");
-        const rows = tableBody.getElementsByTagName("tr");
-        for (let i = 0; i < rows.length; i++) {
-          if (rows[i].style.display !== "none") {
-            const percentInput = rows[i].querySelector(
-              'input[name*="markupPercent"]'
-            );
-            if (percentInput) {
-              percentInput.value = globalPercent;
-              calculateSellPrice(percentInput);
-              markRowAsChanged(percentInput); // Đánh dấu hàng là đã thay đổi
-            }
-          }
-        }
-      }
+                                    <td>
+                                        <select
+                                            th:name="|genreId[${iter.index}]|"
+                                            onchange="markRowAsChanged(this)"
+                                            class="form-select inline-select"
+                                        >
+                                            <option
+                                                th:each="genre : ${genres}"
+                                                th:value="${genre.genreId}"
+                                                th:text="${genre.genreName}"
+                                                th:selected="${p.genre != null && p.genre.genreId == genre.genreId}"
+                                            ></option>
+                                        </select>
+                                    </td>
 
-      // === 4. HÀM MỚI: LƯU TỪNG SẢN PHẨM ===
-      function saveProduct(button, productId, index) {
-        button.disabled = true;
-        button.textContent = "Đang lưu...";
+                                    <td>
+                                        <input
+                                            type="text"
+                                            th:name="|productName[${iter.index}]|"
+                                            th:value="${p.productName}"
+                                            class="form-input inline-input"
+                                        />
+                                    </td>
+                                    <td>
+                                        <input
+                                            type="number"
+                                            class="price-input form-input inline-input text-right"
+                                            th:name="|basisPrice[${iter.index}]|"
+                                            th:value="${p.basisPrice}"
+                                            oninput="calculateSellPrice(this)"
+                                        />
+                                    </td>
+                                    <td>
+                                        <input
+                                            type="number"
+                                            class="price-input form-input inline-input small-input text-right"
+                                            th:name="|markupPercent[${iter.index}]|"
+                                            placeholder="50"
+                                            oninput="calculateSellPrice(this)"
+                                        />
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="sell-price-display price-display"
+                                            th:text="${#numbers.formatDecimal(p.sellPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                                        ></span>
+                                    </td>
+                                    <td class="image-cell">
+                                        <img
+                                            th:if="${p.imageUrl}"
+                                            th:src="@{${p.imageUrl}}"
+                                            class="product-image small-product-image"
+                                        />
+                                        <input
+                                            type="file"
+                                            th:name="|imageFile[${iter.index}]|"
+                                            accept="image/*"
+                                            class="form-file file-input-fix"
+                                        />
+                                    </td>
+                                    <td>
+                                        <textarea
+                                            th:name="|description[${iter.index}]|"
+                                            th:text="${p.description}"
+                                            class="form-textarea inline-textarea"
+                                        ></textarea>
+                                    </td>
+                                    <td class="text-center">
+                                        <button
+                                            class="btn btn-primary save-btn"
+                                            th:onclick="saveProduct(this, [[${p.productId}]], [[${iter.index}]])"
+                                        >
+                                            <i class="fa-solid fa-save"></i> Lưu
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
 
-        const csrfToken = document
-          .querySelector('meta[name="csrf-token"]')
-          .getAttribute("content");
-        const csrfHeader = document
-          .querySelector('meta[name="csrf-header"]')
-          .getAttribute("content");
+            <div th:replace="Admin/footer :: Footer"></div>
+        </div>
 
-        const formData = new FormData();
-        const row = button.closest("tr");
-
-        // 1. Thêm ID sản phẩm
-        formData.append("productId", productId);
-
-        // 2. Lấy tất cả dữ liệu trong hàng bằng "name" có chỉ số
-        formData.append(
-          "providerId",
-          row.querySelector(`select[name="providerId[${index}]"]`).value
-        );
-        formData.append(
-          "genreId",
-          row.querySelector(`select[name="genreId[${index}]"]`).value
-        );
-        formData.append(
-          "productName",
-          row.querySelector(`input[name="productName[${index}]"]`).value
-        );
-        formData.append(
-          "basisPrice",
-          row.querySelector(`input[name="basisPrice[${index}]"]`).value
-        );
-        formData.append(
-          "markupPercent",
-          row.querySelector(`input[name="markupPercent[${index}]"]`).value
-        );
-        formData.append(
-          "description",
-          row.querySelector(`textarea[name="description[${index}]"]`).value
-        );
-
-        // 3. Lấy file (nếu có)
-        const imageInput = row.querySelector(
-          `input[name="imageFile[${index}]"]`
-        );
-        if (imageInput.files.length > 0) {
-          formData.append("imageFile", imageInput.files[0]);
-        }
-
-        // 4. Gửi Fetch đến 1 endpoint MỚI
-        fetch("/Admin/updateSingleProduct", {
-          method: "POST",
-          headers: {
-            [csrfHeader]: csrfToken,
-          },
-          body: formData,
-        })
-          .then((response) => {
-            if (!response.ok) {
-              // Nếu server trả về lỗi (như 400, 500)
-              return response.json().then((err) => {
-                throw new Error(err.message || "Lỗi không xác định");
-              });
-            }
-            return response.json();
-          })
-          .then((data) => {
-            if (data.success) {
-              button.textContent = "Đã lưu!";
-              // Cập nhật lại ảnh nếu có ảnh mới
-              if (data.newImageUrl) {
-                const imgTag = row.querySelector(".product-image");
-                if (imgTag) imgTag.src = data.newImageUrl;
-                else {
-                  // Nếu chưa có ảnh, tạo thẻ img
-                  const newImg = document.createElement("img");
-                  newImg.src = data.newImageUrl;
-                  newImg.className = "product-image";
-                  imageInput.parentNode.prepend(newImg);
+        <script>
+            // === JAVASCRIPT LOGIC GIỮ NGUYÊN ===
+            function searchTable() {
+                // ... (giữ nguyên logic searchTable) ...
+                const input = document.getElementById("searchInput");
+                const filter = input.value.toLowerCase();
+                const tableBody = document.getElementById("product-table-body");
+                const rows = tableBody.getElementsByTagName("tr");
+                for (let i = 0; i < rows.length; i++) {
+                    const nameCell = rows[i].querySelector(
+                        'input[name*="productName"]'
+                    );
+                    if (nameCell) {
+                        const name = nameCell.value.toLowerCase();
+                        if (name.includes(filter)) {
+                            rows[i].style.display = "";
+                        } else {
+                            rows[i].style.display = "none";
+                        }
+                    }
                 }
-              }
-            } else {
-              throw new Error(data.message);
             }
-          })
-          .catch((err) => {
-            alert("Lỗi khi lưu: " + err.message);
-            button.textContent = "Lỗi!";
-          })
-          .finally(() => {
-            setTimeout(() => {
-              button.disabled = false;
-              button.textContent = "Lưu";
-            }, 2000);
-          });
-      }
-    </script>
-  </body>
+            function calculateSellPrice(input) {
+                // ... (giữ nguyên logic calculateSellPrice) ...
+                const row = input.closest("tr");
+                const basisPrice =
+                    parseFloat(
+                        row.querySelector('input[name*="basisPrice"]').value
+                    ) || 0;
+                const markup =
+                    parseFloat(
+                        row.querySelector('input[name*="markupPercent"]').value
+                    ) || 0;
+                const sellPrice = basisPrice * (1 + markup / 100);
+                const display = row.querySelector(".sell-price-display");
+                display.textContent =
+                    new Intl.NumberFormat("vi-VN").format(
+                        sellPrice.toFixed(0)
+                    ) + " đ";
+            }
+            function applyGlobalMarkup() {
+                // ... (giữ nguyên logic applyGlobalMarkup) ...
+                const globalPercent =
+                    document.getElementById("globalMarkup").value;
+                if (globalPercent === "" || globalPercent < 0) return;
+                const tableBody = document.getElementById("product-table-body");
+                const rows = tableBody.getElementsByTagName("tr");
+                for (let i = 0; i < rows.length; i++) {
+                    if (rows[i].style.display !== "none") {
+                        const percentInput = rows[i].querySelector(
+                            'input[name*="markupPercent"]'
+                        );
+                        if (percentInput) {
+                            percentInput.value = globalPercent;
+                            calculateSellPrice(percentInput);
+                            // markRowAsChanged(percentInput); // Giữ lại hàm này nếu cần
+                        }
+                    }
+                }
+            }
+            // Thêm hàm đánh dấu đã thay đổi (nếu cần)
+            function markRowAsChanged(element) {
+                // Cần thiết lập CSS cho class "row-changed"
+                element.closest("tr").classList.add("row-changed");
+            }
+
+            // Hàm saveProduct giữ nguyên (vì nó là logic backend/API)
+            function saveProduct(button, productId, index) {
+                button.disabled = true;
+                button.textContent = "Đang lưu...";
+
+                const csrfToken = document
+                    .querySelector('meta[name="csrf-token"]')
+                    .getAttribute("content");
+                const csrfHeader = document
+                    .querySelector('meta[name="csrf-header"]')
+                    .getAttribute("content");
+
+                const formData = new FormData();
+                const row = button.closest("tr");
+
+                // 1. Thêm ID sản phẩm
+                formData.append("productId", productId);
+
+                // 2. Lấy tất cả dữ liệu trong hàng bằng "name" có chỉ số
+                formData.append(
+                    "providerId",
+                    row.querySelector(`select[name="providerId[${index}]"]`)
+                        .value
+                );
+                formData.append(
+                    "genreId",
+                    row.querySelector(`select[name="genreId[${index}]"]`).value
+                );
+                formData.append(
+                    "productName",
+                    row.querySelector(`input[name="productName[${index}]"]`)
+                        .value
+                );
+                formData.append(
+                    "basisPrice",
+                    row.querySelector(`input[name="basisPrice[${index}]"]`)
+                        .value
+                );
+                formData.append(
+                    "markupPercent",
+                    row.querySelector(`input[name="markupPercent[${index}]"]`)
+                        .value
+                );
+                formData.append(
+                    "description",
+                    row.querySelector(`textarea[name="description[${index}]"]`)
+                        .value
+                );
+
+                // 3. Lấy file (nếu có)
+                const imageInput = row.querySelector(
+                    `input[name="imageFile[${index}]"]`
+                );
+                if (imageInput.files.length > 0) {
+                    formData.append("imageFile", imageInput.files[0]);
+                }
+
+                // 4. Gửi Fetch đến 1 endpoint MỚI
+                fetch("/Admin/updateSingleProduct", {
+                    method: "POST",
+                    headers: {
+                        [csrfHeader]: csrfToken,
+                    },
+                    body: formData,
+                })
+                    .then((response) => {
+                        if (!response.ok) {
+                            // Nếu server trả về lỗi (như 400, 500)
+                            return response.json().then((err) => {
+                                throw new Error(
+                                    err.message || "Lỗi không xác định"
+                                );
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        if (data.success) {
+                            button.textContent = "Đã lưu!";
+                            // Cập nhật lại ảnh nếu có ảnh mới
+                            if (data.newImageUrl) {
+                                const imgTag =
+                                    row.querySelector(".product-image");
+                                if (imgTag) imgTag.src = data.newImageUrl;
+                                else {
+                                    // Nếu chưa có ảnh, tạo thẻ img
+                                    const newImg =
+                                        document.createElement("img");
+                                    newImg.src = data.newImageUrl;
+                                    newImg.className =
+                                        "product-image small-product-image";
+                                    imageInput.parentNode.prepend(newImg);
+                                }
+                            }
+                            // Xóa lớp đánh dấu sau khi lưu thành công
+                            row.classList.remove("row-changed");
+                        } else {
+                            throw new Error(data.message);
+                        }
+                    })
+                    .catch((err) => {
+                        alert("Lỗi khi lưu: " + err.message);
+                        button.textContent = "Lỗi!";
+                    })
+                    .finally(() => {
+                        setTimeout(() => {
+                            button.disabled = false;
+                            button.textContent = "Lưu";
+                        }, 2000);
+                    });
+            }
+        </script>
+    </body>
 </html>

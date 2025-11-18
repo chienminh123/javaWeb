@@ -127,28 +127,6 @@
       .btn-back:hover {
         background-color: #5a6268;
       }
-      .btn-cancel {
-        background-color: #dc3545; /* Màu đỏ */
-        color: white;
-        padding: 10px 15px;
-        border-radius: 5px;
-        text-decoration: none;
-        transition: background-color 0.3s;
-        border: none; /* Dùng cho button */
-        cursor: pointer;
-        font-family: Arial, sans-serif; /* Đảm bảo font chữ giống */
-        font-size: 1em; /* Đảm bảo cỡ chữ giống */
-      }
-      .btn-cancel:hover {
-        background-color: #c82333;
-      }
-      .action-buttons {
-        margin-top: 25px;
-        text-align: right;
-        display: flex; /* Dùng flexbox để căn chỉnh 2 nút */
-        justify-content: flex-end;
-        gap: 10px; /* Khoảng cách giữa 2 nút */
-      }
     </style>
   </head>
   <body>
@@ -194,8 +172,8 @@
             <span
               class="status-badge"
               th:text="${order.status}"
-              th:classappend="${order.status == 'Đang xử lý' or order.status == 'Chờ thanh toán' or order.status == 'Đã xác nhận' or order.status == 'Đang giao hàng'} ? 'status-processing' : 
-                                       (${order.status == 'Đã giao hàng'} ? 'status-completed' : 
+              th:classappend="${order.status == 'Đang xử lý' or order.status == 'Chờ thanh toán'} ? 'status-processing' : 
+                                       (${order.status == 'Hoàn thành'} ? 'status-completed' : 
                                        (${order.status == 'Đã hủy'} ? 'status-cancelled' : 'status-default'))"
               >Đang xử lý</span
             >
@@ -258,19 +236,7 @@
           </div>
         </div>
 
-        <div classs="action-buttons">
-          <form
-            th:action="@{/User/order/return}"
-            method="POST"
-            th:if="${order.status == 'Đã giao hàng'}"
-            style="display: inline"
-            onsubmit="return confirm('Bạn có chắc chắn muốn trả hàng cho đơn hàng này? Hàng sẽ được hoàn kho.');"
-          >
-            <input type="hidden" name="orderId" th:value="${order.orderId}" />
-            <button type="submit" class="btn-cancel">
-              <i class="fa-solid fa-box"></i> Yêu cầu Trả hàng
-            </button>
-          </form>
+        <div class="back-button">
           <a th:href="@{/User/order}" class="btn-back">
             <i class="fa-solid fa-arrow-left"></i> Quay lại Đơn hàng
           </a>

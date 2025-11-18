@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.Entity;
@@ -23,6 +24,9 @@ public class User {
     private String email;    
     private String address;  
     private float point;
+    private String resetToken;
+    private LocalDateTime resetTokenExpiry;
+    
     @OneToOne(mappedBy = "user")
     private Carts carts;
     @OneToMany(mappedBy = "user")

@@ -1,7 +1,6 @@
 package com.example.demo.controller;
 
 import java.io.ByteArrayInputStream;
-import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -269,13 +267,7 @@ public class AdminController {
         return "redirect:/Admin/tonkho";
     }
 
-    @ModelAttribute
-    public void addGlobalAttributes(Model model, Principal principal) {
-        if (principal != null) {
-            // principal.getName() chính là SĐT (vì bạn đăng nhập bằng SĐT)
-            model.addAttribute("currentUserPhone", principal.getName());
-        }
-    }
+   
    
     @GetMapping("/home")
     public String home(Model model) {
@@ -386,7 +378,7 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
     model.addAttribute("orders", orders);
     model.addAttribute("pageTitle", title);
     
-    return "Admin/orders";// Trả về file orders.html
+    return "Admin/orders";
     }
     @GetMapping("/export/inventory")
     public ResponseEntity<InputStreamResource> exportInventory() {

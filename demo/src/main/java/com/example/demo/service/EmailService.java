@@ -132,4 +132,22 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendResetPasswordEmail(String toEmail, String resetUrl) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setFrom(FROM_EMAIL);
+        helper.setTo(toEmail);
+        helper.setSubject("Yêu cầu đặt lại mật khẩu - Bibo Mart");
+
+        String content = "<p>Xin chào,</p>"
+                + "<p>Bạn đã yêu cầu đặt lại mật khẩu. Vui lòng nhấp vào link bên dưới để đổi mật khẩu mới:</p>"
+                + "<p><a href=\"" + resetUrl + "\">Đổi mật khẩu ngay</a></p>"
+                + "<p>Link này sẽ hết hạn sau 15 phút.</p>"
+                + "<br><p>Bỏ qua email này nếu bạn không yêu cầu.</p>";
+
+        helper.setText(content, true);
+        mailSender.send(message);
+    }
 }

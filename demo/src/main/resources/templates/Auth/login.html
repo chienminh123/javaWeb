@@ -2,35 +2,115 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Đăng Nhập</title>
+
+    <link rel="stylesheet" th:href="@{/assets/css/reset.css}" />
+    <link rel="stylesheet" th:href="@{/assets/css/login.css}" />
+    <style>
+      .forgot-password-link {
+        display: block;
+        text-align: right;
+        margin-top: 8px; /* Khoảng cách hợp lý */
+        margin-bottom: 25px;
+        font-size: 14px;
+      }
+
+      .forgot-password-link a {
+        color: #6c757d; /* Màu xám nhẹ */
+        text-decoration: none;
+        transition: color 0.3s;
+      }
+
+      .forgot-password-link a:hover {
+        color: #e91e63;
+        text-decoration: underline;
+      }
+    </style>
   </head>
   <body>
-    <h1>Đăng Nhập</h1>
-    <div th:if="${param.error}">
-      <p style="color:red">Tên đăng nhập hoặc mật khẩu không đúng.</p>
+    <div class="login-container">
+      <!-- Brand header (tùy có logo thì thay src) -->
+      <div class="login-brand">
+        <img
+          src="/assets/img/logo.svg"
+          alt=""
+          onerror="this.style.display='none'"
+        />
+        <div class="brand-text">
+          <strong>Mẹ & Bé</strong>
+          <span>Chào mừng bạn quay lại</span>
+        </div>
+      </div>
+
+      <h1>Đăng Nhập</h1>
+
+      <div th:if="${param.error}" class="message-box error-message">
+        <p>Tên đăng nhập hoặc mật khẩu không đúng.</p>
+      </div>
+      <div th:if="${param.logout}" class="message-box success-message">
+        <p>Bạn đã đăng xuất thành công.</p>
+      </div>
+
+      <form th:action="@{/Auth/login}" method="post">
+        <input
+          type="hidden"
+          th:name="${_csrf.parameterName}"
+          th:value="${_csrf.token}"
+        />
+
+        <div>
+          <label for="Phone">Số điện thoại</label>
+          <input
+            type="text"
+            id="Phone"
+            name="Phone"
+            placeholder="VD: 0912 345 678"
+            required
+          />
+        </div>
+
+        <div class="pw-wrap">
+          <label for="Password">Mật khẩu</label>
+          <div class="pw-input">
+            <input
+              type="password"
+              id="Password"
+              name="Password"
+              placeholder="••••••••"
+              required
+            />
+            <button
+              type="button"
+              class="pw-toggle"
+              aria-label="Hiện/ẩn mật khẩu"
+            >
+              Hiện
+            </button>
+          </div>
+        </div>
+        <div class="forgot-password-link">
+          <a th:href="@{/forgot-password}">Quên mật khẩu?</a>
+        </div>
+        <div>
+          <button type="submit">Đăng Nhập</button>
+        </div>
+      </form>
+
+      <p>Chưa có tài khoản? <a th:href="@{/register}">Đăng ký</a></p>
     </div>
-    <div th:if="${param.logout}">
-      <p style="color:green">Bạn đã đăng xuất thành công.</p>
-    </div>
-    <form th:action="@{/Auth/login}" method="post">
-      <!-- CSRF token for Spring Security -->
-      <input
-        type="hidden"
-        th:name="${_csrf.parameterName}"
-        th:value="${_csrf.token}"
-      />
-      <div>
-        <label for="Phone">Số điện thoại: </label>
-        <input type="text" id="Phone" name="Phone" required />
-      </div>
-      <div>
-        <label for="Password">Mật khẩu:</label>
-        <input type="password" id="Password" name="Password" required />
-      </div>
-      <div>
-        <button type="submit">Đăng Nhập</button>
-      </div>
-    </form>
-    <p>Chưa có tài khoản? <a th:href="@{/register}">Đăng ký</a></p>
+
+    <script>
+      (function () {
+        const btn = document.querySelector(".pw-toggle");
+        if (!btn) return;
+        const input = document.getElementById("Password");
+        btn.addEventListener("click", function () {
+          const isPwd = input.type === "password";
+          input.type = isPwd ? "text" : "password";
+          this.textContent = isPwd ? "Ẩn" : "Hiện";
+        });
+      })();
+    </script>
   </body>
 </html>

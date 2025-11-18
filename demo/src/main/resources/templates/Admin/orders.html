@@ -7,10 +7,8 @@
   <head>
     <meta charset="UTF-8" />
     <title th:text="${pageTitle}">Danh sách Đơn hàng</title>
-    <link rel="stylesheet" th:href="@{/admin-css/reset.css}" />
-    <link rel="stylesheet" th:href="@{/admin-css/main.css}" />
-    <link rel="stylesheet" th:href="@{/admin-css/sidebar.css}" />
-    <link rel="stylesheet" th:href="@{/admin-css/header.css}" />
+    <link rel="stylesheet" th:href="@{/assets/css/admin.css}" />
+
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -86,7 +84,7 @@
   <body>
     <div th:replace="Admin/header::Header"></div>
     <div th:replace="Admin/sidebar::sideBar"></div>
-    <div id="content-right">
+    <div class="admin-main">
       <div class="home">
         <h1><i class="fas fa-list"></i> Danh sách Đơn hàng</h1>
         <p th:text="${pageTitle}"></p>

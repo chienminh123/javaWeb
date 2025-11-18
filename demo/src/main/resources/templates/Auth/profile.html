@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Thông Tin Tài Khoản</title>
-    <link rel="stylesheet" th:href="@{/Admin.css}" />
+    <link rel="stylesheet" th:href="@{/assets/css/admin.css}" />
     <style>
       .container {
         margin-left: 270px;
@@ -57,10 +57,19 @@
         color: #a94442;
       }
     </style>
+    <div th:if="${user.role == 'USER'}">
+      <link rel="stylesheet" th:href="@{/user-css/header.css}" />
+      <link rel="stylesheet" th:href="@{/user-css/footer.css}" />
+    </div>
   </head>
   <body>
-    <div th:replace="Admin/header :: Header"></div>
-    <div th:replace="Admin/sidebar :: sideBar"></div>
+    <div th:if="${user.role == 'ADMIN'}">
+      <div th:replace="Admin/header :: Header"></div>
+      <div th:replace="Admin/sidebar :: sideBar"></div>
+    </div>
+    <div th:if="${user.role == 'USER'}">
+      <div th:replace="User/userHeader :: user-header"></div>
+    </div>
 
     <div class="container">
       <h2>Thông Tin Tài Khoản</h2>
@@ -79,12 +88,20 @@
             th:text="${errorMessage}"
           ></div>
 
-          <form th:action="@{/Admin/updateProfile}" method="post">
-            <label>SĐT (Tài khoản - Không thể đổi):</label>
+          <form th:action="@{/Auth/updateProfile}" method="post">
+            <label>SĐT (Tài khoản):</label>
             <input type="text" th:value="*{phone}" readonly />
 
             <label>Vai trò (Không thể đổi):</label>
             <input type="text" th:value="*{role}" readonly />
+
+            <label>Họ và tên hiển thị:</label>
+            <input
+              type="text"
+              name="userName"
+              th:value="*{userName}"
+              required
+            />
 
             <label for="email">Email:</label>
             <input
@@ -121,7 +138,7 @@
             th:text="${passwordError}"
           ></div>
 
-          <form th:action="@{/Admin/changePassword}" method="post">
+          <form th:action="@{/Auth/changePassword}" method="post">
             <label for="oldPassword">Mật khẩu cũ:</label>
             <input
               type="password"
@@ -152,6 +169,12 @@
       </div>
     </div>
 
-    <div th:replace="Admin/footer :: Footer"></div>
+    <div th:if="${user.role == 'ADMIN'}">
+      <div th:replace="Admin/footer :: Footer"></div>
+    </div>
+
+    <div th:if="${user.role == 'USER'}">
+      <div th:replace="User/userFooter :: user-footer"></div>
+    </div>
   </body>
 </html>

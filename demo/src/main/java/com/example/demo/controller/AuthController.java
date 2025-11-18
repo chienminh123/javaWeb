@@ -22,8 +22,11 @@ import com.example.demo.model.User;
 import com.example.demo.repository.OrdersRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.CartService;
+import com.example.demo.service.EmailService;
 import com.example.demo.service.OrderService;
 import com.example.demo.service.UserService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 
 
@@ -46,6 +49,9 @@ public class AuthController {
     private OrdersRepository ordersRepo;
     @Autowired
     private CartService cartService;
+    @Autowired
+    private EmailService emailService;
+    
     
     @GetMapping("/Auth/login")
     public String loginForm(Model model) {
@@ -110,12 +116,13 @@ public class AuthController {
     public String updateProfile(
             @RequestParam String email,
             @RequestParam String address,
+            @RequestParam String userName,
             Principal principal,
             RedirectAttributes redirectAttributes) {
         
         try {
             // Sửa SĐT và địa chỉ, SĐT lấy từ user đang đăng nhập
-            userService.updateUserProfile(principal.getName(), email, address);
+            userService.updateUserProfile(principal.getName(),userName, email, address);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Cập nhật thất bại: " + e.getMessage());
@@ -155,14 +162,6 @@ public void addGlobalAttributes(Model model, Principal principal) {
         // 1. Gửi SĐT
         System.out.println("DEBUG CHECKOUT: Giá trị principal.getName() (SĐT) là: " + userPhone);
         model.addAttribute("currentUserPhone", userPhone);
-        
-        // 2. Lấy 5 đơn hàng mới nhất
-        List<Orders> notifications = ordersRepo.findFirst5ByUserPhoneOrderByOrderDateDesc(userPhone);
-        model.addAttribute("notificationOrders", notifications);
-        
-        // ===============================================
-        // 3. LOGIC MỚI: TÍNH VÀ GỬI TỔNG SỐ LƯỢNG SẢN PHẨM
-        // ===============================================
         Carts userCart = cartService.getCart(userPhone);
         int itemCount = cartService.calculateItemCount(userCart);
         model.addAttribute("cartItemCount", itemCount);
@@ -255,6 +254,57 @@ public void addGlobalAttributes(Model model, Principal principal) {
         }
 
         return "redirect:/User/order-detail/" + orderId;
+    }
+
+    @GetMapping("/forgot-password")
+    public String showForgotPasswordForm() {
+        return "Auth/forgot-password";
+    }
+    // 2. Xử lý gửi email
+    @PostMapping("/forgot-password")
+    public String processForgotPassword(@RequestParam String email, Model model, HttpServletRequest request) {
+        try {
+            // Tạo token
+            String token = userService.generateResetToken(email); // Cần thêm hàm này vào interface UserService nếu bạn dùng Interface
+            
+            // Tạo URL reset (ví dụ: http://localhost:8080/reset-password?token=xyz...)
+            String resetUrl = request.getRequestURL().toString().replace(request.getServletPath(), "") 
+                            + "/reset-password?token=" + token;
+            
+            // Gửi email
+            emailService.sendResetPasswordEmail(email, resetUrl);
+            
+            model.addAttribute("message", "Link đặt lại mật khẩu đã được gửi vào email của bạn.");
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+        }
+        return "Auth/forgot-password";
+    }
+
+    // 3. Hiển thị form nhập mật khẩu mới (từ link email)
+    @GetMapping("/reset-password")
+    public String showResetPasswordForm(@RequestParam String token, Model model) {
+        model.addAttribute("token", token);
+        return "Auth/reset-password";
+    }
+
+    // 4. Xử lý đổi mật khẩu
+    @PostMapping("/reset-password")
+    public String processResetPassword(
+            @RequestParam String token, 
+            @RequestParam String password, 
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            userService.resetPassword(token, password);
+            redirectAttributes.addFlashAttribute("successMessage", "Đặt lại mật khẩu thành công! Vui lòng đăng nhập.");
+            return "redirect:/Auth/login";
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("error", e.getMessage());
+            return "Auth/reset-password";
+        }
     }
 }
 

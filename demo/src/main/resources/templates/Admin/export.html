@@ -1,331 +1,360 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Xuất Kho Sản Phẩm</title>
-    <link rel="stylesheet" th:href="@{/Admin.css}" />
-    <!-- CSRF -->
-    <meta name="csrf-token" th:content="${_csrf.token}" />
-    <meta name="csrf-header" th:content="${_csrf.headerName}" />
-    <style>
-      .error-message {
-        color: red;
-        background: #ffe0e0;
-        padding: 10px;
-        margin: 15px 0;
-        border: 1px solid red;
-        border-radius: 4px;
-      }
-      .autocomplete-items {
-        position: absolute;
-        border: 1px solid #d4d4d4;
-        border-top: none;
-        z-index: 99;
-        max-height: 150px;
-        overflow-y: auto;
-        background: white;
-      }
-      .autocomplete-items div {
-        padding: 10px;
-        cursor: pointer;
-        border-bottom: 1px solid #d4d4d4;
-      }
-      .autocomplete-items div:hover {
-        background-color: #e9e9e9;
-      }
-      .size-row {
-        display: flex;
-        gap: 5px;
-        align-items: center;
-        margin-bottom: 5px;
-      }
-      .remove-size {
-        background: #ff4444;
-        color: white;
-        border: none;
-        width: 20px;
-        height: 20px;
-        font-size: 12px;
-        cursor: pointer;
-      }
-    </style>
-  </head>
-  <body>
-    <div th:replace="Admin/header :: Header"></div>
-    <div th:replace="Admin/sidebar :: sideBar"></div>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Xuất Kho Sản Phẩm</title>
+        <meta name="csrf-token" th:content="${_csrf.token}" />
+        <meta name="csrf-header" th:content="${_csrf.headerName}" />
 
-    <div class="container" th:fragment="exportContent">
-      <h3>Tạo Phiếu Xuất Kho</h3>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+            integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA== "
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
+        <link rel="stylesheet" th:href="@{/assets/css/admin.css}" />
+    </head>
+    <body class="admin-layout">
+        <div th:replace="Admin/sidebar :: sideBar"></div>
+        <div class="admin-content-wrapper">
+            <div th:replace="Admin/header :: Header"></div>
 
-      <div
-        th:if="${errorMessage}"
-        class="error-message"
-        th:text="${errorMessage}"
-      ></div>
+            <main class="admin-main">
+                <div class="export-container" th:fragment="exportContent">
+                    <h2 class="page-title">
+                        <i class="fa-solid fa-truck-ramp-box"></i> Tạo Phiếu
+                        Xuất Kho
+                    </h2>
 
-      <button type="button" class="add-product-btn" onclick="addProductRow()">
-        + Thêm sản phẩm
-      </button>
+                    <div
+                        th:if="${errorMessage}"
+                        class="error-message alert alert-danger"
+                        th:text="${errorMessage}"
+                    ></div>
 
-      <form
-        id="multiExportForm"
-        th:action="@{/Admin/processExport}"
-        method="post"
-      >
-        <table id="productTable">
-          <thead>
-            <tr>
-              <th>NCC (Bắt buộc)</th>
-              <th>Tên sản phẩm (Chọn từ gợi ý)</th>
-              <th>Size & SL Xuất</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Template row - ẩn -->
-            <tr class="product-row" style="display: none">
-              <td>
-                <select
-                  name="providerId"
-                  required
-                  onchange="loadProductSuggestions(this)"
-                >
-                  <option value="">-- Chọn NCC --</option>
-                  <option
-                    th:each="p : ${providers}"
-                    th:value="${p.providerId}"
-                    th:text="${p.providerName}"
-                  ></option>
-                </select>
-              </td>
-              <td class="autocomplete" style="position: relative">
-                <input
-                  type="text"
-                  name="productName"
-                  placeholder="Nhập tên SP..."
-                  required
-                  oninput="showSuggestions(this)"
-                  autocomplete="off"
-                />
-                <div class="autocomplete-items"></div>
-                <input type="hidden" name="productId" required />
-              </td>
-              <td>
-                <div class="sizes-container">
-                  <div class="size-row">
-                    <input
-                      type="text"
-                      name="sizeName"
-                      placeholder="S"
-                      style="width: 40px"
-                    />
-                    <input
-                      type="number"
-                      name="quantity"
-                      placeholder="SL"
-                      min="1"
-                      style="width: 50px"
-                    />
-                    <button
-                      type="button"
-                      class="add-btn"
-                      onclick="addSizeRow(this)"
+                    <div class="export-actions">
+                        <button
+                            type="button"
+                            class="btn btn-primary add-product-btn"
+                            onclick="addProductRow()"
+                        >
+                            <i class="fa-solid fa-plus"></i> Thêm sản phẩm
+                        </button>
+                    </div>
+
+                    <form
+                        id="multiExportForm"
+                        th:action="@{/Admin/processExport}"
+                        method="post"
                     >
-                      +
-                    </button>
-                  </div>
+                        <div class="table-wrapper">
+                            <table id="productTable" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 20%">
+                                            NCC (Bắt buộc)
+                                        </th>
+                                        <th style="width: 40%">
+                                            Tên sản phẩm (Chọn từ gợi ý)
+                                        </th>
+                                        <th style="width: 30%">
+                                            Size & SL Xuất
+                                        </th>
+                                        <th style="width: 10%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        class="product-row"
+                                        style="display: none"
+                                    >
+                                        <td>
+                                            <select
+                                                name="providerId"
+                                                required
+                                                onchange="loadProductSuggestions(this)"
+                                            >
+                                                <option value="">
+                                                    -- Chọn NCC --
+                                                </option>
+                                                <option
+                                                    th:each="p : ${providers}"
+                                                    th:value="${p.providerId}"
+                                                    th:text="${p.providerName}"
+                                                ></option>
+                                            </select>
+                                        </td>
+                                        <td
+                                            class="autocomplete"
+                                            style="position: relative"
+                                        >
+                                            <input
+                                                type="text"
+                                                name="productName"
+                                                placeholder="Nhập tên SP..."
+                                                required
+                                                oninput="showSuggestions(this)"
+                                                autocomplete="off"
+                                                class="form-input"
+                                            />
+                                            <div
+                                                class="autocomplete-items"
+                                            ></div>
+                                            <input
+                                                type="hidden"
+                                                name="productId"
+                                                required
+                                            />
+                                        </td>
+                                        <td>
+                                            <div class="sizes-container">
+                                                <div class="size-row">
+                                                    <input
+                                                        type="text"
+                                                        name="sizeName"
+                                                        placeholder="S"
+                                                        required
+                                                        style="width: 40px"
+                                                        class="form-input small-input"
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        name="quantity"
+                                                        placeholder="SL"
+                                                        min="1"
+                                                        required
+                                                        style="width: 50px"
+                                                        class="form-input small-input"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-icon add-btn"
+                                                        onclick="addSizeRow(this)"
+                                                    >
+                                                        <i
+                                                            class="fa-solid fa-plus"
+                                                        ></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button
+                                                type="button"
+                                                class="btn btn-icon remove-row"
+                                                onclick="removeRow(this)"
+                                            >
+                                                <i
+                                                    class="fa-solid fa-trash-can"
+                                                ></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="form-submit-area">
+                            <button
+                                type="button"
+                                class="btn btn-success submit-all"
+                                onclick="submitForm()"
+                            >
+                                <i class="fa-solid fa-box-open"></i> XÁC NHẬN
+                                XUẤT KHO
+                            </button>
+                        </div>
+                    </form>
                 </div>
-              </td>
-              <td>
-                <button
-                  type="button"
-                  class="remove-row"
-                  onclick="removeRow(this)"
-                >
-                  X
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+            </main>
 
-        <button type="button" class="submit-all" onclick="submitForm()">
-          XÁC NHẬN XUẤT KHO
-        </button>
-      </form>
-    </div>
+            <div th:replace="Admin/footer :: Footer"></div>
+        </div>
 
-    <div th:replace="Admin/footer :: Footer"></div>
+        <script th:inline="javascript">
+            // ... GIỮ NGUYÊN TOÀN BỘ JAVASCRIPT LOGIC ...
+            const productSuggestions = /*[[${productSuggestions}]]*/ {};
 
-    <script th:inline="javascript">
-      const productSuggestions = /*[[${productSuggestions}]]*/ {};
+            // CSRF
+            function getCsrf() {
+                const token = document.querySelector(
+                    'meta[name="csrf-token"]'
+                ).content;
+                const header = document.querySelector(
+                    'meta[name="csrf-header"]'
+                ).content;
+                return { token, header };
+            }
 
-      // CSRF
-      function getCsrf() {
-        const token = document.querySelector('meta[name="csrf-token"]').content;
-        const header = document.querySelector(
-          'meta[name="csrf-header"]'
-        ).content;
-        return { token, header };
-      }
+            function addProductRow() {
+                const tbody = document.querySelector("#productTable tbody");
+                const template = tbody
+                    .querySelector(".product-row")
+                    .cloneNode(true);
+                template.style.display = "table-row";
 
-      function addProductRow() {
-        const tbody = document.querySelector("#productTable tbody");
-        const template = tbody.querySelector(".product-row").cloneNode(true);
-        template.style.display = "table-row";
+                // Reset inputs
+                template.querySelectorAll("input, select").forEach((el) => {
+                    if (
+                        el.type === "text" ||
+                        el.type === "number" ||
+                        el.type === "hidden"
+                    )
+                        el.value = "";
+                    if (el.tagName === "SELECT") el.selectedIndex = 0;
+                });
 
-        // Reset inputs
-        template.querySelectorAll("input, select").forEach((el) => {
-          if (
-            el.type === "text" ||
-            el.type === "number" ||
-            el.type === "hidden"
-          )
-            el.value = "";
-          if (el.tagName === "SELECT") el.selectedIndex = 0;
-        });
-
-        // Reset sizes container
-        const container = template.querySelector(".sizes-container");
-        container.innerHTML = `
+                // Reset sizes container
+                const container = template.querySelector(".sizes-container");
+                container.innerHTML = `
         <div class="size-row">
-          <input type="text" name="sizeName" placeholder="S" style="width:40px" />
-          <input type="number" name="quantity" placeholder="SL" min="1" style="width:50px" />
-          <button type="button" class="add-btn" onclick="addSizeRow(this)">+</button>
+          <input type="text" name="sizeName" placeholder="S" required style="width:40px" class="form-input small-input" />
+          <input type="number" name="quantity" placeholder="SL" min="1" required style="width:50px" class="form-input small-input" />
+          <button type="button" class="btn btn-icon add-btn" onclick="addSizeRow(this)"><i class="fa-solid fa-plus"></i></button>
         </div>
       `;
 
-        tbody.appendChild(template);
-      }
+                tbody.appendChild(template);
+            }
 
-      function addSizeRow(btn) {
-        const container = btn.closest(".sizes-container");
-        const newRow = document.createElement("div");
-        newRow.className = "size-row";
-        newRow.innerHTML = `
-        <input type="text" name="sizeName" placeholder="M" style="width:40px" />
-        <input type="number" name="quantity" placeholder="SL" min="1" style="width:50px" />
-        <button type="button" class="remove-size" onclick="this.parentElement.remove()">−</button>
+            function addSizeRow(btn) {
+                const container = btn.closest(".sizes-container");
+                const newRow = document.createElement("div");
+                newRow.className = "size-row";
+                newRow.innerHTML = `
+        <input type="text" name="sizeName" placeholder="M" required style="width:40px" class="form-input small-input" />
+        <input type="number" name="quantity" placeholder="SL" min="1" required style="width:50px" class="form-input small-input" />
+        <button type="button" class="btn btn-icon remove-size" onclick="this.parentElement.remove()"><i class="fa-solid fa-minus"></i></button>
       `;
-        container.appendChild(newRow);
-      }
+                container.appendChild(newRow);
+            }
 
-      function removeRow(btn) {
-        const row = btn.closest("tr");
-        if (
-          document.querySelectorAll(
-            "#productTable tbody tr:not([style*='display: none'])"
-          ).length <= 1
-        ) {
-          alert("Phải có ít nhất 1 sản phẩm!");
-          return;
-        }
-        row.remove();
-      }
+            function removeRow(btn) {
+                const row = btn.closest("tr");
+                if (
+                    document.querySelectorAll(
+                        "#productTable tbody tr:not([style*='display: none'])"
+                    ).length <= 1
+                ) {
+                    alert("Phải có ít nhất 1 sản phẩm!");
+                    return;
+                }
+                row.remove();
+            }
 
-      function loadProductSuggestions(select) {
-        const providerId = select.value;
-        const suggestions = productSuggestions[providerId] || [];
-        const input = select
-          .closest("tr")
-          .querySelector('input[name="productName"]');
-        input.dataset.suggestions = JSON.stringify(suggestions);
-      }
+            function loadProductSuggestions(select) {
+                const providerId = select.value;
+                const suggestions = productSuggestions[providerId] || [];
+                const input = select
+                    .closest("tr")
+                    .querySelector('input[name="productName"]');
+                input.dataset.suggestions = JSON.stringify(suggestions);
+            }
 
-      function showSuggestions(input) {
-        const suggestions = JSON.parse(input.dataset.suggestions || "[]");
-        const val = input.value.trim().toLowerCase();
-        const container = input.nextElementSibling;
-        container.innerHTML = "";
+            function showSuggestions(input) {
+                const suggestions = JSON.parse(
+                    input.dataset.suggestions || "[]"
+                );
+                const val = input.value.trim().toLowerCase();
+                const container = input.nextElementSibling;
+                container.innerHTML = "";
 
-        if (!val) return;
+                if (!val) return;
 
-        const filtered = suggestions
-          .filter((p) => p.productName.toLowerCase().includes(val))
-          .slice(0, 5);
+                const filtered = suggestions
+                    .filter((p) => p.productName.toLowerCase().includes(val))
+                    .slice(0, 5);
 
-        filtered.forEach((p) => {
-          const div = document.createElement("div");
-          div.innerHTML = `<strong>${p.productName}</strong><br>
+                filtered.forEach((p) => {
+                    const div = document.createElement("div");
+                    div.innerHTML = `<strong>${p.productName}</strong><br>
                          <small>Mã: ${p.productId} | Tồn: ${
-            p.totalQuantity || 0
-          }</small>`;
-          div.onclick = () => {
-            input.value = p.productName;
-            input.closest("td").querySelector('input[name="productId"]').value =
-              p.productId;
-            container.innerHTML = "";
-          };
-          container.appendChild(div);
-        });
-      }
-
-      function submitForm() {
-        const form = document.getElementById("multiExportForm");
-        let valid = true;
-        let firstError = null;
-
-        document
-          .querySelectorAll(
-            "#productTable tbody tr:not([style*='display: none'])"
-          )
-          .forEach((row) => {
-            const providerId = row.querySelector(
-              'select[name="providerId"]'
-            ).value;
-            const productId = row.querySelector(
-              'input[name="productId"]'
-            ).value;
-            const sizeRows = row.querySelectorAll(".size-row");
-
-            if (!providerId || !productId) {
-              valid = false;
-              if (!firstError)
-                firstError = "Vui lòng chọn NCC và sản phẩm hợp lệ!";
-              return;
+                        p.totalQuantity || 0
+                    }</small>`;
+                    div.onclick = () => {
+                        input.value = p.productName;
+                        input
+                            .closest("td")
+                            .querySelector('input[name="productId"]').value =
+                            p.productId;
+                        container.innerHTML = "";
+                    };
+                    container.appendChild(div);
+                });
             }
 
-            let hasValidSize = false;
-            sizeRows.forEach((sizeRow) => {
-              const sizeName = sizeRow
-                .querySelector('input[name="sizeName"]')
-                .value.trim();
-              const qty = sizeRow.querySelector('input[name="quantity"]').value;
-              if (sizeName && qty && parseInt(qty) > 0) {
-                hasValidSize = true;
-              }
-            });
+            function submitForm() {
+                const form = document.getElementById("multiExportForm");
+                let valid = true;
+                let firstError = null;
 
-            if (!hasValidSize) {
-              valid = false;
-              if (!firstError)
-                firstError =
-                  "Sản phẩm '" +
-                  row.querySelector('input[name="productName"]').value +
-                  "' cần ít nhất 1 size có số lượng > 0!";
+                document
+                    .querySelectorAll(
+                        "#productTable tbody tr:not([style*='display: none'])"
+                    )
+                    .forEach((row) => {
+                        const providerId = row.querySelector(
+                            'select[name="providerId"]'
+                        ).value;
+                        const productId = row.querySelector(
+                            'input[name="productId"]'
+                        ).value;
+                        const sizeRows = row.querySelectorAll(".size-row");
+
+                        if (!providerId || !productId) {
+                            valid = false;
+                            if (!firstError)
+                                firstError =
+                                    "Vui lòng chọn NCC và sản phẩm hợp lệ!";
+                            return;
+                        }
+
+                        let hasValidSize = false;
+                        sizeRows.forEach((sizeRow) => {
+                            const sizeName = sizeRow
+                                .querySelector('input[name="sizeName"]')
+                                .value.trim();
+                            const qty = sizeRow.querySelector(
+                                'input[name="quantity"]'
+                            ).value;
+                            if (sizeName && qty && parseInt(qty) > 0) {
+                                hasValidSize = true;
+                            }
+                        });
+
+                        if (!hasValidSize) {
+                            valid = false;
+                            if (!firstError)
+                                firstError =
+                                    "Sản phẩm '" +
+                                    row.querySelector(
+                                        'input[name="productName"]'
+                                    ).value +
+                                    "' cần ít nhất 1 size có số lượng > 0!";
+                        }
+                    });
+
+                if (!valid) {
+                    alert(firstError);
+                    return;
+                }
+
+                // Thêm CSRF token vào form
+                const { token, header } = getCsrf();
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = "_csrf";
+                input.value = token;
+                form.appendChild(input);
+
+                form.submit();
             }
-          });
 
-        if (!valid) {
-          alert(firstError);
-          return;
-        }
-
-        // Thêm CSRF token vào form
-        const { token, header } = getCsrf();
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = "_csrf";
-        input.value = token;
-        form.appendChild(input);
-
-        form.submit();
-      }
-
-      // Tự động thêm 1 dòng khi load
-      window.onload = () => {
-        addProductRow();
-      };
-    </script>
-  </body>
+            // Tự động thêm 1 dòng khi load
+            window.onload = () => {
+                addProductRow();
+            };
+        </script>
+    </body>
 </html>

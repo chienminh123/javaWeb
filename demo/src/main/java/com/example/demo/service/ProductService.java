@@ -381,9 +381,7 @@ public class ProductService {
         return productRepo.findAllWithDetails(); 
     }
     
-    // public List<Product> findProductsByGenre(Integer genreId) {
-    //     return productRepo.findByGenreGenreId(genreId);
-    // }
+    
     public List<Product> findProductsByGenre(
         Integer genreId, String sortParam, String priceRange, Integer brandId) {
         

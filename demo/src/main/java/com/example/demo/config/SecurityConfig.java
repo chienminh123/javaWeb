@@ -47,45 +47,13 @@ public class SecurityConfig {
         };
     }
 
-//     @Bean
-// public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//     http
-//         .authorizeHttpRequests((requests) -> requests
-//             .requestMatchers("/", "/Auth/**", "/register", "/css/**", "/js/**").permitAll() 
-//             .requestMatchers("/Admin/addProvider", "/Admin/addGenre").permitAll()
-//             // trang ai cx xem ddc
-//             .requestMatchers("/Admin/**").hasRole("ADMIN")
-//             .requestMatchers("/User/**").hasRole("USER")
-//             .anyRequest().authenticated()
-//         )
-//         .formLogin((form) -> form
-//             .loginPage("/Auth/login")
-//             .loginProcessingUrl("/Auth/login")
-//             .usernameParameter("Phone")
-//             .passwordParameter("Password")
-//             .successHandler(roleBasedAuthenticationSuccessHandler())
-//             .permitAll()
-//         )
-//         .logout((logout) -> logout
-//             .logoutUrl("/logout")
-//             .logoutSuccessUrl("/Auth/login")
-//             .permitAll()
-//             .invalidateHttpSession(true)
-//             .clearAuthentication(true)
-//         )
-//         // BẬT CSRF NHƯNG CHO PHÉP ANONYMOUS
-//         .csrf(csrf -> csrf
-//             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-//         );
-//     return http.build();
-// }
 @Bean
 public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
         
         .authorizeHttpRequests((requests) -> requests
             // 1. CẤP QUYỀN MỞ CHO TRANG CHỦ, ĐĂNG KÝ VÀ TÀI NGUYÊN TĨNH
-            .requestMatchers("/", "/Auth/**", "/register", "/css/**", "/js/**", "/img/**", "/uploads/**").permitAll() 
+            .requestMatchers("/", "/Auth/**", "/register", "/css/**", "/js/**", "/img/**","/assets/**",  "/uploads/**","/forgot-password","/reset-password","/user-css/**").permitAll() 
             .requestMatchers("/Admin/addProvider", "/Admin/addGenre").permitAll() // Giữ nguyên
 
             // 2. CẤP QUYỀN XEM SẢN PHẨM & TÌM KIẾM CHO TẤT CẢ MỌI NGƯỜI
