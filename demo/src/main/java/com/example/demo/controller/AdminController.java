@@ -24,9 +24,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.demo.dto.TopProductDTO;
+import com.example.demo.model.Coupon;
 import com.example.demo.model.Genre;
 import com.example.demo.model.Orders;
 import com.example.demo.model.Provider;
+import com.example.demo.service.CouponService;
 import com.example.demo.service.EmailService;
 import com.example.demo.service.ExcelExportService;
 import com.example.demo.service.GenreService;
@@ -53,10 +55,11 @@ public class AdminController {
     private ReportService reportService;
     @Autowired
     private OrderService orderService;
-@Autowired
+    @Autowired
     private EmailService emailService;
     @Autowired
     private ExcelExportService excelExportService;
+    @Autowired private CouponService couponService;
 
     @GetMapping("/addproduct")
     public String addProduct(Model model) {
@@ -111,6 +114,7 @@ public class AdminController {
         model.addAttribute("products", productService.getAllProductsWithInventory());
         model.addAttribute("providers", providerService.findAll());
         model.addAttribute("genres", genreService.findAllGenres());
+        model.addAttribute("coupons", couponService.findAll());
         return "Admin/fixproduct"; // Trả về file HTML mới
     }
     
@@ -122,15 +126,16 @@ public class AdminController {
             @RequestParam("genreId") Integer genreId,
             @RequestParam("productName") String productName,
             @RequestParam("basisPrice") Float basisPrice,
+            @RequestParam(value = "discount", required = false) Integer discount,
             @RequestParam(value = "markupPercent", required = false) Float markupPercent,
             @RequestParam("description") String description,
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile
     ) {
         try {
             // Gọi Service để xử lý
-            String newImageUrl = productService.updateSingleProduct( // Gọi hàm service MỚI
+            String newImageUrl = productService.updateSingleProduct( 
                 productId, providerId, genreId, productName,
-                basisPrice, markupPercent, description, imageFile
+                basisPrice, markupPercent, discount,description, imageFile
             );
 
             // Trả về kết quả thành công
@@ -407,5 +412,17 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
                 .headers(headers)
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(new InputStreamResource(in));
+    }
+
+    @PostMapping("/addCoupon")
+    public String addCoupon(Coupon coupon) {
+        couponService.save(coupon);
+        return "redirect:/Admin/fixproduct";
+    }
+
+    @GetMapping("/deleteCoupon")
+    public String deleteCoupon(@RequestParam Integer id) {
+        couponService.delete(id);
+        return "redirect:/Admin/fixproduct";
     }
 }

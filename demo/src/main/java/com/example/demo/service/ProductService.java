@@ -287,7 +287,7 @@ public class ProductService {
 @Transactional
     public String updateSingleProduct(
             Integer productId, Integer providerId, Integer genreId,
-            String productName, Float basisPrice, Float markupPercent,
+            String productName, Float basisPrice, Float markupPercent,Integer discount,
             String description, MultipartFile imageFile
     ) {
         // 1. Tìm sản phẩm
@@ -297,9 +297,8 @@ public class ProductService {
         // 2. Tìm các đối tượng liên quan
         Provider provider = providerRepo.findById(providerId)
             .orElseThrow(() -> new RuntimeException("Không tìm thấy NCC với ID: " + providerId));
-        
-        // === SỬA LỖI CŨ CỦA BẠN (getById -> findById) ===
-        Genre genre = genreService.getById(genreId) // Giả định bạn đã có hàm findById trả về Optional
+     
+        Genre genre = genreService.getById(genreId) 
             .orElseThrow(() -> new RuntimeException("Không tìm thấy thể loại với ID: " + genreId));
 
         // 3. Cập nhật thông tin
@@ -307,6 +306,8 @@ public class ProductService {
         product.setProvider(provider);
         product.setGenre(genre);
         product.setBasisPrice(basisPrice);
+        product.setDiscount(discount != null ? discount : 0);
+        product.setMarkupPercent(markupPercent != null ? markupPercent : 0f);
         product.setDescription(description);
 
         // 4. Tính giá bán nếu có % markup

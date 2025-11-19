@@ -56,6 +56,44 @@
         background: #f8e0e0;
         color: #a94442;
       }
+      /* CSS cho phần hạng thành viên */
+      .rank-card {
+        background: linear-gradient(to right, #fff8e1, #fff);
+        border: 1px solid #ffe082;
+        border-left: 5px solid #f39c12;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+      .rank-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px dashed #ccc;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+      }
+      .rank-title {
+        font-size: 16px;
+        color: #666;
+      }
+      .rank-badge {
+        font-size: 24px;
+        font-weight: bold;
+        color: #f39c12;
+        text-transform: uppercase;
+      }
+      .point-display {
+        font-size: 28px;
+        font-weight: bold;
+        color: #27ae60;
+      }
+      .rank-progress {
+        font-size: 14px;
+        color: #7f8c8d;
+        margin-top: 5px;
+      }
     </style>
     <div th:if="${user.role == 'USER'}">
       <link rel="stylesheet" th:href="@{/user-css/header.css}" />
@@ -73,7 +111,44 @@
 
     <div class="container">
       <h2>Thông Tin Tài Khoản</h2>
+      <div th:if="${user.role == 'USER'}">
+        <div class="rank-card">
+          <div class="rank-header">
+            <div>
+              <span class="rank-title">Hạng thành viên</span>
+              <div class="rank-badge" th:text="${user.rank}">MEMBER</div>
+            </div>
+            <div style="text-align: right">
+              <span class="rank-title">Điểm tích lũy</span>
+              <div>
+                <span
+                  class="point-display"
+                  th:text="${#numbers.formatDecimal(user.point, 0, 'COMMA', 0, 'POINT')}"
+                  >0</span
+                >
+                <span>điểm</span>
+              </div>
+            </div>
+          </div>
 
+          <div class="rank-progress">
+            <i class="fa-solid fa-circle-info"></i>
+            <span th:if="${user.rank == 'MEMBER'}"
+              >Tích lũy thêm để đạt hạng <b>SILVER</b> (Cần 100.000 điểm).</span
+            >
+            <span th:if="${user.rank == 'SILVER'}"
+              >Tích lũy thêm để đạt hạng <b>GOLD</b> (Cần 500.000 điểm).</span
+            >
+            <span th:if="${user.rank == 'GOLD'}"
+              >Tích lũy thêm để đạt hạng <b>DIAMOND</b> (Cần 1.000.000
+              điểm).</span
+            >
+            <span th:if="${user.rank == 'DIAMOND'}"
+              >Tuyệt vời! Bạn đang ở hạng cao nhất.</span
+            >
+          </div>
+        </div>
+      </div>
       <div class="profile-container" th:object="${user}">
         <div class="form-section">
           <h3>Sửa Thông Tin</h3>

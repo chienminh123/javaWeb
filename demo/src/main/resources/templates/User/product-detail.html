@@ -159,12 +159,33 @@
           <h1 class="product-title" th:text="*{productName}">Tên sản phẩm</h1>
           <p class="sku" th:text="'Mã SP: ' + *{productId}">Mã SP: 12345</p>
 
-          <div
-            class="main-price"
-            th:text="${#numbers.formatDecimal(product.sellPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"
-          >
-            500.000đ
-          </div>
+          <div class="price-box" style="margin: 15px 0;">
+    
+    <div th:if="${product.discount > 0}">
+        <p style="font-size: 14px; color: #666; margin-bottom: 5px;">
+            Giá niêm yết: 
+            <span style="text-decoration: line-through;">
+                <span th:text="${#numbers.formatDecimal(product.sellPrice, 0, 'COMMA', 0, 'POINT')}"></span>đ
+            </span>
+        </p>
+        
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="main-price" style="color: #ff4d4f; font-size: 32px; font-weight: bold;">
+                <span th:text="${#numbers.formatDecimal(product.getDiscountedPrice(), 0, 'COMMA', 0, 'POINT')}"></span>đ
+            </span>
+            
+            <span style="background: #ff4d4f; color: white; padding: 3px 8px; border-radius: 4px; font-size: 14px; font-weight: bold;">
+                Giảm [[${product.discount}]]%
+            </span>
+        </div>
+    </div>
+
+    <div th:unless="${product.discount > 0}">
+        <span class="main-price" style="color: #333; font-size: 32px; font-weight: bold;">
+            <span th:text="${#numbers.formatDecimal(product.sellPrice, 0, 'COMMA', 0, 'POINT')}"></span>đ
+        </span>
+    </div>
+</div>
 
           <form th:action="@{/cart/add}" method="POST">
             <input type="hidden" name="productId" th:value="*{productId}" />

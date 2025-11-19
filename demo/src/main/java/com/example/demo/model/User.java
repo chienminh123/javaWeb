@@ -26,6 +26,7 @@ public class User {
     private float point;
     private String resetToken;
     private LocalDateTime resetTokenExpiry;
+    private String rank = "MEMBER";
     
     @OneToOne(mappedBy = "user")
     private Carts carts;

@@ -1,370 +1,474 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Sửa đổi thông tin sản phẩm</title>
-        <meta name="csrf-token" th:content="${_csrf.token}" />
-        <meta name="csrf-header" th:content="${_csrf.headerName}" />
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-            integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA== "
-            crossorigin="anonymous"
-            referrerpolicy="no-referrer"
-        />
-        <link rel="stylesheet" th:href="@{/assets/css/admin.css}" />
-    </head>
-    <body class="admin-layout">
-        <div th:replace="Admin/sidebar :: sideBar"></div>
-        <div class="admin-content-wrapper">
-            <div th:replace="Admin/header :: Header"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Quản lý sản phẩm</title>
+    <meta name="csrf-token" th:content="${_csrf.token}" />
+    <meta name="csrf-header" th:content="${_csrf.headerName}" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" th:href="@{/assets/css/admin.css}" />
+  </head>
+  <body class="admin-layout">
+    <div th:replace="Admin/sidebar :: sideBar"></div>
+    <div class="admin-content-wrapper">
+      <div th:replace="Admin/header :: Header"></div>
+<div
+          class="coupon-manager-section"
+          style="
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px dashed #ccc;
+          "
+        >
+          <h2 class="page-title">
+            <i class="fa-solid fa-ticket"></i> Quản lý Mã Giảm Giá
+          </h2>
+          <form
+            th:action="@{/Admin/addCoupon}"
+            method="post"
+            class="coupon-form"
+            style="
+              background: #fff;
+              padding: 20px;
+              margin-bottom: 20px;
+              display: flex;
+              flex-wrap: wrap;
+              gap: 15px;
+            "
+          >
+            <input
+              type="hidden"
+              th:name="${_csrf.parameterName}"
+              th:value="${_csrf.token}"
+            />
+            <div style="flex: 1">
+              <label>Mã Code</label
+              ><input
+                type="text"
+                name="code"
+                class="form-input"
+                required
+                placeholder="SALE10"
+              />
+            </div>
+            <div style="flex: 1">
+              <label>Loại</label
+              ><select name="discountType" class="form-select">
+                <option value="PERCENT">Theo %</option>
+                <option value="FIXED">Tiền Mặt</option>
+              </select>
+            </div>
+            <div style="flex: 1">
+              <label>Giá trị</label
+              ><input
+                type="number"
+                name="discountValue"
+                class="form-input"
+                required
+                placeholder="10"
+              />
+            </div>
+            <div style="flex: 1">
+              <label>Giảm Tối Đa</label
+              ><input
+                type="number"
+                name="maxDiscountAmount"
+                class="form-input"
+              />
+            </div>
+            <div style="flex: 0.5">
+              <label>SL</label
+              ><input
+                type="number"
+                name="quantity"
+                class="form-input"
+                value="100"
+              />
+            </div>
+            <div style="flex: 1">
+              <label>Từ</label
+              ><input
+                type="date"
+                name="startDate"
+                class="form-input"
+                required
+              />
+            </div>
+            <div style="flex: 1">
+              <label>Đến</label
+              ><input type="date" name="endDate" class="form-input" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Tạo</button>
+          </form>
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Loại</th>
+                  <th>Giá trị</th>
+                  <th>SL</th>
+                  <th>Hạn</th>
+                  <th>Xóa</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="c : ${coupons}">
+                  <td
+                    th:text="${c.code}"
+                    style="font-weight: bold; color: #d63031"
+                  ></td>
+                  <td th:text="${c.discountType}"></td>
+                  <td th:text="${c.discountValue}"></td>
+                  <td th:text="${c.quantity}"></td>
+                  <td th:text="${c.endDate}"></td>
+                  <td>
+                    <a
+                      th:href="@{/Admin/deleteCoupon(id=${c.couponId})}"
+                      style="color: red"
+                      ><i class="fa-solid fa-trash"></i
+                    ></a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+      <main class="admin-main">
+        <div class="product-edit-container">
+          <h2 class="page-title">
+            <i class="fa-solid fa-pen-to-square"></i> Sửa đổi sản phẩm
+          </h2>
 
-            <main class="admin-main">
-                <div class="product-edit-container">
-                    <h2 class="page-title">
-                        <i class="fa-solid fa-screwdriver-wrench"></i> Sửa đổi
-                        thông tin sản phẩm
-                    </h2>
+          <div class="tools-bar">
+            <div class="search-group">
+              <input
+                type="text"
+                id="searchInput"
+                class="search-bar form-input"
+                onkeyup="searchTable()"
+                placeholder="Tìm tên sản phẩm..."
+              />
+            </div>
+            <div class="global-markup-group">
+              <label>Lợi nhuận chung (%):</label>
+              <input
+                type="number"
+                id="globalMarkup"
+                class="price-input form-input small-input text-right"
+                placeholder="20"
+              />
+              <button
+                type="button"
+                class="btn btn-primary action-btn"
+                onclick="applyGlobalMarkup()"
+              >
+                Áp dụng
+              </button>
+            </div>
+          </div>
 
-                    <div class="tools-bar">
-                        <div class="search-group">
-                            <i
-                                class="fa-solid fa-magnifying-glass search-icon"
-                            ></i>
-                            <input
-                                type="text"
-                                id="searchInput"
-                                class="search-bar form-input"
-                                onkeyup="searchTable()"
-                                placeholder="Tìm theo tên sản phẩm..."
-                            />
-                        </div>
+          <div class="table-wrapper">
+            <table id="editTable" class="data-table edit-table">
+              <thead>
+                <tr>
+                  <th style="width: 3%">STT</th>
+                  <th style="width: 10%">NCC</th>
+                  <th style="width: 10%">Thể Loại</th>
+                  <th style="width: 15%">Tên SP</th>
+                  <th style="width: 10%">Giá Gốc</th>
+                  <th style="width: 8%">Lợi Nhuận %</th>
+                  <th style="width: 10%">Giá Bán</th>
+                  <th style="width: 8%" class="text-danger">Giảm %</th>
+                  <th style="width: 10%">Giá Sau Giảm</th>
+                  <th style="width: 5%">Ảnh</th>
+                  <th style="width: 8%">Lưu</th>
+                </tr>
+              </thead>
+              <tbody id="product-table-body">
+                <tr th:each="p, iter : ${products}">
+                  <td th:text="${iter.index + 1}" class="text-center"></td>
+                  <input
+                    type="hidden"
+                    th:name="|productId[${iter.index}]|"
+                    th:value="${p.productId}"
+                  />
 
-                        <div class="global-markup-group">
-                            <label for="globalMarkup">Giá Bán Chung (%):</label>
-                            <input
-                                type="number"
-                                id="globalMarkup"
-                                class="price-input form-input small-input text-right"
-                                placeholder="30"
-                            />
-                            <button
-                                type="button"
-                                class="btn btn-primary action-btn"
-                                onclick="applyGlobalMarkup()"
-                            >
-                                <i class="fa-solid fa-tags"></i> Áp dụng cho tất
-                                cả
-                            </button>
-                        </div>
-                    </div>
+                  <td>
+                    <select
+                      th:name="|providerId[${iter.index}]|"
+                      onchange="markRowAsChanged(this)"
+                      class="form-select inline-select"
+                    >
+                      <option
+                        th:each="pro : ${providers}"
+                        th:value="${pro.providerId}"
+                        th:text="${pro.providerName}"
+                        th:selected="${p.provider != null && p.provider.providerId == pro.providerId}"
+                      ></option>
+                    </select>
+                  </td>
 
-                    <div class="table-wrapper">
-                        <table id="editTable" class="data-table edit-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 3%">STT</th>
-                                    <th style="width: 10%">NCC</th>
-                                    <th style="width: 10%">Thể Loại</th>
-                                    <th style="width: 20%">Tên Sản Phẩm</th>
-                                    <th style="width: 10%">Giá gốc (VND)</th>
-                                    <th style="width: 8%">Giá bán (%)</th>
-                                    <th style="width: 12%">Giá bán (VND)</th>
-                                    <th style="width: 5%">Ảnh</th>
-                                    <th style="width: 15%">Mô tả</th>
-                                    <th style="width: 7%">Lưu</th>
-                                </tr>
-                            </thead>
-                            <tbody id="product-table-body">
-                                <tr th:each="p, iter : ${products}">
-                                    <td
-                                        th:text="${iter.index + 1}"
-                                        class="text-center"
-                                    ></td>
-                                    <input
-                                        type="hidden"
-                                        th:name="|productId[${iter.index}]|"
-                                        th:value="${p.productId}"
-                                    />
+                  <td>
+                    <select
+                      th:name="|genreId[${iter.index}]|"
+                      onchange="markRowAsChanged(this)"
+                      class="form-select inline-select"
+                    >
+                      <option
+                        th:each="gen : ${genres}"
+                        th:value="${gen.genreId}"
+                        th:text="${gen.genreName}"
+                        th:selected="${p.genre != null && p.genre.genreId == gen.genreId}"
+                      ></option>
+                    </select>
+                  </td>
 
-                                    <td>
-                                        <select
-                                            th:name="|providerId[${iter.index}]|"
-                                            onchange="markRowAsChanged(this)"
-                                            class="form-select inline-select"
-                                        >
-                                            <option
-                                                th:each="provider : ${providers}"
-                                                th:value="${provider.providerId}"
-                                                th:text="${provider.providerName}"
-                                                th:selected="${p.provider != null && p.provider.providerId == provider.providerId}"
-                                            ></option>
-                                        </select>
-                                    </td>
+                  <td>
+                    <input
+                      type="text"
+                      th:name="|productName[${iter.index}]|"
+                      th:value="${p.productName}"
+                      class="form-input inline-input"
+                    />
+                  </td>
 
-                                    <td>
-                                        <select
-                                            th:name="|genreId[${iter.index}]|"
-                                            onchange="markRowAsChanged(this)"
-                                            class="form-select inline-select"
-                                        >
-                                            <option
-                                                th:each="genre : ${genres}"
-                                                th:value="${genre.genreId}"
-                                                th:text="${genre.genreName}"
-                                                th:selected="${p.genre != null && p.genre.genreId == genre.genreId}"
-                                            ></option>
-                                        </select>
-                                    </td>
+                  <td>
+                    <input
+                      type="number"
+                      class="price-input form-input text-right"
+                      th:name="|basisPrice[${iter.index}]|"
+                      th:value="${p.basisPrice != null ? p.basisPrice : 0}"
+                      oninput="calculatePrices(this)"
+                    />
+                  </td>
 
-                                    <td>
-                                        <input
-                                            type="text"
-                                            th:name="|productName[${iter.index}]|"
-                                            th:value="${p.productName}"
-                                            class="form-input inline-input"
-                                        />
-                                    </td>
-                                    <td>
-                                        <input
-                                            type="number"
-                                            class="price-input form-input inline-input text-right"
-                                            th:name="|basisPrice[${iter.index}]|"
-                                            th:value="${p.basisPrice}"
-                                            oninput="calculateSellPrice(this)"
-                                        />
-                                    </td>
-                                    <td>
-                                        <input
-                                            type="number"
-                                            class="price-input form-input inline-input small-input text-right"
-                                            th:name="|markupPercent[${iter.index}]|"
-                                            placeholder="50"
-                                            oninput="calculateSellPrice(this)"
-                                        />
-                                    </td>
-                                    <td>
-                                        <span
-                                            class="sell-price-display price-display"
-                                            th:text="${#numbers.formatDecimal(p.sellPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'"
-                                        ></span>
-                                    </td>
-                                    <td class="image-cell">
-                                        <img
-                                            th:if="${p.imageUrl}"
-                                            th:src="@{${p.imageUrl}}"
-                                            class="product-image small-product-image"
-                                        />
-                                        <input
-                                            type="file"
-                                            th:name="|imageFile[${iter.index}]|"
-                                            accept="image/*"
-                                            class="form-file file-input-fix"
-                                        />
-                                    </td>
-                                    <td>
-                                        <textarea
-                                            th:name="|description[${iter.index}]|"
-                                            th:text="${p.description}"
-                                            class="form-textarea inline-textarea"
-                                        ></textarea>
-                                    </td>
-                                    <td class="text-center">
-                                        <button
-                                            class="btn btn-primary save-btn"
-                                            th:onclick="saveProduct(this, [[${p.productId}]], [[${iter.index}]])"
-                                        >
-                                            <i class="fa-solid fa-save"></i> Lưu
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </main>
+                  <td>
+                    <input
+                      type="number"
+                      class="form-input text-center"
+                      th:name="|markupPercent[${iter.index}]|"
+                      th:value="${p.markupPercent != null ? p.markupPercent : 0}"
+                      oninput="calculatePrices(this)"
+                    />
+                  </td>
 
-            <div th:replace="Admin/footer :: Footer"></div>
+                  <td>
+                    <span
+                      class="sell-price-display fw-bold"
+                      th:text="${p.sellPrice != null ? #numbers.formatDecimal(p.sellPrice, 0, 'COMMA', 0, 'POINT') : '0'}"
+                    ></span>
+                  </td>
+
+                  <td>
+                    <input
+                      type="number"
+                      class="form-input text-center text-danger fw-bold"
+                      th:name="|discount[${iter.index}]|"
+                      th:value="${p.discount != null ? p.discount : 0}"
+                      placeholder="0"
+                      min="0"
+                      max="99"
+                      oninput="calculatePrices(this)"
+                    />
+                  </td>
+
+                  <td>
+                    <span
+                      class="final-price-display text-success fw-bold"
+                      th:text="${#numbers.formatDecimal(p.getDiscountedPrice(), 0, 'COMMA', 0, 'POINT')}"
+                    ></span>
+                  </td>
+
+                  <td class="image-cell">
+                    <img
+                      th:if="${p.imageUrl != null}"
+                      th:src="@{${p.imageUrl}}"
+                      class="product-image small-product-image"
+                    />
+                    <input
+                      type="file"
+                      th:name="|imageFile[${iter.index}]|"
+                      accept="image/*"
+                      class="form-file file-input-fix"
+                    />
+                    <textarea
+                      style="display: none"
+                      th:name="|description[${iter.index}]|"
+                      th:text="${p.description}"
+                    ></textarea>
+                  </td>
+
+                  <td class="text-center">
+                    <button
+                      class="btn btn-primary save-btn"
+                      th:onclick="saveProduct(this, [[${p.productId}]], [[${iter.index}]])"
+                    >
+                      <i class="fa-solid fa-save"></i> Lưu
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <script>
-            // === JAVASCRIPT LOGIC GIỮ NGUYÊN ===
-            function searchTable() {
-                // ... (giữ nguyên logic searchTable) ...
-                const input = document.getElementById("searchInput");
-                const filter = input.value.toLowerCase();
-                const tableBody = document.getElementById("product-table-body");
-                const rows = tableBody.getElementsByTagName("tr");
-                for (let i = 0; i < rows.length; i++) {
-                    const nameCell = rows[i].querySelector(
-                        'input[name*="productName"]'
-                    );
-                    if (nameCell) {
-                        const name = nameCell.value.toLowerCase();
-                        if (name.includes(filter)) {
-                            rows[i].style.display = "";
-                        } else {
-                            rows[i].style.display = "none";
-                        }
-                    }
-                }
+        
+        </div>
+      </main>
+      <div th:replace="Admin/footer :: Footer"></div>
+    </div>
+
+    <script>
+      function searchTable() {
+        const filter = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const rows = document
+          .getElementById("product-table-body")
+          .getElementsByTagName("tr");
+        for (let row of rows) {
+          const nameInput = row.querySelector('input[name*="productName"]');
+          if (nameInput) {
+            row.style.display = nameInput.value.toLowerCase().includes(filter)
+              ? ""
+              : "none";
+          }
+        }
+      }
+
+      function calculatePrices(input) {
+        const row = input.closest("tr");
+        // Lấy giá trị hoặc mặc định 0
+        const basisPrice =
+          parseFloat(row.querySelector('input[name*="basisPrice"]').value) || 0;
+        const markup =
+          parseFloat(row.querySelector('input[name*="markupPercent"]').value) ||
+          0;
+        const discount =
+          parseFloat(row.querySelector('input[name*="discount"]').value) || 0;
+
+        // Tính toán logic
+        const sellPrice = basisPrice * (1 + markup / 100);
+        const finalPrice = sellPrice * (1 - discount / 100);
+
+        // Hiển thị
+        const formatter = new Intl.NumberFormat("vi-VN");
+        row.querySelector(".sell-price-display").textContent = formatter.format(
+          sellPrice.toFixed(0)
+        );
+        row.querySelector(".final-price-display").textContent =
+          formatter.format(finalPrice.toFixed(0));
+      }
+
+      function applyGlobalMarkup() {
+        const globalPercent = document.getElementById("globalMarkup").value;
+        if (!globalPercent) return;
+        const rows = document
+          .getElementById("product-table-body")
+          .getElementsByTagName("tr");
+        for (let row of rows) {
+          if (row.style.display !== "none") {
+            const markupInput = row.querySelector(
+              'input[name*="markupPercent"]'
+            );
+            if (markupInput) {
+              markupInput.value = globalPercent;
+              calculatePrices(markupInput);
             }
-            function calculateSellPrice(input) {
-                // ... (giữ nguyên logic calculateSellPrice) ...
-                const row = input.closest("tr");
-                const basisPrice =
-                    parseFloat(
-                        row.querySelector('input[name*="basisPrice"]').value
-                    ) || 0;
-                const markup =
-                    parseFloat(
-                        row.querySelector('input[name*="markupPercent"]').value
-                    ) || 0;
-                const sellPrice = basisPrice * (1 + markup / 100);
-                const display = row.querySelector(".sell-price-display");
-                display.textContent =
-                    new Intl.NumberFormat("vi-VN").format(
-                        sellPrice.toFixed(0)
-                    ) + " đ";
+          }
+        }
+      }
+
+      function markRowAsChanged(element) {
+        element.closest("tr").classList.add("row-changed");
+      }
+
+      function saveProduct(button, productId, index) {
+        button.disabled = true;
+        button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+        const csrfToken = document
+          .querySelector('meta[name="csrf-token"]')
+          .getAttribute("content");
+        const csrfHeader = document
+          .querySelector('meta[name="csrf-header"]')
+          .getAttribute("content");
+
+        const formData = new FormData();
+        const row = button.closest("tr");
+
+        formData.append("productId", productId);
+        formData.append(
+          "providerId",
+          row.querySelector(`select[name="providerId[${index}]"]`).value
+        );
+        formData.append(
+          "genreId",
+          row.querySelector(`select[name="genreId[${index}]"]`).value
+        );
+        formData.append(
+          "productName",
+          row.querySelector(`input[name="productName[${index}]"]`).value
+        );
+        formData.append(
+          "basisPrice",
+          row.querySelector(`input[name="basisPrice[${index}]"]`).value
+        );
+        formData.append(
+          "markupPercent",
+          row.querySelector(`input[name="markupPercent[${index}]"]`).value
+        );
+        formData.append(
+          "discount",
+          row.querySelector(`input[name="discount[${index}]"]`).value
+        );
+        formData.append(
+          "description",
+          row.querySelector(`textarea[name="description[${index}]"]`).value
+        );
+
+        const imageInput = row.querySelector(
+          `input[name="imageFile[${index}]"]`
+        );
+        if (imageInput.files.length > 0) {
+          formData.append("imageFile", imageInput.files[0]);
+        }
+
+        fetch("/Admin/updateSingleProduct", {
+          method: "POST",
+          headers: { [csrfHeader]: csrfToken },
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              button.innerHTML = '<i class="fa-solid fa-check"></i>';
+              button.classList.add("btn-success");
+              setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = '<i class="fa-solid fa-save"></i>';
+                button.classList.remove("btn-success");
+              }, 2000);
+
+              if (data.newImageUrl) {
+                const imgTag = row.querySelector(".product-image");
+                if (imgTag) imgTag.src = data.newImageUrl;
+              }
+            } else {
+              alert("Lỗi: " + data.message);
+              button.disabled = false;
+              button.innerHTML = '<i class="fa-solid fa-save"></i>';
             }
-            function applyGlobalMarkup() {
-                // ... (giữ nguyên logic applyGlobalMarkup) ...
-                const globalPercent =
-                    document.getElementById("globalMarkup").value;
-                if (globalPercent === "" || globalPercent < 0) return;
-                const tableBody = document.getElementById("product-table-body");
-                const rows = tableBody.getElementsByTagName("tr");
-                for (let i = 0; i < rows.length; i++) {
-                    if (rows[i].style.display !== "none") {
-                        const percentInput = rows[i].querySelector(
-                            'input[name*="markupPercent"]'
-                        );
-                        if (percentInput) {
-                            percentInput.value = globalPercent;
-                            calculateSellPrice(percentInput);
-                            // markRowAsChanged(percentInput); // Giữ lại hàm này nếu cần
-                        }
-                    }
-                }
-            }
-            // Thêm hàm đánh dấu đã thay đổi (nếu cần)
-            function markRowAsChanged(element) {
-                // Cần thiết lập CSS cho class "row-changed"
-                element.closest("tr").classList.add("row-changed");
-            }
-
-            // Hàm saveProduct giữ nguyên (vì nó là logic backend/API)
-            function saveProduct(button, productId, index) {
-                button.disabled = true;
-                button.textContent = "Đang lưu...";
-
-                const csrfToken = document
-                    .querySelector('meta[name="csrf-token"]')
-                    .getAttribute("content");
-                const csrfHeader = document
-                    .querySelector('meta[name="csrf-header"]')
-                    .getAttribute("content");
-
-                const formData = new FormData();
-                const row = button.closest("tr");
-
-                // 1. Thêm ID sản phẩm
-                formData.append("productId", productId);
-
-                // 2. Lấy tất cả dữ liệu trong hàng bằng "name" có chỉ số
-                formData.append(
-                    "providerId",
-                    row.querySelector(`select[name="providerId[${index}]"]`)
-                        .value
-                );
-                formData.append(
-                    "genreId",
-                    row.querySelector(`select[name="genreId[${index}]"]`).value
-                );
-                formData.append(
-                    "productName",
-                    row.querySelector(`input[name="productName[${index}]"]`)
-                        .value
-                );
-                formData.append(
-                    "basisPrice",
-                    row.querySelector(`input[name="basisPrice[${index}]"]`)
-                        .value
-                );
-                formData.append(
-                    "markupPercent",
-                    row.querySelector(`input[name="markupPercent[${index}]"]`)
-                        .value
-                );
-                formData.append(
-                    "description",
-                    row.querySelector(`textarea[name="description[${index}]"]`)
-                        .value
-                );
-
-                // 3. Lấy file (nếu có)
-                const imageInput = row.querySelector(
-                    `input[name="imageFile[${index}]"]`
-                );
-                if (imageInput.files.length > 0) {
-                    formData.append("imageFile", imageInput.files[0]);
-                }
-
-                // 4. Gửi Fetch đến 1 endpoint MỚI
-                fetch("/Admin/updateSingleProduct", {
-                    method: "POST",
-                    headers: {
-                        [csrfHeader]: csrfToken,
-                    },
-                    body: formData,
-                })
-                    .then((response) => {
-                        if (!response.ok) {
-                            // Nếu server trả về lỗi (như 400, 500)
-                            return response.json().then((err) => {
-                                throw new Error(
-                                    err.message || "Lỗi không xác định"
-                                );
-                            });
-                        }
-                        return response.json();
-                    })
-                    .then((data) => {
-                        if (data.success) {
-                            button.textContent = "Đã lưu!";
-                            // Cập nhật lại ảnh nếu có ảnh mới
-                            if (data.newImageUrl) {
-                                const imgTag =
-                                    row.querySelector(".product-image");
-                                if (imgTag) imgTag.src = data.newImageUrl;
-                                else {
-                                    // Nếu chưa có ảnh, tạo thẻ img
-                                    const newImg =
-                                        document.createElement("img");
-                                    newImg.src = data.newImageUrl;
-                                    newImg.className =
-                                        "product-image small-product-image";
-                                    imageInput.parentNode.prepend(newImg);
-                                }
-                            }
-                            // Xóa lớp đánh dấu sau khi lưu thành công
-                            row.classList.remove("row-changed");
-                        } else {
-                            throw new Error(data.message);
-                        }
-                    })
-                    .catch((err) => {
-                        alert("Lỗi khi lưu: " + err.message);
-                        button.textContent = "Lỗi!";
-                    })
-                    .finally(() => {
-                        setTimeout(() => {
-                            button.disabled = false;
-                            button.textContent = "Lưu";
-                        }, 2000);
-                    });
-            }
-        </script>
-    </body>
+          })
+          .catch((err) => {
+            alert("Lỗi kết nối!");
+            button.disabled = false;
+            button.innerHTML = '<i class="fa-solid fa-save"></i>';
+          });
+      }
+    </script>
+  </body>
 </html>

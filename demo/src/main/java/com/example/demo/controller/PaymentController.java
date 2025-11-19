@@ -1,7 +1,5 @@
 package com.example.demo.controller;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,13 +8,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.demo.model.Orders;
-import com.example.demo.model.Sizes;
 import com.example.demo.service.EmailService;
 import com.example.demo.service.OrderService;
 import com.example.demo.service.ProductService;
 import com.example.demo.service.VNPayService;
 
-import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
@@ -62,7 +58,8 @@ public class PaymentController {
                 orderService.save(order);
                 
                 // Gửi email xác nhận
-                sendOrderEmails(order);
+                // sendOrderEmails(order);
+                orderService.notifyOrderSuccess(order);
 
                 redirectAttributes.addFlashAttribute("successMessage", "Thanh toán thành công! Đơn hàng #" + orderId);
             } else {
@@ -81,16 +78,16 @@ public class PaymentController {
     }
     
     // Tách hàm gửi email (Giống trong CartController)
-    private void sendOrderEmails(Orders order) {
-        try {
-             emailService.sendOrderConfirmation(order);
-             emailService.sendNewOrderNotification(order);
-             List<Sizes> lowStockItems = productService.checkLowStockAfterOrder(order, 5); 
-             if (!lowStockItems.isEmpty()) {
-                 emailService.sendLowStockNotification(lowStockItems);
-             }
-        } catch (MessagingException e) {
-             logger.warn("LỖI GỬI EMAIL XÁC NHẬN (PaymentController):", e);
-        }
-    }
+    // private void sendOrderEmails(Orders order) {
+    //     try {
+    //          emailService.sendOrderConfirmation(order);
+    //          emailService.sendNewOrderNotification(order);
+    //          List<Sizes> lowStockItems = productService.checkLowStockAfterOrder(order, 5); 
+    //          if (!lowStockItems.isEmpty()) {
+    //              emailService.sendLowStockNotification(lowStockItems);
+    //          }
+    //     } catch (MessagingException e) {
+    //          logger.warn("LỖI GỬI EMAIL XÁC NHẬN (PaymentController):", e);
+    //     }
+    // }
 }

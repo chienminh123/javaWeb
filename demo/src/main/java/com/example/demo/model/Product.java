@@ -34,6 +34,8 @@ public class Product {
     private float basisPrice;
     private float sellPrice;
     private String imageUrl;
+    private Integer discount = 0;
+    private Float markupPercent = 0f;
     @OneToMany(mappedBy = "product", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<Sizes> sizes;
     // Getter & Setter
@@ -46,4 +48,11 @@ public class Product {
     }
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    
+    public double getDiscountedPrice() {
+        if (discount == null || discount == 0) {
+            return this.sellPrice;
+        }
+        return this.sellPrice * (1 - (discount / 100.0));
+    }
 }

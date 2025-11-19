@@ -79,7 +79,7 @@ public class CartService {
             newItem.setProduct(product);
             newItem.setSizes(size);
             newItem.setQuantity(quantity);
-            newItem.setPrice(product.getSellPrice()); // Lưu giá bán tại thời điểm đó
+            newItem.setPrice((float) product.getDiscountedPrice());// Lưu giá ĐÃ GIẢM
             cartDetailRepo.save(newItem);
         }
     }

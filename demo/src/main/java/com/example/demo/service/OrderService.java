@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.model.CartDetail;
 import com.example.demo.model.Carts;
+import com.example.demo.model.Coupon;
 import com.example.demo.model.OrderDetail;
 import com.example.demo.model.Orders;
 import com.example.demo.model.Sizes;
@@ -38,9 +39,12 @@ public class OrderService {
     @Autowired private CartDetailRepository cartDetailRepo;
     @Autowired private SizesRepository sizesRepo;
     @Autowired private UserRepository userRepo; 
+    @Autowired private ProductService productService;
+    @Autowired private CouponService couponService;
+    @Autowired private CartService cartService;
     
    @Transactional
-    public Orders createOrderFromCart(String userPhone, String address, String phone, String paymentMethod) throws Exception {
+    public Orders createOrderFromCart(String userPhone, String address, String phone, String paymentMethod,String couponCode) throws Exception {
         
         User user = userRepo.findByPhone(userPhone);
         if (user == null) {
@@ -55,19 +59,34 @@ public class OrderService {
         if (cartDetails == null || cartDetails.isEmpty()) {
             throw new Exception("Giỏ hàng rỗng, không thể tạo đơn hàng.");
         }
+    
+        double tempTotal = cartService.calculateTotal(cart); 
+        double discountAmount = 0;
+        double finalTotal = tempTotal;
 
+        // Xử lý Coupon
+        if (couponCode != null && !couponCode.isEmpty()) {
+            Coupon coupon = couponService.checkCoupon(couponCode);
+            discountAmount = couponService.calculateDiscount(coupon, tempTotal);
+            finalTotal = tempTotal - discountAmount;
+            
+            // Trừ lượt sử dụng mã
+            coupon.setQuantity(coupon.getQuantity() - 1);
+            couponService.save(coupon);
+        }
         // 2. TẠO VÀ LƯU ORDERS
         Orders newOrder = new Orders();
         newOrder.setUser(user);
         newOrder.setOrderDate(LocalDateTime.now());
-        
-        // [SỬA ĐỔI] Gán trạng thái mặc định. Controller sẽ quyết định trạng thái cuối cùng.
         newOrder.setStatus("Mới tạo"); 
         
         newOrder.setAddress(address);
         newOrder.setPhone(phone); 
         newOrder.setPaymentMethod(paymentMethod);
-        
+        newOrder.setCouponCode(couponCode);
+        newOrder.setDiscountAmount(discountAmount);
+        newOrder.setFinalTotal(finalTotal);
+
         newOrder = ordersRepo.save(newOrder);
         List<OrderDetail> orderDetails = new java.util.ArrayList<>();
         for (CartDetail item : cartDetails) {
@@ -115,6 +134,9 @@ public class OrderService {
     /**
      * [ADMIN] Cập nhật trạng thái (Gửi thông báo ngược lại User)
      */
+    private static final long RANK_SILVER = 100_000;  
+    private static final long RANK_GOLD = 500_000;    
+    private static final long RANK_DIAMOND = 1_000_000;
    @Transactional
     public Orders updateOrderStatus(Integer orderId, String newStatus) {
         Orders order = ordersRepo.findById(orderId)
@@ -156,7 +178,22 @@ public class OrderService {
                 // (Nếu muốn, bạn có thể ném lỗi ở đây để ngăn việc đổi trạng thái nếu hoàn kho thất bại)
             }
         }
-        // ============================
+        if ("Đã giao hàng".equals(newStatus) && !"Đã giao hàng".equals(oldStatus)) {
+            User user = order.getUser();
+            
+            // 1. Tính điểm: 1/10 giá trị đơn hàng (10%)
+            // Lấy giá trị cuối cùng (sau khi trừ mã giảm giá nếu có)
+            double orderValue = (order.getFinalTotal() != null) ? order.getFinalTotal() : getTotalPrice(order);
+            long pointsEarned = (long) (orderValue * 0.001); 
+            
+            // Cộng điểm
+            user.setPoint(user.getPoint() + pointsEarned);
+            
+            // 2. Kiểm tra thăng hạng
+            checkAndUpgradeRank(user);
+            
+            userRepo.save(user);
+        }
 
         // Cập nhật trạng thái mới
         order.setStatus(newStatus);
@@ -176,6 +213,67 @@ public class OrderService {
         }
         
         return updatedOrder;
+    }
+    private void checkAndUpgradeRank(User user) {
+        String oldRank = user.getRank();
+        String newRank = oldRank;
+        Coupon rewardCoupon = null;
+
+        float pts = user.getPoint();
+
+        // Logic xác định hạng mới
+        if (pts >= RANK_DIAMOND) {
+            newRank = "DIAMOND";
+        } else if (pts >= RANK_GOLD) {
+            newRank = "GOLD";
+        } else if (pts >= RANK_SILVER) {
+            newRank = "SILVER";
+        }
+
+        // Nếu lên hạng mới cao hơn hạng cũ -> Tặng quà
+        if (!newRank.equals(oldRank)) {
+            user.setRank(newRank); // Cập nhật hạng
+            
+            // Tạo phần thưởng tùy theo hạng
+            try {
+                if ("SILVER".equals(newRank)) {
+                    rewardCoupon = createRankUpCoupon(user, "SILVER", 50_000.0); // Tặng 50k
+                } else if ("GOLD".equals(newRank)) {
+                    rewardCoupon = createRankUpCoupon(user, "GOLD", 100_000.0); // Tặng 100k
+                } else if ("DIAMOND".equals(newRank)) {
+                    rewardCoupon = createRankUpCoupon(user, "DIAMOND", 200_000.0); // Tặng 200k
+                }
+                
+                // Gửi email chúc mừng
+                if (rewardCoupon != null) {
+                    emailService.sendRankUpEmail(user, newRank, rewardCoupon);
+                }
+            } catch (Exception e) {
+                logger.error("Lỗi khi tặng quà thăng hạng: ", e);
+            }
+        }
+    }
+    // Hàm tạo Coupon riêng cho User
+    private Coupon createRankUpCoupon(User user, String rankName, Double discountAmount) {
+        Coupon c = new Coupon();
+        // Mã code ví dụ: GOLD-0987654321-X8K2 (Kèm SĐT user để không trùng)
+        String code = rankName + "-" + user.getPhone() + "-" + System.currentTimeMillis() % 10000;
+        
+        c.setCode(code);
+        c.setDiscountType("FIXED"); // Giảm tiền mặt
+        c.setDiscountValue(discountAmount);
+        c.setQuantity(1); // Chỉ dùng 1 lần
+        c.setStartDate(java.time.LocalDate.now());
+        c.setEndDate(java.time.LocalDate.now().plusMonths(1)); // Hạn 1 tháng
+        c.setActive(true);
+        
+        return couponService.save(c);
+    }
+
+    // Hàm phụ trợ tính tổng tiền (nếu chưa có finalTotal)
+    private double getTotalPrice(Orders order) {
+        return order.getOrderDetails().stream()
+            .mapToDouble(d -> d.getPrice() * d.getQuantity()).sum();
     }
 
     @Transactional
@@ -229,4 +327,20 @@ public class OrderService {
     public Orders save(Orders order) {
         return ordersRepo.save(order);
     }
+    public void notifyOrderSuccess(Orders order) {
+    try {
+        // Gửi xác nhận cho khách
+        emailService.sendOrderConfirmation(order);
+        // Gửi thông báo cho Admin
+        emailService.sendNewOrderNotification(order);
+        
+        // Kiểm tra tồn kho
+        List<Sizes> lowStockItems = productService.checkLowStockAfterOrder(order, 5);
+        if (!lowStockItems.isEmpty()) {
+            emailService.sendLowStockNotification(lowStockItems);
+        }
+    } catch (MessagingException e) {
+        logger.warn("LỖI GỬI EMAIL ORDER #" + order.getOrderId(), e);
+    }
+}
 }

@@ -37,12 +37,14 @@ public class VNPayService {
      */
     public String createPaymentUrl(Orders order, HttpServletRequest req) {
         
-        // Tính tổng tiền từ OrderDetails (nếu order chưa có sẵn)
-        double totalPrice = order.getOrderDetails().stream()
-                                .mapToDouble(d -> d.getPrice() * d.getQuantity())
-                                .sum();
-        // VNPay yêu cầu * 100
-        long amount = (long) totalPrice * 100;
+        long amount;
+        if (order.getFinalTotal() != null && order.getFinalTotal() > 0) {
+            amount = (long) (order.getFinalTotal() * 100);
+        } else {
+            // Fallback nếu là đơn cũ
+            double totalPrice = order.getOrderDetails().stream().mapToDouble(d -> d.getPrice() * d.getQuantity()).sum();
+            amount = (long) (totalPrice * 100);
+        }
 
         String vnp_TxnRef = String.valueOf(order.getOrderId());
         String vnp_IpAddr = VNPayConfig.getIpAddress(req);

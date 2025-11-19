@@ -23,6 +23,9 @@ public class Orders {
     private String Address;
     private String Phone;
     private String paymentMethod;
+    private String couponCode;      // Mã voucher đã dùng
+    private Double discountAmount;  // Số tiền được giảm
+    private Double finalTotal;
     
     @OneToMany(mappedBy="orders")
     private List<OrderDetail> orderDetails;

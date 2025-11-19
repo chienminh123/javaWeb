@@ -1,29 +1,30 @@
 package com.example.demo.controller;
 
 import java.security.Principal; // Thêm import
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired; // Thêm import
-import org.springframework.stereotype.Controller;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller; // Thêm import
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes; // Thêm import
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.example.demo.model.Carts;
+import com.example.demo.model.Carts; // Thêm import
+import com.example.demo.model.Coupon;
 import com.example.demo.model.Orders;
-import com.example.demo.model.Sizes;
 import com.example.demo.service.CartService;
+import com.example.demo.service.CouponService;
 import com.example.demo.service.EmailService;
 import com.example.demo.service.OrderService;
 import com.example.demo.service.ProductService;
 import com.example.demo.service.VNPayService;
 
-import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest; 
 
 @Controller
@@ -39,6 +40,7 @@ public class CartController {
     private ProductService productService;
     @Autowired
     private VNPayService vnpayService;
+    @Autowired private CouponService couponService;
 
     private static final Logger logger = LoggerFactory.getLogger(CartController.class);
     
@@ -141,65 +143,7 @@ public class CartController {
         return "User/checkout"; 
     }
 
-    // @PostMapping("/checkout/confirm")
-    // public String confirmCheckout(
-    // @RequestParam("address") String address,
-    // @RequestParam("phone") String phone, // Số điện thoại nhận hàng
-    // @RequestParam("paymentMethod") String paymentMethod,
-    // Principal principal, 
-    // RedirectAttributes redirectAttributes) {
-
-    // if (principal == null) {
-    //     return "redirect:/Auth/login"; // Yêu cầu đăng nhập
-    // }
-
-    // try {
-    //     String userPhone = principal.getName();
-
-    //     // 1. Gọi OrderService để xử lý toàn bộ quy trình
-    //     Orders newOrder = orderService.createOrderFromCart(userPhone, address, phone, paymentMethod); 
-        
-    //     // 2. Đặt trạng thái tùy thuộc vào phương thức thanh toán
-    //     if ("Chuyển khoản".equals(paymentMethod)) {
-    //         newOrder.setStatus("Chờ thanh toán"); 
-    //     } else {
-    //         newOrder.setStatus("Đang xử lý"); 
-    //     }
-        
-    //     // 3. GỬI EMAIL (nếu đã cấu hình)
-    //     try {
-    //         emailService.sendOrderConfirmation(newOrder); 
-    //         emailService.sendNewOrderNotification(newOrder); 
-    //         List<Sizes> lowStockItems = productService.checkLowStockAfterOrder(newOrder, 5); // Ngưỡng: 5
-    //             if (!lowStockItems.isEmpty()) {
-    //                 emailService.sendLowStockNotification(lowStockItems);
-    //                 logger.warn("ĐÃ GỬI CẢNH BÁO TỒN KHO THẤP CHO ADMIN SAU ĐƠN HÀNG #" + newOrder.getOrderId());
-    //             }
-    //             // =================================================================
-                
-            
-    //     } catch (MessagingException e) {
-    //         logger.warn("LỖI GỬI EMAIL XÁC NHẬN:", e);
-    //     }
-                
-    //     // 4. Thành công: Gửi thông báo và chuyển hướng
-    //     redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn hàng: #" + newOrder.getOrderId());
-
-    //     // Chuyển hướng đến trang đơn hàng của user
-    //     return "redirect:/order"; 
-
-    // } catch (Exception e) {
-    //     // === THỰC HIỆN LOGGING CHI TIẾT TẠI ĐÂY ===
-    //     logger.error("LỖI XỬ LÝ ĐẶT HÀNG:", e);
-    //     // ==========================================
-        
-    //     // 5. Thất bại: Gửi thông báo lỗi (ví dụ: hết hàng) và quay lại trang giỏ hàng
-    //     String errorMessage = "Lỗi đặt hàng: " + (e.getMessage() != null ? e.getMessage() : "Lỗi không xác định. Vui lòng kiểm tra Console.");
-    //     redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
-        
-    //     return "redirect:/cart"; 
-    // }
-    // }
+    
     @PostMapping("/checkout/confirm")
     public String confirmCheckout(
         @RequestParam("address") String address,
@@ -207,7 +151,8 @@ public class CartController {
         @RequestParam("paymentMethod") String paymentMethod,
         Principal principal, 
         RedirectAttributes redirectAttributes,
-        HttpServletRequest request // [THÊM DÒNG NÀY]
+        HttpServletRequest request,
+        @RequestParam(required = false) String couponCode
     ) {
 
         if (principal == null) {
@@ -219,7 +164,7 @@ public class CartController {
             String userPhone = principal.getName();
 
             // 1. TẠO ĐƠN HÀNG (Trừ kho, tạo Order)
-            newOrder = orderService.createOrderFromCart(userPhone, address, phone, paymentMethod);
+            newOrder = orderService.createOrderFromCart(userPhone, address, phone, paymentMethod, couponCode);
 
             // 2. XỬ LÝ LUỒNG THANH TOÁN
             if ("VNPay".equals(paymentMethod)) {
@@ -244,7 +189,8 @@ public class CartController {
             }
             
             // 3. GỬI EMAIL (Chỉ gửi cho COD và Chuyển khoản thủ công)
-            sendOrderEmails(newOrder);
+            // sendOrderEmails(newOrder);
+            orderService.notifyOrderSuccess(newOrder);
                     
             redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn hàng: #" + newOrder.getOrderId());
             return "redirect:/User/order"; 
@@ -258,16 +204,41 @@ public class CartController {
         }
     }
 
-    private void sendOrderEmails(Orders order) {
+    // private void sendOrderEmails(Orders order) {
+    //     try {
+    //          emailService.sendOrderConfirmation(order); 
+    //          emailService.sendNewOrderNotification(order); 
+    //          List<Sizes> lowStockItems = productService.checkLowStockAfterOrder(order, 5); 
+    //          if (!lowStockItems.isEmpty()) {
+    //              emailService.sendLowStockNotification(lowStockItems);
+    //          }
+    //     } catch (MessagingException e) {
+    //         logger.warn("LỖI GỬI EMAIL XÁC NHẬN:", e);
+    //     }
+    // }
+
+    @GetMapping("/api/coupon/check")
+    @ResponseBody
+    public Map<String, Object> checkCoupon(@RequestParam String code, @RequestParam Double total) {
+        Map<String, Object> response = new HashMap<>();
         try {
-             emailService.sendOrderConfirmation(order); 
-             emailService.sendNewOrderNotification(order); 
-             List<Sizes> lowStockItems = productService.checkLowStockAfterOrder(order, 5); 
-             if (!lowStockItems.isEmpty()) {
-                 emailService.sendLowStockNotification(lowStockItems);
-             }
-        } catch (MessagingException e) {
-            logger.warn("LỖI GỬI EMAIL XÁC NHẬN:", e);
+            Coupon coupon = couponService.checkCoupon(code);
+            double discount = couponService.calculateDiscount(coupon, total);
+            response.put("valid", true);
+            response.put("discountAmount", discount);
+            response.put("newTotal", total - discount);
+            if ("FIXED".equals(coupon.getDiscountType())) 
+            {
+                response.put("messageText", "Giảm trực tiếp " + String.format("%,.0f", coupon.getDiscountValue()) + "đ");
+            }
+            else 
+            {
+                response.put("messageText", "Giảm " + coupon.getDiscountValue() + "%");
+            }
+        } catch (Exception e) {
+            response.put("valid", false);
+            response.put("message", e.getMessage());
         }
+        return response;
     }
 }

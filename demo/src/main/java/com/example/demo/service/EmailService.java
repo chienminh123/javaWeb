@@ -9,8 +9,10 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import com.example.demo.model.Coupon;
 import com.example.demo.model.Orders;
 import com.example.demo.model.Sizes;
+import com.example.demo.model.User;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -150,4 +152,28 @@ public class EmailService {
         helper.setText(content, true);
         mailSender.send(message);
     }
+
+    public void sendRankUpEmail(User user, String newRank, Coupon coupon) throws MessagingException {
+    MimeMessage message = mailSender.createMimeMessage();
+    MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+    helper.setFrom(FROM_EMAIL);
+    helper.setTo(user.getEmail());
+    helper.setSubject("CHÚC MỪNG! BẠN ĐÃ THĂNG HẠNG " + newRank + " - Nhận ngay quà tặng!");
+
+    // Nội dung Email (Có thể chuyển sang Template Thymeleaf sau)
+    String htmlContent = "<h3>Xin chào " + user.getUserName() + ",</h3>"
+            + "<p>Chúc mừng bạn đã đạt mốc tích lũy điểm mới và thăng hạng thành viên <b>" + newRank + "</b>!</p>"
+            + "<p>Để tri ân, chúng tôi gửi tặng bạn mã giảm giá đặc biệt:</p>"
+            + "<div style='background: #f4f4f4; padding: 15px; border: 1px dashed #333; display: inline-block; margin: 10px 0;'>"
+            + "<h2 style='color: #e74c3c; margin: 0;'>" + coupon.getCode() + "</h2>"
+            + "<p style='margin: 5px 0;'>Giảm trực tiếp: <b>" + String.format("%,.0f", coupon.getDiscountValue()) + "đ</b></p>"
+            + "<p style='margin: 0; font-size: 12px;'>Hạn sử dụng: " + coupon.getEndDate() + "</p>"
+            + "</div>"
+            + "<p>Hãy sử dụng mã này ở bước thanh toán cho đơn hàng tiếp theo nhé!</p>"
+            + "<br><p>Trân trọng,<br>Đội ngũ Bibo Mart</p>";
+
+    helper.setText(htmlContent, true);
+    mailSender.send(message);
+}
 }
