@@ -7,6 +7,7 @@
   <head>
     <meta charset="UTF-8" />
     <title th:text="${pageTitle}">Danh sách Đơn hàng</title>
+
     <link rel="stylesheet" th:href="@{/assets/css/admin.css}" />
 
     <link
@@ -14,6 +15,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
     <style>
+      /* CSS riêng cho trang Order giữ nguyên */
       .orders-table {
         width: 100%;
         border-collapse: collapse;
@@ -24,9 +26,9 @@
       .orders-table th,
       .orders-table td {
         border: 1px solid #ddd;
-        padding: 12px;
+        padding: 16px;
         text-align: left;
-        font-size: 14px;
+        font-size: 18px;
       }
       .orders-table th {
         background-color: #f2f2f2;
@@ -39,35 +41,29 @@
         background-color: #f1f1f1;
       }
       .status-badge {
-        /* CSS cho status badge giống như orders.html */
         display: inline-block;
-        padding: 4px 8px;
+        padding: 6px 10px;
         border-radius: 4px;
-        font-size: 12px;
+        font-size: 16px;
         font-weight: bold;
-        color: white; /* Đảm bảo chữ màu trắng */
+        color: white;
       }
 
-      /* === QUY TẮC MỚI THEO YÊU CẦU CỦA BẠN === */
-
-      /* MÀU ĐỎ: Hủy */
+      /* Màu trạng thái */
       .status-Đã_hủy,
       .status-Đã_trả_hàng {
-        background-color: #ff4d4f; /* Đỏ */
+        background-color: #ff4d4f;
       }
-
-      /* MÀU VÀNG: Chờ thanh toán, Đang xử lý */
       .status-Chờ_thanh_toán,
+      .status-Đã-thanh-toán-VNPay,
       .status-Đang_xử_lý {
-        background-color: #faad14; /* Vàng cam */
+        background-color: #faad14;
       }
-
-      /* MÀU XANH LÁ/DƯƠNG: Các trạng thái còn lại (Đang chuẩn bị, Đã xác nhận, Đang giao hàng, Đã hoàn thành) */
       .status-Đã_hoàn_thành,
       .status-Đang_chuẩn_bị,
       .status-Đã_xác_nhận,
       .status-Đang_giao_hàng {
-        background-color: #52c41a; /* Xanh lá */
+        background-color: #52c41a;
       }
       .detail-btn {
         background-color: #1890ff;
@@ -77,64 +73,96 @@
         border-radius: 4px;
         cursor: pointer;
         text-decoration: none;
-        font-size: 13px;
+        font-size: 16px;
+      }
+
+      .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background-color: #6c757d; /* Màu xám trung tính */
+        color: white;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 15px; /* Cách tiêu đề một chút */
+        transition: background-color 0.2s;
+        width: fit-content;
+      }
+      .btn-back:hover {
+        background-color: #5a6268; /* Màu xám đậm hơn khi hover */
+        color: white;
       }
     </style>
   </head>
   <body>
-    <div th:replace="Admin/header::Header"></div>
-    <div th:replace="Admin/sidebar::sideBar"></div>
-    <div class="admin-main">
-      <div class="home">
-        <h1><i class="fas fa-list"></i> Danh sách Đơn hàng</h1>
-        <p th:text="${pageTitle}"></p>
+    <div class="admin-layout">
+      <div th:replace="Admin/sidebar::sideBar"></div>
 
-        <table class="orders-table">
-          <thead>
-            <tr>
-              <th>Mã ĐH</th>
-              <th>Mã User</th>
-              <th>Ngày đặt hàng</th>
-              <th>Tổng tiền</th>
-              <th>Trạng thái</th>
-              <th>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr th:each="order : ${orders}">
-              <td th:text="${order.orderId}">#1001</td>
-              <td th:text="${order.user?.userId}">U001</td>
-              <td
-                th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"
-              >
-                12/11/2025 10:00
-              </td>
-              <td>
-                <span
-                  th:text="${#numbers.formatDecimal(#aggregates.sum(order.orderDetails.![price * quantity]), 0, 'COMMA', 0, 'POINT')} + ' đ'"
-                ></span>
-              </td>
-              <td>
-                <span
-                  class="status-badge"
-                  th:classappend="'status-' + ${#strings.replace(order.status, ' ', '_')}"
-                  th:text="${order.status}"
-                >
-                  Đang xử lý
-                </span>
-              </td>
-              <td>
-                <a
-                  th:href="@{/Admin/order-detail(orderId=${order.orderId})}"
-                  class="detail-btn"
-                  >Chi tiết</a
-                >
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="admin-content-wrapper">
+        <div th:replace="Admin/header::Header"></div>
+
+        <main class="admin-main">
+          <div class="dashboard-content">
+            <a th:href="@{/Admin/home}" class="btn-back">
+              <i class="fas fa-arrow-left"></i> Quay lại trang chủ
+            </a>
+            <h1>
+              <i class="fas fa-file-invoice-dollar"></i> Danh sách Đơn hàng
+            </h1>
+            <!-- <p th:text="${pageTitle}"></p> -->
+
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Mã ĐH</th>
+                  <th>Mã User</th>
+                  <th>Ngày đặt hàng</th>
+                  <th>Tổng tiền</th>
+                  <th>Trạng thái</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="order : ${orders}">
+                  <td th:text="${order.orderId}">#1001</td>
+                  <td th:text="${order.user?.userId}">U001</td>
+                  <td
+                    th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"
+                  >
+                    12/11/2025 10:00
+                  </td>
+                  <td>
+                    <span
+                      th:text="${#numbers.formatDecimal(#aggregates.sum(order.orderDetails.![price * quantity]), 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                    ></span>
+                  </td>
+                  <td>
+                    <span
+                      class="status-badge"
+                      th:classappend="'status-' + ${#strings.replace(order.status, ' ', '_')}"
+                      th:text="${order.status}"
+                    >
+                      Đang xử lý
+                    </span>
+                  </td>
+                  <td>
+                    <a
+                      th:href="@{/Admin/order-detail(orderId=${order.orderId})}"
+                      class="detail-btn"
+                      >Chi tiết</a
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </main>
+
+        <div th:replace="Admin/footer::Footer"></div>
       </div>
     </div>
-    <div th:replace="Admin/footer::Footer"></div>
   </body>
 </html>

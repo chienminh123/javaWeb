@@ -153,25 +153,6 @@ public class AuthController {
         return "redirect:/Auth/profile";
     }
     
-//     @ModelAttribute
-// public void addGlobalAttributes(Model model, Principal principal) {
-//     if (principal != null) {
-//         String userPhone = principal.getName();
-//         // 1. Gửi SĐT
-//         System.out.println("DEBUG CHECKOUT: Giá trị principal.getName() (SĐT) là: " + userPhone);
-//         model.addAttribute("currentUserPhone", userPhone);
-//         Carts userCart = cartService.getCart(userPhone);
-//         int itemCount = cartService.calculateItemCount(userCart);
-//         model.addAttribute("cartItemCount", itemCount);
-//     } else {
-//         // Nếu chưa đăng nhập, luôn gửi itemCount = 0
-//         model.addAttribute("cartItemCount", 0); 
-//     }
-//     if (principal != null) {
-//     String userPhone = principal.getName();
-//     System.out.println("DEBUG: Principal Name (SĐT) là: " + userPhone);
-//     }
-// }
     
     @GetMapping("/User/order")
     public String userOrders(Model model, Principal principal) {
@@ -205,9 +186,15 @@ public class AuthController {
             // Ngăn người dùng xem đơn hàng của người khác
             throw new RuntimeException("Bạn không có quyền xem đơn hàng này."); 
         }
-        double totalPrice = order.getOrderDetails().stream()
-                                            .mapToDouble(d -> d.getPrice() * d.getQuantity())
-                                            .sum();
+        double totalPrice;
+        if (order.getFinalTotal() != null && order.getFinalTotal() > 0) {
+            totalPrice = order.getFinalTotal();
+        } else {
+            // Fallback: Cộng dồn thủ công (sẽ không có giảm giá)
+            totalPrice = order.getOrderDetails().stream()
+                            .mapToDouble(d -> d.getPrice() * d.getQuantity())
+                            .sum();
+        }
                                             
         model.addAttribute("order", order);
         model.addAttribute("totalPrice", totalPrice);

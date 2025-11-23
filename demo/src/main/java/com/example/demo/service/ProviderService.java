@@ -17,4 +17,8 @@ public class ProviderService {
 
     public List<Provider> findAll() { return repo.findAll(); }
     public Provider save(Provider p) { return repo.save(p); }
+    public void delete(Integer id) {repo.deleteById(id);}
+    public List<Provider> findByGenreId(Integer genreId) {
+        return repo.findProvidersByGenre(genreId);
+    }
 }

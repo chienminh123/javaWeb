@@ -105,13 +105,32 @@
         background-color: #6c757d;
       }
 
-      .total-row {
-        border-top: 3px double #333;
-        font-size: 1.6em;
-        text-align: right;
-        padding-top: 15px;
+      /* === PHẦN TỔNG TIỀN (MỚI) === */
+      .payment-summary {
         margin-top: 20px;
+        border-top: 2px solid #eee;
+        padding-top: 15px;
       }
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 1.1em;
+        color: #555;
+      }
+      .summary-row.final {
+        font-size: 1.6em;
+        font-weight: bold;
+        color: #ff4d4f;
+        border-top: 1px dashed #ccc;
+        padding-top: 10px;
+        margin-top: 10px;
+      }
+      .discount-text {
+        color: #28a745; /* Màu xanh lá cho giảm giá */
+      }
+      /* =========================== */
+
       .back-button {
         margin-top: 25px;
         text-align: right;
@@ -173,7 +192,7 @@
               class="status-badge"
               th:text="${order.status}"
               th:classappend="${order.status == 'Đang xử lý' or order.status == 'Chờ thanh toán'} ? 'status-processing' : 
-                                       (${order.status == 'Hoàn thành'} ? 'status-completed' : 
+                                       (${order.status == 'Hoàn thành' or order.status == 'Đã giao hàng'} ? 'status-completed' : 
                                        (${order.status == 'Đã hủy'} ? 'status-cancelled' : 'status-default'))"
               >Đang xử lý</span
             >
@@ -227,18 +246,63 @@
             </tbody>
           </table>
 
-          <div class="total-row">
-            Tổng cộng:
-            <span
-              th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"
-              >1.000.000đ</span
+          <div class="payment-summary">
+            <div class="summary-row">
+              <span>Tổng tiền hàng:</span>
+              <span
+                th:text="${#numbers.formatDecimal(order.orderDetails.stream().map(d -> d.price * d.quantity).reduce(0, (a, b) -> a + b), 0, 'COMMA', 0, 'POINT')} + 'đ'"
+              ></span>
+            </div>
+
+            <div
+              class="summary-row"
+              th:if="${order.discountAmount != null and order.discountAmount > 0}"
             >
+              <span class="discount-text">
+                <i class="fas fa-ticket-alt"></i> Giảm giá
+                <span
+                  th:if="${order.couponCode != null}"
+                  th:text="'(' + ${order.couponCode} + ')'"
+                ></span
+                >:
+              </span>
+              <span
+                class="discount-text"
+                th:text="'-' + ${#numbers.formatDecimal(order.discountAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'"
+                >-50.000đ</span
+              >
+            </div>
+
+            <div class="summary-row final">
+              <span>Tổng thanh toán:</span>
+              <span
+                th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"
+                >1.000.000đ</span
+              >
+            </div>
           </div>
         </div>
 
         <div class="back-button">
+          <form
+            th:if="${order.status == 'Đã giao hàng'}"
+            th:action="@{/User/order/return}"
+            method="post"
+            style="display: inline-block; margin-right: 10px"
+            onsubmit="return confirm('Bạn có chắc muốn trả hàng đơn này không?');"
+          >
+            <input type="hidden" name="orderId" th:value="${order.orderId}" />
+            <button
+              type="submit"
+              class="btn-back"
+              style="background-color: #dc3545; border: none; cursor: pointer"
+            >
+              <i class="fas fa-undo"></i> Yêu cầu Trả Hàng
+            </button>
+          </form>
+
           <a th:href="@{/User/order}" class="btn-back">
-            <i class="fa-solid fa-arrow-left"></i> Quay lại Đơn hàng
+            <i class="fa-solid fa-arrow-left"></i> Quay lại đơn hàng
           </a>
         </div>
       </div>

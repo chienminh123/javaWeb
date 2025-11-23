@@ -8,9 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.demo.model.Orders;
-import com.example.demo.service.EmailService;
 import com.example.demo.service.OrderService;
-import com.example.demo.service.ProductService;
 import com.example.demo.service.VNPayService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,8 +18,7 @@ public class PaymentController {
     private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
     @Autowired private VNPayService vnpayService;
     @Autowired private OrderService orderService;
-    @Autowired private EmailService emailService;
-    @Autowired private ProductService productService;
+    
 
     /**
      * SỬA ĐỔI: Nhận HttpServletRequest để xác thực chữ ký thật
@@ -54,7 +51,7 @@ public class PaymentController {
             
             if ("00".equals(responseCode)) {
                 // Giao dịch thành công
-                order.setStatus("Đã thanh toán (VNPay)");
+                order.setStatus("Đã thanh toán VNPay");
                 orderService.save(order);
                 
                 // Gửi email xác nhận
@@ -77,17 +74,4 @@ public class PaymentController {
         return "redirect:/User/order";
     }
     
-    // Tách hàm gửi email (Giống trong CartController)
-    // private void sendOrderEmails(Orders order) {
-    //     try {
-    //          emailService.sendOrderConfirmation(order);
-    //          emailService.sendNewOrderNotification(order);
-    //          List<Sizes> lowStockItems = productService.checkLowStockAfterOrder(order, 5); 
-    //          if (!lowStockItems.isEmpty()) {
-    //              emailService.sendLowStockNotification(lowStockItems);
-    //          }
-    //     } catch (MessagingException e) {
-    //          logger.warn("LỖI GỬI EMAIL XÁC NHẬN (PaymentController):", e);
-    //     }
-    // }
 }

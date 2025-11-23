@@ -31,7 +31,7 @@ public class ReportService {
     private QuittanceRepository quittanceRepo;
     
     @Autowired
-    private ProductRepository productRepo; // Giả định bạn đã có từ các bước trước
+    private ProductRepository productRepo; 
 
     // // Lấy dữ liệu cho biểu đồ Doanh thu
     public List<RevenueByDateDTO> getRevenueReport(LocalDate startDate, LocalDate endDate) {

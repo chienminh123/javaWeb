@@ -10,7 +10,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import lombok.Data;
-
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 @Entity
 @Data
 public class Carts {
@@ -19,7 +20,11 @@ public class Carts {
     private Integer cartId;
     @OneToOne
     @JoinColumn(name = "userId", referencedColumnName = "userId") 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private User user; // Quan hệ một-một với User
     @OneToMany(mappedBy = "carts")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<CartDetail> cartDetails;
 }

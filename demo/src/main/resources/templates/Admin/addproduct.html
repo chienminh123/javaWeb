@@ -37,8 +37,47 @@
                         >
                             <i class="fa-solid fa-plus"></i> Thêm sản phẩm
                         </button>
+                        <button type="button" class="btn btn-primary" onclick="openProviderManager()" style="margin-left: 10px; color: white;">
+                        <i class="fa-solid fa-users-gear"></i> Quản lý Nhà cung cấp
+                        </button>
                     </div>
-
+<div id="providerManagerModal" class="modal">
+    <div class="modal-content" style="max-width: 1600px; width: 95%;">
+        <span class="close-btn" onclick="closeModal('providerManagerModal')"><i class="fa-solid fa-xmark"></i></span>
+        
+        <h3 class="modal-title">Quản lý Nhà Cung Cấp</h3>
+        
+        <div class="inline-form" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+            <input type="hidden" id="manageProviderId"> <input type="text" id="manageProviderName" placeholder="Tên NCC" class="form-input" style="flex: 2;">
+            <input type="text" id="manageProviderPhone" placeholder="SĐT" class="form-input" style="flex: 1;">
+            <input type="email" id="manageProviderEmail" placeholder="Email" class="form-input" style="flex: 1;">
+             <input type="text" id="manageProviderAddress" placeholder="Địa chỉ" class="form-input" style="flex: 2;">
+            
+            <button type="button" onclick="saveOrUpdateProvider()" class="btn btn-success">
+                <i class="fa-solid fa-save"></i> Lưu
+            </button>
+            <button type="button" onclick="resetProviderForm()" class="btn btn-secondary">
+                <i class="fa-solid fa-rotate-right"></i> Hủy
+            </button>
+        </div>
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table class="data-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên</th>
+                        <th>SĐT</th>
+                        <th>Email</th>
+                        <th>Địa chỉ</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="providerListBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
                     <form
                         id="multiProductForm"
                         th:action="@{/Admin/saveMultipleProducts}"
@@ -513,6 +552,157 @@
                         container.appendChild(div);
                     });
             }
+            // --- CÁC HÀM QUẢN LÝ NHÀ CUNG CẤP (MỚI) ---
+
+    // 1. Mở Modal và tải dữ liệu
+    function openProviderManager() {
+        document.getElementById('providerManagerModal').style.display = 'flex';
+        loadProviderList();
+    }
+
+    // 2. Tải danh sách NCC từ Server
+    function loadProviderList() {
+        fetch('/Admin/api/providers') // Cần tạo API này ở Bước 3
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('providerListBody');
+                tbody.innerHTML = '';
+                data.forEach(p => {
+                    const row = `
+                        <tr>
+                            <td>${p.providerId}</td>
+                            <td>${p.providerName}</td>
+                            <td>${p.providerPhone || ''}</td>
+                            <td>${p.providerEmail || ''}</td>
+                             <td>${p.providerAddress || ''}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-warning" onclick="editProvider(${p.providerId}, '${p.providerName}', '${p.providerPhone || ''}', '${p.providerEmail || ''}', '${p.providerAddress || ''}')">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteProvider(${p.providerId})">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            });
+    }
+
+    // 3. Đưa dữ liệu lên form để sửa
+    function editProvider(id, name, phone, email, address) {
+        document.getElementById('manageProviderId').value = id;
+        document.getElementById('manageProviderName').value = name;
+        document.getElementById('manageProviderPhone').value = phone;
+        document.getElementById('manageProviderEmail').value = email;
+        document.getElementById('manageProviderAddress').value = address;
+    }
+
+    // 4. Reset form
+    function resetProviderForm() {
+        document.getElementById('manageProviderId').value = '';
+        document.getElementById('manageProviderName').value = '';
+        document.getElementById('manageProviderPhone').value = '';
+        document.getElementById('manageProviderEmail').value = '';
+        document.getElementById('manageProviderAddress').value = '';
+    }
+
+    // 5. Lưu (Thêm mới hoặc Cập nhật)
+    function saveOrUpdateProvider() {
+        const id = document.getElementById('manageProviderId').value;
+        const name = document.getElementById('manageProviderName').value.trim();
+        const phone = document.getElementById('manageProviderPhone').value.trim();
+        const email = document.getElementById('manageProviderEmail').value.trim();
+         const address = document.getElementById('manageProviderAddress').value.trim();
+        
+        if (!name) return alert("Vui lòng nhập tên NCC");
+
+        const { token, header } = getCsrfToken();
+        const data = { providerName: name, providerPhone: phone, providerEmail: email, providerAddress: address };
+        
+        let url = '/Admin/addProvider'; // Mặc định là thêm
+        let method = 'POST';
+
+        // Nếu có ID -> Là chức năng Sửa
+        if (id) {
+            url = '/Admin/updateProvider'; // Cần tạo API này ở Bước 3
+            method = 'PUT';
+            data.providerId = id;
+        }
+
+        fetch(url, {
+            method: method,
+            headers: { "Content-Type": "application/json", [header]: token },
+            body: JSON.stringify(data)
+        })
+        .then(res => {
+            if (res.ok) return res.json();
+            throw new Error('Lỗi khi lưu');
+        })
+        .then(() => {
+          // 1. Tải lại danh sách trong bảng (để thấy dòng mới thêm)
+            loadProviderList(); 
+            
+            // 2. Xóa trắng form nhập liệu (để nhập người tiếp theo)
+            resetProviderForm(); 
+            
+            // 3. Cập nhật các ô chọn NCC ở màn hình chính (MỚI)
+            refreshMainProviderDropdowns();
+
+            // 4. KHÔNG reload trang nữa -> Modal sẽ giữ nguyên không bị tắt
+            // location.reload(); <--- ĐÃ BỎ DÒNG NÀY
+            
+            // 5. (Tùy chọn) Hiện thông báo nhỏ góc màn hình
+            // alert("Đã lưu thành công!");
+        })
+        
+        .catch(err => alert("Có lỗi xảy ra: " + err));
+    }
+
+    // 6. Xóa NCC
+    function deleteProvider(id) {
+        if (!confirm('Bạn có chắc muốn xóa NCC này? Các sản phẩm liên quan có thể bị ảnh hưởng.')) return;
+        
+        const { token, header } = getCsrfToken();
+        
+        fetch(`/Admin/deleteProvider/${id}`, { // Cần tạo API này ở Bước 3
+            method: 'DELETE',
+            headers: { [header]: token }
+        })
+        .then(res => {
+            if (res.ok) {
+                loadProviderList();
+                location.reload(); // Đồng bộ lại dropdown
+            } else {
+                alert("Không thể xóa (có thể do ràng buộc dữ liệu sản phẩm)");
+            }
+        });
+    }
+    function refreshMainProviderDropdowns() {
+        fetch('/Admin/api/providers')
+            .then(res => res.json())
+            .then(data => {
+                // Tìm tất cả thẻ select chọn NCC trong bảng nhập hàng
+                const selects = document.querySelectorAll('select[name="providerId"]');
+                
+                selects.forEach(select => {
+                    const currentValue = select.value; // Giữ lại giá trị đang chọn (nếu có)
+                    
+                    // Xóa hết option cũ
+                    select.innerHTML = '<option value="">-- Chọn NCC --</option>';
+                    
+                    // Thêm option mới
+                    data.forEach(p => {
+                        const option = new Option(p.providerName, p.providerId);
+                        select.add(option);
+                    });
+                    
+                    // Khôi phục giá trị đã chọn (nếu NCC đó vẫn còn)
+                    select.value = currentValue;
+                });
+            });
+        }
 
             window.onload = () => addProductRow();
         </script>

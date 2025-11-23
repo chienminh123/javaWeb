@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Quản Lý Khách Hàng</title>
+    <link rel="stylesheet" th:href="@{/assets/css/admin.css}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+    .badge {
+        padding: 5px 10px;
+        border-radius: 15px; /* Bo tròn nhẹ */
+        color: white; 
+        font-size: 0.8rem;
+        display: inline-block;
+        min-width: 80px; 
+        text-align: center;
+        font-weight: 500;
+    }
+
+    /* Màu nền cho từng rank */
+    .rank-member { background-color: #6c757d; } /* Xám */
+    .rank-vip    { background-color: #ffc107; color: #000; } /* Vàng */
+    .rank-admin  { background-color: #dc3545; } /* Đỏ */
+    
+    /* Fallback */
+    .badge:not([class*="rank-"]) { background-color: #0d6efd; }
+    
+    /* Style cho thông báo */
+    .alert {
+        padding: 10px 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+    .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body class="admin-layout">
+    <div th:replace="~{Admin/sidebar :: sideBar}"></div>
+
+    <div class="admin-content-wrapper">
+        <div th:replace="~{Admin/header :: Header}"></div>
+
+        <main class="admin-main">
+            <div class="container">
+                <h2 class="page-title"><i class="fa-solid fa-users"></i> Danh Sách Khách Hàng</h2>
+                
+                <div th:if="${successMessage}" class="alert alert-success">
+                    <i class="fa-solid fa-check-circle"></i> <span th:text="${successMessage}"></span>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger">
+                    <i class="fa-solid fa-triangle-exclamation"></i> <span th:text="${errorMessage}"></span>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form th:action="@{/Admin/customers}" method="get" class="d-flex align-items-center gap-2">
+                            
+                            <label for="min" class="mb-0 fw-bold text-nowrap" style="font-size: 0.9rem;">
+                                Điểm từ:
+                            </label>
+                            
+                            <input type="number" id="min" name="min" 
+                                   class="form-control form-control-sm" 
+                                   style="width: 100px;height: 35px;" 
+                                   placeholder="0" th:value="${minPoints}">
+                            
+                            <label for="max" class="mb-0 fw-bold text-nowrap" style="font-size: 0.9rem;">
+                                - Đến:
+                            </label>
+                            
+                            <input type="number" id="max" name="max" 
+                                   class="form-control form-control-sm" 
+                                   style="width: 100px; height: 35px;" 
+                                   placeholder="Max" th:value="${maxPoints}">
+                            
+                            <button type="submit" class="btn btn-primary btn-sm ms-2">
+                                <i class="fas fa-filter"></i> Lọc
+                            </button>
+                            
+                            <a th:href="@{/Admin/customers}" class="btn btn-secondary btn-sm">
+                                Bỏ lọc
+                            </a>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Họ tên</th>
+                                <th>SĐT</th>
+                                <th>Email</th>
+                                <th>Điểm tích lũy</th>
+                                <th>Hạng khách hàng</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${customers == null || customers.empty}">
+                                <td colspan="7" style="text-align: center; padding: 20px; font-style: italic; color: #666;">
+                                    Chưa có dữ liệu khách hàng phù hợp
+                                </td>
+                            </tr>
+
+                            <tr th:each="user, stat : ${customers}">
+                                <td th:text="${stat.count}"></td>
+                                <td th:text="${user.userName}"></td>
+                                <td th:text="${user.phone}"></td>
+                                <td th:text="${user.email}"></td>
+                                
+                                <td class="text-right" th:text="${user.points}"></td>
+
+                                <td>
+                                    <span th:text="${user.rank != null ? user.rank : 'MEMBER'}"
+                                          th:class="|badge rank-${user.rank != null ? #strings.toLowerCase(user.rank) : 'member'}|">
+                                    </span>
+                                </td>
+
+                                <td style="white-space: nowrap;">
+                                    <a th:href="@{/Admin/user-detail/{id}(id=${user.userId})}" 
+                                       class="btn btn-sm btn-info text-white" 
+                                       title="Xem chi tiết & Lịch sử">
+                                        <i class="fa-solid fa-circle-info"></i>
+                                    </a>
+
+                                    <a th:if="${user.enabled == true}"
+                                       th:href="@{/Admin/user/lock/{id}(id=${user.userId})}"
+                                       class="btn btn-sm btn-warning text-dark" 
+                                       onclick="return confirm('Bạn có chắc muốn KHÓA tài khoản này?')"
+                                       title="Khóa tài khoản">
+                                        <i class="fa-solid fa-lock"></i>
+                                    </a>
+                                    
+                                    <a th:if="${user.enabled == false}"
+                                       th:href="@{/Admin/user/unlock/{id}(id=${user.userId})}"
+                                       class="btn btn-sm btn-success" 
+                                       onclick="return confirm('Mở khóa tài khoản này?')"
+                                       title="Mở khóa">
+                                        <i class="fa-solid fa-lock-open"></i>
+                                    </a>
+
+                                    <a th:href="@{/Admin/user/delete/{id}(id=${user.userId})}" 
+                                       class="btn btn-sm btn-danger" 
+                                       onclick="return confirm('Cảnh báo: Xóa user sẽ xóa hết đơn hàng liên quan. Bạn chắc chứ?')"
+                                       title="Xóa vĩnh viễn">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+        <div th:replace="~{Admin/footer :: Footer}"></div>
+    </div>
+</body>
+</html>

@@ -7,6 +7,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Entity
 @Data
@@ -16,6 +18,8 @@ public class OrderDetail {
     private Integer orderDetailId;
     @ManyToOne
     @JoinColumn(name = "orderId", referencedColumnName = "orderId") 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Orders orders; // Quan hệ nhiều-một với Đơn hàng
     @ManyToOne
     @JoinColumn(name = "productId", referencedColumnName = "productId")

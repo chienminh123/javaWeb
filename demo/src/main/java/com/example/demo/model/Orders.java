@@ -3,6 +3,7 @@ package com.example.demo.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,6 +12,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Entity
 @Data
@@ -27,9 +30,13 @@ public class Orders {
     private Double discountAmount;  // Số tiền được giảm
     private Double finalTotal;
     
-    @OneToMany(mappedBy="orders")
+    @OneToMany(mappedBy="orders" ,cascade = CascadeType.ALL)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<OrderDetail> orderDetails;
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "userId")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private User user; // Quan hệ nhiều-một với User
 }

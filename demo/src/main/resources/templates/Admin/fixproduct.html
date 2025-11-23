@@ -17,11 +17,7 @@
       <div th:replace="Admin/header :: Header"></div>
 <div
           class="coupon-manager-section"
-          style="
-            margin-top: 50px;
-            padding-top: 20px;
-            border-top: 2px dashed #ccc;
-          "
+          
         >
           <h2 class="page-title">
             <i class="fa-solid fa-ticket"></i> Quản lý Mã Giảm Giá
@@ -136,7 +132,11 @@
               </tbody>
             </table>
           </div>
-      <main class="admin-main">
+      <main class="admin-main" style="
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px dashed #ccc;
+          ">
         <div class="product-edit-container">
           <h2 class="page-title">
             <i class="fa-solid fa-pen-to-square"></i> Sửa đổi sản phẩm
@@ -256,10 +256,15 @@
                   </td>
 
                   <td>
-                    <span
-                      class="sell-price-display fw-bold"
-                      th:text="${p.sellPrice != null ? #numbers.formatDecimal(p.sellPrice, 0, 'COMMA', 0, 'POINT') : '0'}"
-                    ></span>
+                    
+                    <input
+                      type="number"
+                      class="form-input text-right fw-bold"
+                      th:name="|sellPrice[${iter.index}]|"
+                      th:value="${p.sellPrice != null ? p.sellPrice : 0}"
+                      oninput="calculatePrices(this)"
+                    />
+                 
                   </td>
 
                   <td>
@@ -339,29 +344,43 @@
         }
       }
 
-      function calculatePrices(input) {
-        const row = input.closest("tr");
-        // Lấy giá trị hoặc mặc định 0
-        const basisPrice =
-          parseFloat(row.querySelector('input[name*="basisPrice"]').value) || 0;
-        const markup =
-          parseFloat(row.querySelector('input[name*="markupPercent"]').value) ||
-          0;
-        const discount =
-          parseFloat(row.querySelector('input[name*="discount"]').value) || 0;
+     function calculatePrices(input) {
+  const row = input.closest("tr");
+  
+  // Lấy các ô input trong dòng
+  const basisInput = row.querySelector('input[name*="basisPrice"]');
+  const markupInput = row.querySelector('input[name*="markupPercent"]');
+  const sellInput = row.querySelector('input[name*="sellPrice"]'); // Input giá bán mới
+  const discountInput = row.querySelector('input[name*="discount"]');
+  const finalDisplay = row.querySelector(".final-price-display");
 
-        // Tính toán logic
-        const sellPrice = basisPrice * (1 + markup / 100);
-        const finalPrice = sellPrice * (1 - discount / 100);
+  // Lấy giá trị hiện tại
+  let basis = parseFloat(basisInput.value) || 0;
+  let markup = parseFloat(markupInput.value) || 0;
+  let sell = parseFloat(sellInput.value) || 0;
+  let discount = parseFloat(discountInput.value) || 0;
 
-        // Hiển thị
-        const formatter = new Intl.NumberFormat("vi-VN");
-        row.querySelector(".sell-price-display").textContent = formatter.format(
-          sellPrice.toFixed(0)
-        );
-        row.querySelector(".final-price-display").textContent =
-          formatter.format(finalPrice.toFixed(0));
-      }
+  // LOGIC TÍNH TOÁN 2 CHIỀU
+  if (input.name.includes("basisPrice") || input.name.includes("markupPercent")) {
+    // Trường hợp 1: Nhập giá gốc hoặc % lợi nhuận -> Tính ra giá bán
+    sell = basis * (1 + markup / 100);
+    sellInput.value = Math.round(sell); // Cập nhật ô giá bán
+  } 
+  else if (input.name.includes("sellPrice")) {
+    // Trường hợp 2: Tự nhập giá bán -> Tính ngược lại % lợi nhuận
+    if (basis > 0) {
+      markup = ((sell - basis) / basis) * 100;
+      markupInput.value = markup.toFixed(1); // Cập nhật ô % lợi nhuận
+    }
+  }
+
+  // Luôn tính lại giá sau giảm (Final Price)
+  let finalPrice = sell * (1 - discount / 100);
+
+  // Hiển thị format tiền tệ
+  const formatter = new Intl.NumberFormat("vi-VN");
+  finalDisplay.textContent = formatter.format(finalPrice.toFixed(0));
+}
 
       function applyGlobalMarkup() {
         const globalPercent = document.getElementById("globalMarkup").value;

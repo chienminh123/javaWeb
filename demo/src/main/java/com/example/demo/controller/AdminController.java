@@ -15,6 +15,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +30,8 @@ import com.example.demo.model.Coupon;
 import com.example.demo.model.Genre;
 import com.example.demo.model.Orders;
 import com.example.demo.model.Provider;
+import com.example.demo.model.User;
+import com.example.demo.repository.UserRepository;
 import com.example.demo.service.CouponService;
 import com.example.demo.service.EmailService;
 import com.example.demo.service.ExcelExportService;
@@ -425,4 +429,159 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
         couponService.delete(id);
         return "redirect:/Admin/fixproduct";
     }
+    // 1. API lấy danh sách NCC (Trả về JSON)
+    @GetMapping("/api/providers")
+    @ResponseBody
+    public List<Provider> getProvidersApi() {
+        return providerService.findAll();
+    }
+
+    // 2. API Cập nhật NCC
+    @org.springframework.web.bind.annotation.PutMapping("/updateProvider")
+    @ResponseBody
+    @Transactional
+    public Provider updateProvider(@RequestBody Provider provider) {
+        Provider exist = providerService.findAll().stream()
+            .filter(p -> p.getProviderId() == provider.getProviderId())
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("NCC không tồn tại"));
+            
+        exist.setProviderName(provider.getProviderName());
+        exist.setProviderEmail(provider.getProviderEmail());
+        exist.setProviderPhone(provider.getProviderPhone());
+        exist.setProviderAddress(provider.getProviderAddress());
+        
+        return providerService.save(exist);
+    }
+
+    // 3. API Xóa NCC
+    @org.springframework.web.bind.annotation.DeleteMapping("/deleteProvider/{id}")
+    @ResponseBody
+    @Transactional
+    public String deleteProvider(@PathVariable Integer id) {
+        // Lưu ý: Nếu DB có khóa ngoại, bạn cần xử lý try-catch ở đây
+        // hoặc xóa các sản phẩm liên quan trước.
+        // Ở đây giả định xóa cơ bản:
+        providerService.findAll().stream()
+            .filter(p -> p.getProviderId() == id)
+            .findFirst()
+            .ifPresent(p -> {
+                 // Gọi service xóa (Bạn cần thêm hàm delete vào ProviderService nếu chưa có)
+                 // providerService.delete(id); 
+                 // Tạm thời gọi repo trực tiếp nếu service chưa có hàm delete:
+                 // providerRepo.deleteById(id);
+            });
+            
+        // Vì trong ProviderService bạn chưa gửi hàm delete, 
+        // hãy thêm hàm này vào ProviderService.java:
+        // public void delete(Integer id) { repo.deleteById(id); }
+        
+        // Sau đó dùng:
+        // providerService.delete(id);
+        
+        return "Deleted";
+    }
+  
+
+  @Autowired
+    private UserRepository userRepository;
+
+    // --- 1. HIỂN THỊ DANH SÁCH + LỌC ---
+  @GetMapping("/customers")
+    public String listCustomers(Model model, 
+                                @RequestParam(value = "min", required = false) Long min,
+                                @RequestParam(value = "max", required = false) Long max) {
+        List<User> list;
+        if (min == null && max == null) {
+            list = userRepository.findByRole("USER"); 
+        } else {
+            long minVal = (min != null) ? min : 0; 
+            long maxVal = (max != null) ? max : Long.MAX_VALUE; 
+            list = userRepository.findByRoleAndPointsBetweenOrderByPointsDesc("USER", minVal, maxVal);
+        }
+        model.addAttribute("customers", list); 
+        model.addAttribute("minPoints", min);
+        model.addAttribute("maxPoints", max);
+        return "Admin/customers";
+    }
+
+    // --- 2. SỬA LẠI: XÓA TÀI KHOẢN (Đồng bộ URL với HTML) ---
+    // HTML gọi: /Admin/user/delete/{id} -> Controller chỉ cần: /user/delete/{id}
+    @GetMapping("/user/delete/{id}") 
+    public String deleteUser(@PathVariable("id") int userId, RedirectAttributes redirectAttributes) {
+        try {
+            User user = userRepository.findById(userId).orElse(null);
+            if (user == null) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Người dùng không tồn tại!");
+                return "redirect:/Admin/customers";
+            }
+            if (user.getOrders() != null && !user.getOrders().isEmpty()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa khách vì họ đã có đơn hàng. Hãy dùng chức năng KHÓA.");
+                return "redirect:/Admin/customers";
+            }
+            userRepository.delete(user);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa khách hàng thành công.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi xóa: " + e.getMessage());
+        }
+        return "redirect:/Admin/customers";
+    }
+
+    // --- 3. SỬA LẠI: KHÓA TÀI KHOẢN ---
+    // Bỏ chữ "/Admin" ở đầu vì class đã có rồi
+    @GetMapping("/user/lock/{id}") 
+    public String lockUser(@PathVariable("id") int userId, RedirectAttributes redirectAttributes) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            user.setEnabled(false); 
+            userRepository.save(user);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã khóa tài khoản: " + user.getUserName());
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy user!");
+        }
+        return "redirect:/Admin/customers";
+    }
+
+    // --- 4. SỬA LẠI: MỞ KHÓA ---
+    @GetMapping("/user/unlock/{id}")
+    public String unlockUser(@PathVariable("id") int userId, RedirectAttributes redirectAttributes) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            user.setEnabled(true);
+            userRepository.save(user);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã mở khóa tài khoản.");
+        }
+        return "redirect:/Admin/customers";
+    }
+
+    // --- 5. THÊM MỚI: CHỨC NĂNG SỬA (Xem chi tiết & Cập nhật) ---
+    // HTML của bạn đang gọi: /Admin/user-detail/{id}
+    
+    // a. Hiển thị form sửa
+    @GetMapping("/user-detail/{id}")
+    public String showUserDetail(@PathVariable("id") Integer id, Model model) {
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
+        model.addAttribute("user", user);
+        return "Admin/user-detail"; // Bạn cần tạo file này (xem bước 2)
+    }
+
+    // b. Xử lý lưu sau khi sửa
+    @PostMapping("/updateUser")
+    public String updateUser(@ModelAttribute("user") User user, RedirectAttributes redirectAttributes) {
+        User existingUser = userRepository.findById(user.getUserId()).orElse(null);
+        if (existingUser != null) {
+            // Chỉ cho phép cập nhật thông tin cá nhân, KHÔNG cập nhật mật khẩu/điểm ở đây nếu không cần thiết
+            existingUser.setUserName(user.getUserName());
+            existingUser.setPhone(user.getPhone());
+            existingUser.setAddress(user.getAddress());
+            existingUser.setEmail(user.getEmail());
+            // existingUser.setRank(user.getRank()); // Nếu muốn sửa hạng thủ công
+            
+            userRepository.save(existingUser);
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin khách hàng thành công!");
+        }
+        return "redirect:/Admin/customers";
+    }
 }
+    

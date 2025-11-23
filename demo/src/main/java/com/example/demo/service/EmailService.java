@@ -39,14 +39,18 @@ public class EmailService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setFrom(FROM_EMAIL);
-        // Giả định User model có trường getEmail()
+        
         helper.setTo(order.getUser().getEmail()); 
         helper.setSubject("Xác nhận Đơn hàng #" + order.getOrderId() + " thành công!");
         
-        // Tính tổng tiền cho email (từ order details)
-        double totalPrice = order.getOrderDetails().stream()
-                                            .mapToDouble(d -> d.getPrice() * d.getQuantity())
-                                            .sum();
+       double totalPrice;
+        if (order.getFinalTotal() != null && order.getFinalTotal() > 0) {
+            totalPrice = order.getFinalTotal();
+        } else {
+            totalPrice = order.getOrderDetails().stream()
+                                .mapToDouble(d -> d.getPrice() * d.getQuantity())
+                                .sum();
+        }
         
         Context context = new Context();
         context.setVariable("order", order);

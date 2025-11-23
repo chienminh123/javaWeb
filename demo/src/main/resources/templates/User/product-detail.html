@@ -133,6 +133,83 @@
         border-top: 1px solid #eee;
         padding-top: 20px;
       }
+      /* CSS CHO PHẦN ĐÁNH GIÁ */
+    .rating-overview {
+        background: #fff;
+        padding: 20px;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        display: flex;
+        gap: 40px;
+        margin-bottom: 20px;
+        align-items: center;
+    }
+    .rating-score {
+        text-align: center;
+    }
+    .rating-score .score {
+        font-size: 48px;
+        font-weight: bold;
+        color: #ee4d2d;
+    }
+    .rating-stars i {
+        color: #ee4d2d;
+        font-size: 18px;
+    }
+    
+    /* Thanh lọc (Filter) */
+    .rating-filters {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .filter-btn {
+        padding: 6px 15px;
+        border: 1px solid #ddd;
+        background: #fff;
+        border-radius: 20px;
+        text-decoration: none;
+        color: #333;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+    .filter-btn:hover {
+        border-color: #ee4d2d;
+        color: #ee4d2d;
+    }
+    .filter-btn.active {
+        background: #fff;
+        border-color: #ee4d2d;
+        color: #ee4d2d;
+        font-weight: bold;
+        box-shadow: 0 0 5px rgba(238, 77, 45, 0.2);
+    }
+
+    /* Danh sách comment */
+    .review-item {
+        padding: 20px 0;
+        border-bottom: 1px solid #f1f1f1;
+        display: flex;
+        gap: 15px;
+    }
+    .user-avatar-placeholder {
+        width: 40px;
+        height: 40px;
+        background: #ccc;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: bold;
+    }
+    .review-content-area {
+        flex: 1;
+    }
+    .review-author { font-size: 13px; font-weight: 600; }
+    .review-date { font-size: 12px; color: #888; margin-left: 10px; }
+    .review-text { margin-top: 8px; color: #333; line-height: 1.5; }
+    .mini-stars { color: #ee4d2d; font-size: 12px; }
     </style>
   </head>
   <body>
@@ -240,7 +317,107 @@
         </div>
       </div>
     </main>
+<div class="review-section-container" style="max-width: 1200px; margin: 40px auto;">
+    <h3>ĐÁNH GIÁ SẢN PHẨM</h3>
 
+    <div class="rating-overview">
+        <div class="rating-score">
+            <div class="score">
+                <span th:text="${stats['average']}">4.5</span><span style="font-size: 24px; color: #666;">/5</span>
+            </div>
+            <div class="rating-stars">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+            </div>
+            <div style="color: #666; font-size: 13px; margin-top: 5px;">
+                ([[${stats['total']}]] đánh giá)
+            </div>
+        </div>
+
+        <div class="rating-filters">
+            <a th:href="@{/product/{id}(id=${product.productId})}" 
+               class="filter-btn" 
+               th:classappend="${currentFilter == null} ? 'active'">
+               Tất cả
+            </a>
+            <a th:href="@{/product/{id}(id=${product.productId}, rating=5)}" 
+               class="filter-btn" 
+               th:classappend="${currentFilter == 5} ? 'active'">
+               5 Sao ([[${stats['count5']}]])
+            </a>
+            <a th:href="@{/product/{id}(id=${product.productId}, rating=4)}" 
+               class="filter-btn" 
+               th:classappend="${currentFilter == 4} ? 'active'">
+               4 Sao ([[${stats['count4']}]])
+            </a>
+            <a th:href="@{/product/{id}(id=${product.productId}, rating=3)}" 
+               class="filter-btn" 
+               th:classappend="${currentFilter == 3} ? 'active'">
+               3 Sao ([[${stats['count3']}]])
+            </a>
+            <a th:href="@{/product/{id}(id=${product.productId}, rating=2)}" 
+               class="filter-btn" 
+               th:classappend="${currentFilter == 2} ? 'active'">
+               2 Sao ([[${stats['count2']}]])
+            </a>
+            <a th:href="@{/product/{id}(id=${product.productId}, rating=1)}" 
+               class="filter-btn" 
+               th:classappend="${currentFilter == 1} ? 'active'">
+               1 Sao ([[${stats['count1']}]])
+            </a>
+        </div>
+    </div>
+
+    <div class="review-form" th:if="${canReview}" style="margin-bottom: 30px; background: #fcfcfc; padding: 20px; border: 1px dashed #ddd;">
+        <h4 style="font-size: 16px; margin-bottom: 15px;">Gửi đánh giá của bạn</h4>
+        <form th:action="@{/product/review}" method="post">
+            <input type="hidden" name="productId" th:value="${product.productId}">
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <select name="rating" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                    <option value="5">⭐⭐⭐⭐⭐ (Tuyệt vời)</option>
+                    <option value="4">⭐⭐⭐⭐ (Hài lòng)</option>
+                    <option value="3">⭐⭐⭐ (Bình thường)</option>
+                    <option value="2">⭐⭐ (Không hài lòng)</option>
+                    <option value="1">⭐ (Tệ)</option>
+                </select>
+            </div>
+            
+            <textarea name="comment" rows="3" placeholder="Sản phẩm thế nào? Hãy chia sẻ với mọi người..." required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+            
+            <div style="margin-top: 10px; text-align: right;">
+                <button type="submit" style="background: #ee4d2d; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer;">Gửi Đánh Giá</button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="review-list">
+        <div th:if="${#lists.isEmpty(reviews)}" style="text-align: center; padding: 40px; color: #999;">
+            <i class="far fa-comment-dots" style="font-size: 40px; margin-bottom: 10px;"></i>
+            <p>Chưa có đánh giá nào phù hợp.</p>
+        </div>
+
+        <div th:each="rv : ${reviews}" class="review-item">
+            <div class="user-avatar-placeholder" th:text="${#strings.substring(rv.user.userName, 0, 1)}">A</div>
+            
+            <div class="review-content-area">
+                <div>
+                    <span class="review-author" th:text="${rv.user.userName}">Nguyen Van A</span>
+                    <span class="review-date" th:text="${#temporals.format(rv.reviewDate, 'dd/MM/yyyy HH:mm')}">20/11/2025</span>
+                </div>
+                
+                <div class="mini-stars">
+                    <i class="fas fa-star" th:each="i : ${#numbers.sequence(1, rv.rating)}"></i>
+                </div>
+                
+                <p class="review-text" th:text="${rv.comment}">Sản phẩm dùng rất thích...</p>
+                
+                <div style="margin-top: 5px; font-size: 12px; color: #28a745;">
+                    <i class="fas fa-check-circle"></i> Đã mua hàng tại Bibo Mart
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     <div th:replace="User/userFooter::user-footer"></div>
 
     <script>

@@ -1,8 +1,11 @@
 package com.example.demo.controller;
 
 import java.security.Principal; // Thêm import
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.demo.model.CartDetail;
 import com.example.demo.model.Carts; // Thêm import
 import com.example.demo.model.Coupon;
 import com.example.demo.model.Orders;
@@ -117,28 +121,51 @@ public class CartController {
     }
 
     @GetMapping("/checkout")
-    public String showCheckout(Model model, Principal principal) {
+    public String showCheckout(Model model, Principal principal,
+                               @RequestParam(name = "selectedItems", required = false) List<Integer> selectedItems) {
         // 1. Kiểm tra đăng nhập
         if (principal == null) {
             return "redirect:/Auth/login";
         }
         
-        // 2. Lấy giỏ hàng của user
-        // Giả định CartService đã có các hàm này
+        // 2. Lấy giỏ hàng gốc
         Carts cart = cartService.getCart(principal.getName());
         
-        // Kiểm tra giỏ hàng rỗng
         if (cart == null || cart.getCartDetails() == null || cart.getCartDetails().isEmpty()) {
-            // Có thể chuyển hướng về trang giỏ hàng hoặc báo lỗi
             return "redirect:/cart?error=Giỏ hàng rỗng";
         }
-        
-        // 3. Tính tổng tiền và chuẩn bị dữ liệu (ví dụ: thông tin User, địa chỉ mặc định)
+
+        // 3. LỌC SẢN PHẨM ĐƯỢC CHỌN (QUAN TRỌNG: Fix lỗi chọn 1 ra tất cả)
+        // Nếu có danh sách ID được gửi lên, chỉ giữ lại các item đó
+        if (selectedItems != null && !selectedItems.isEmpty()) {
+            List<CartDetail> filteredDetails = cart.getCartDetails().stream()
+                .filter(item -> selectedItems.contains(item.getCartDetailId()))
+                .collect(Collectors.toList());
+            
+            // Set tạm vào object cart để view hiển thị (không lưu DB)
+            cart.setCartDetails(filteredDetails); 
+        }
+
+        // 4. Tính lại tổng tiền dựa trên danh sách (đã lọc)
         float total = cartService.calculateTotal(cart);
-        // (Bạn cần thêm logic lấy thông tin User như tên, địa chỉ, SĐT để điền vào form)
         
+        // 5. Lấy danh sách Coupon hợp lệ
+        List<Coupon> allCoupons = couponService.findAll();
+        List<Coupon> validCoupons = allCoupons.stream()
+            .filter(c -> c.isActive())
+            .filter(c -> c.getQuantity() > 0)
+            .filter(c -> {
+                LocalDate now = LocalDate.now();
+                return (c.getStartDate() == null || !now.isBefore(c.getStartDate())) &&
+                       (c.getEndDate() == null || !now.isAfter(c.getEndDate()));
+            })
+            .collect(Collectors.toList());
+
+        // 6. Gửi dữ liệu sang View
         model.addAttribute("cart", cart);
-        model.addAttribute("totalPrice", total);
+        model.addAttribute("totalPrice", total); 
+        model.addAttribute("userCoupons", validCoupons); 
+        model.addAttribute("currentUser", cart.getUser());
         
         return "User/checkout"; 
     }
@@ -152,70 +179,45 @@ public class CartController {
         Principal principal, 
         RedirectAttributes redirectAttributes,
         HttpServletRequest request,
-        @RequestParam(required = false) String couponCode
+        @RequestParam(required = false) String couponCode,
+        // THÊM THAM SỐ NÀY ĐỂ NHẬN LIST ID SẢN PHẨM
+        @RequestParam(name = "selectedItems", required = false) List<Integer> selectedItems 
     ) {
-
-        if (principal == null) {
-            return "redirect:/Auth/login"; 
-        }
+        if (principal == null) return "redirect:/Auth/login"; 
 
         Orders newOrder = null;
         try {
             String userPhone = principal.getName();
 
-            // 1. TẠO ĐƠN HÀNG (Trừ kho, tạo Order)
-            newOrder = orderService.createOrderFromCart(userPhone, address, phone, paymentMethod, couponCode);
+            // Gọi hàm Service với danh sách selectedItems
+            newOrder = orderService.createOrderFromCart(userPhone, address, phone, paymentMethod, couponCode, selectedItems);
 
-            // 2. XỬ LÝ LUỒNG THANH TOÁN
             if ("VNPay".equals(paymentMethod)) {
-                
                 newOrder.setStatus("Chờ thanh toán VNPay");
-                orderService.save(newOrder); // Lưu trạng thái
-                
-                String orderInfo = "Thanh toan don hang #" + newOrder.getOrderId();
-                // Gọi hàm createPaymentUrl thật (cần request để lấy IP)
+                orderService.save(newOrder); 
                 String vnpayUrl = vnpayService.createPaymentUrl(newOrder, request); 
-                
-                // Chuyển hướng người dùng đến Cổng VNPay Sandbox
                 return "redirect:" + vnpayUrl; 
 
             } else if ("Chuyển khoản".equals(paymentMethod)) {
                 newOrder.setStatus("Chờ thanh toán"); 
                 orderService.save(newOrder); 
-
-            } else { // COD
+            } else { 
                 newOrder.setStatus("Đang xử lý"); 
                 orderService.save(newOrder); 
             }
             
-            // 3. GỬI EMAIL (Chỉ gửi cho COD và Chuyển khoản thủ công)
-            // sendOrderEmails(newOrder);
             orderService.notifyOrderSuccess(newOrder);
-                    
-            redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn hàng: #" + newOrder.getOrderId());
+            redirectAttributes.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn: #" + newOrder.getOrderId());
             return "redirect:/User/order"; 
 
         } catch (Exception e) {
-            logger.error("LỖI XỬ LÝ ĐẶT HÀNG:", e);
-            String errorMessage = "Lỗi đặt hàng: " + (e.getMessage() != null ? e.getMessage() : "Lỗi không xác định.");
-            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
-            
+            logger.error("LỖI ĐẶT HÀNG:", e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
             return "redirect:/cart"; 
         }
     }
 
-    // private void sendOrderEmails(Orders order) {
-    //     try {
-    //          emailService.sendOrderConfirmation(order); 
-    //          emailService.sendNewOrderNotification(order); 
-    //          List<Sizes> lowStockItems = productService.checkLowStockAfterOrder(order, 5); 
-    //          if (!lowStockItems.isEmpty()) {
-    //              emailService.sendLowStockNotification(lowStockItems);
-    //          }
-    //     } catch (MessagingException e) {
-    //         logger.warn("LỖI GỬI EMAIL XÁC NHẬN:", e);
-    //     }
-    // }
+   
 
     @GetMapping("/api/coupon/check")
     @ResponseBody

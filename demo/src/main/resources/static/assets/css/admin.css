@@ -276,8 +276,9 @@ a {
 }
 
 .dashboard-content {
-    max-width: 1200px; /* Limit content width for better readability */
-    margin: 0 auto;
+    max-width: 100%; /* Sửa từ 1200px thành 100% để tràn màn hình */
+    width: 100%; /* Đảm bảo chiếm toàn bộ chiều ngang */
+    margin: 0;
 }
 
 .banner {

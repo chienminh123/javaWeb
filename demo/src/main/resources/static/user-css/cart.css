@@ -179,18 +179,76 @@ input[type="number"] {
         var(--tw-shadow, 0 0 #0000);
 }
 
+/* Stepper */
+.checkout-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    position: relative;
+}
+.checkout-steps::before {
+    content: "";
+    position: absolute;
+    top: 20px;
+    left: 40px;
+    right: 40px;
+    height: 2px;
+    background: #ddd;
+    z-index: 0;
+}
+.step {
+    text-align: center;
+    z-index: 1;
+    background: white;
+    flex: 1;
+}
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #ddd;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+.step.active .step-number {
+    background: #ff424e;
+    color: white;
+}
+.step-title {
+    font-size: 14px;
+    color: #999;
+}
+.step.active .step-title {
+    color: #ff424e;
+    font-weight: bold;
+}
+
 /* "Continue Shopping" link */
 .link-primary {
     display: inline-flex;
     align-items: center;
-    font-size: 1.125rem; /* text-lg */
-    line-height: 1.75rem;
-    font-weight: 500; /* font-medium */
-    color: #2563eb; /* text-blue-600 */
-    border-radius: 0.5rem; /* rounded-lg */
+    gap: 10px;
+    background: #fff;
+    color: #ff424e;
+    border: 2px solid #ff424e;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 16px;
+    text-decoration: none;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(255, 66, 78, 0.15);
 }
 .link-primary:hover {
-    color: #1d4ed8; /* hover:text-blue-800 */
+    background: #ff424e;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 66, 78, 0.3);
 }
 .link-primary i {
     margin-right: 0.5rem; /* mr-2 */
@@ -696,16 +754,6 @@ input[type="number"] {
 .text-green-600 {
     /* Phí vận chuyển miễn phí */
     color: #27ae60 !important; /* Giữ xanh, nhưng có thể đổi thành #e74c3c nếu muốn đồng bộ hoàn toàn */
-}
-
-/* Link "Tiếp tục mua sắm" */
-.link-primary {
-    color: #e74c3c !important;
-    font-weight: 600;
-}
-.link-primary:hover {
-    color: #ff4444 !important;
-    text-decoration: underline;
 }
 
 /* Card sản phẩm */

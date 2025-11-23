@@ -21,6 +21,14 @@
                 </span>
                 <span class="label">Trang chủ</span>
             </a>
+            <a th:href="@{/Admin/customers}" 
+            sec:authorize="hasRole('ADMIN')"
+            th:class="${currentPage == '/Admin/customers'} ? 'sidebar-link active' : 'sidebar-link'">
+                <span class="icon">
+                    <i class="fa-solid fa-users"></i>
+                </span>
+                <span class="label">Khách hàng</span>
+            </a>
 
             <a
                 th:href="@{/Admin/tonkho}"
