@@ -190,7 +190,6 @@ public class AuthController {
         if (order.getFinalTotal() != null && order.getFinalTotal() > 0) {
             totalPrice = order.getFinalTotal();
         } else {
-            // Fallback: Cộng dồn thủ công (sẽ không có giảm giá)
             totalPrice = order.getOrderDetails().stream()
                             .mapToDouble(d -> d.getPrice() * d.getQuantity())
                             .sum();
@@ -200,6 +199,44 @@ public class AuthController {
         model.addAttribute("totalPrice", totalPrice);
         
         return "User/order-detail"; 
+    }
+
+    @PostMapping("/User/order/cancel")
+    public String cancelOrder(
+            @RequestParam("orderId") Integer orderId,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
+
+        // 1. Kiểm tra đăng nhập
+        if (principal == null) {
+            return "redirect:/Auth/login";
+        }
+
+        try {
+            // Lấy thông tin đơn hàng
+            Orders order = orderService.findOrderById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng."));
+
+            if (!order.getUser().getPhone().equals(principal.getName())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: Bạn không có quyền thao tác trên đơn hàng này.");
+                return "redirect:/User/order";
+            }
+
+            String currentStatus = order.getStatus();
+            if ("Đang xử lý".equals(currentStatus) || "Chờ thanh toán".equals(currentStatus) ||"Đã thanh toán VNPay".equals(currentStatus)) {
+                orderService.updateOrderStatus(orderId, "Đã hủy");
+                
+                redirectAttributes.addFlashAttribute("successMessage", "Đã hủy đơn hàng #" + orderId + " thành công.");
+            } else {
+                // Nếu trạng thái đã thay đổi (ví dụ Admin vừa chuyển sang Đang giao hàng)
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể hủy đơn hàng đang ở trạng thái: " + currentStatus);
+            }
+
+        } catch (Exception e) {
+            logger.error("Lỗi khi hủy đơn hàng: ", e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+        }
+        return "redirect:/User/order-detail/" + orderId;
     }
 
     @PostMapping("/User/order/return")

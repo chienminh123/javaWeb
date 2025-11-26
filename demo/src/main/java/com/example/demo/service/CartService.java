@@ -54,12 +54,11 @@ public class CartService {
         Sizes size = sizesRepo.findById(sizeId)
             .orElseThrow(() -> new RuntimeException("Size không tồn tại"));
 
-        // 2. KIỂM TRA TỒN KHO (Constraint 2)
+    
         if (quantity > size.getQuantity()) {
             throw new IllegalStateException("Số lượng tồn kho không đủ (Chỉ còn " + size.getQuantity() + ")");
         }
 
-        // 3. Kiểm tra xem sản phẩm (với size đó) đã có trong giỏ chưa
         Optional<CartDetail> existingItem = cartDetailRepo.findByCartsAndProductAndSizes(cart, product, size);
 
         if (existingItem.isPresent()) {

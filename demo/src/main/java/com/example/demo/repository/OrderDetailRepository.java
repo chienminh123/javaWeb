@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import com.example.demo.dto.TopProductIdDTO;
 import com.example.demo.model.OrderDetail;
+import com.example.demo.model.Product;
 
 @Repository
 public interface OrderDetailRepository extends JpaRepository<OrderDetail, Integer> {
@@ -36,11 +37,12 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
        "FROM OrderDetail od JOIN od.orders o " +
        "WHERE (o.orderDate BETWEEN :startDate AND :endDate) " +
        // [ĐIỀU KIỆN LỌC] Chỉ tính doanh thu cho các đơn hàng GIAO THÀNH CÔNG
-       "AND o.status IN ('Hoàn thành', 'Đã giao hàng') " + 
+       "AND o.status IN ('Giao hàng thành công') " + 
        "GROUP BY FUNCTION('DATE', o.orderDate) " +
        "ORDER BY FUNCTION('DATE', o.orderDate) ASC")
     List<Object[]> findRevenueByDateRange(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
 
+        boolean existsByProduct(Product product);
 }

@@ -53,10 +53,9 @@ public class CartController {
             @RequestParam("productId") Integer productId,
             @RequestParam(name = "sizeId", required = false) Integer sizeId,
             @RequestParam("quantity") Integer quantity,
-            Principal principal, // Lấy user đang đăng nhập
-            RedirectAttributes redirectAttributes) { // Dùng để gửi thông báo lỗi
-        
-        // Yêu cầu đăng nhập (Spring Security sẽ xử lý, nhưng check lại)
+            Principal principal, 
+            RedirectAttributes redirectAttributes) { 
+    
         if (principal == null) {
             return "redirect:/Auth/login";
         }

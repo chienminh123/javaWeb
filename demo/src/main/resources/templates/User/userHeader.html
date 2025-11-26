@@ -1,6 +1,5 @@
-<div th:fragment="user-header" class="header">
+<!-- <div th:fragment="user-header" class="header">
   <style>
-    /* ... (Giữ nguyên phần CSS như cũ) ... */
     .search-form {
       position: relative;
     }
@@ -232,7 +231,321 @@
   </nav>
 
   <script th:inline="javascript">
-    /* Code gợi ý tìm kiếm */
+    let suggestionTimer;
+    function fetchSuggestions(input) {
+      clearTimeout(suggestionTimer);
+      const keyword = input.value.trim();
+      const suggestionsBox = document.getElementById("searchSuggestions");
+
+      if (keyword.length < 2) {
+        suggestionsBox.style.display = "none";
+        return;
+      }
+
+      const form = input.closest("form");
+      const genreIdInput = form.querySelector('input[name="genreId"]');
+      const genreId = genreIdInput ? genreIdInput.value : null;
+
+      suggestionTimer = setTimeout(() => {
+        let apiUrl = `/api/products/suggest?keyword=${encodeURIComponent(
+          keyword
+        )}`;
+        if (genreId) {
+          apiUrl += `&genreId=${encodeURIComponent(genreId)}`;
+        }
+
+        fetch(apiUrl)
+          .then((response) => response.json())
+          .then((data) => {
+            suggestionsBox.innerHTML = "";
+            if (data.length > 0) {
+              data.forEach((name) => {
+                const item = document.createElement("div");
+                item.className = "suggestion-item";
+                item.textContent = name;
+                item.onmousedown = () => {
+                  input.value = name;
+                  input.closest("form").submit();
+                };
+                suggestionsBox.appendChild(item);
+              });
+              suggestionsBox.style.display = "block";
+            } else {
+              suggestionsBox.style.display = "none";
+            }
+          })
+          .catch((err) => console.error("Lỗi fetch gợi ý:", err));
+      }, 300);
+    }
+
+    function hideSuggestions() {
+      setTimeout(() => {
+        document.getElementById("searchSuggestions").style.display = "none";
+      }, 200);
+    }
+
+    function toggleProfileMenu() {
+      var menu = document.getElementById("profileMenu");
+      if (menu) {
+        menu.classList.toggle("show");
+      } else {
+        console.error("Không tìm thấy element có id='profileMenu'");
+      }
+    }
+
+    window.onclick = function (event) {
+      if (!event.target.closest(".top-bar__action--account")) {
+        var dropdowns = document.getElementsByClassName(
+          "notification-dropdown"
+        );
+        for (var i = 0; i < dropdowns.length; i++) {
+          var openDropdown = dropdowns[i];
+          if (openDropdown.classList.contains("show")) {
+            openDropdown.classList.remove("show");
+          }
+        }
+      }
+    };
+  </script>
+</div> -->
+<div th:fragment="user-header" class="header">
+  <style>
+    .search-form {
+      position: relative;
+    }
+    .search-suggestions {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      z-index: 1000;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .suggestion-item {
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+    .suggestion-item:hover {
+      background-color: #f5f5f5;
+    }
+
+    .header-action-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .notification-dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 40px;
+      width: 220px;
+      background-color: #fff;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 100;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .notification-dropdown.show {
+      display: block;
+    }
+
+    .notification-header {
+      padding: 12px 15px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+      color: #333;
+    }
+    .notification-item {
+      padding: 10px 15px;
+      border-bottom: 1px solid #f1f1f1;
+      display: block;
+      text-decoration: none;
+      color: #333;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .notification-item:hover {
+      background-color: #f0f8ff;
+      color: #007bff;
+    }
+    .notification-item i {
+      margin-right: 8px;
+      width: 20px;
+      text-align: center;
+      color: #666;
+    }
+    .notification-footer {
+      padding: 0;
+    }
+    .logout-btn {
+      width: 100%;
+      padding: 12px;
+      background: none;
+      border: none;
+      color: #dc3545;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: left;
+      padding-left: 15px;
+      font-size: 14px;
+    }
+    .logout-btn:hover {
+      background-color: #fff5f5;
+    }
+    .logout-btn i {
+      margin-right: 8px;
+      width: 20px;
+    }
+  </style>
+
+  <div class="header__top-bar top-bar">
+    <div class="top-bar__left">
+      <a href="/User/index" class="logo">
+        <img
+          th:src="@{/img/logo.png}"
+          alt="Logo Bibo Mart"
+          class="logo__image"
+        />
+      </a>
+    </div>
+
+    <div class="top-bar__center">
+      <form class="search-form" th:action="@{/search}" method="GET">
+        <input
+          type="text"
+          placeholder="Ba mẹ cần tìm gì cho bé hôm nay?"
+          class="search-form__input"
+          name="keyword"
+          autocomplete="off"
+          oninput="fetchSuggestions(this)"
+          onblur="hideSuggestions()"
+        />
+        <input
+          type="hidden"
+          name="genreId"
+          th:if="${currentGenreId != null}"
+          th:value="${currentGenreId}"
+        />
+        <button type="submit" class="search-form__button">
+          <i class="fa-solid fa-magnifying-glass search-form__icon"></i>
+        </button>
+        <div class="search-suggestions" id="searchSuggestions"></div>
+      </form>
+    </div>
+
+    <div class="top-bar__right header-actions">
+      <a
+        th:href="@{/User/order}"
+        class="top-bar__action top-bar__action--notification"
+      >
+        <i class="fa-regular fa-bell top-bar__icon"></i>
+        <span>Thông báo</span>
+      </a>
+
+      <a
+        th:href="@{/cart}"
+        class="top-bar__action top-bar__action--cart"
+        style="position: relative"
+      >
+        <i class="fa-solid fa-cart-shopping top-bar__icon"></i>
+        <span>Giỏ hàng</span>
+        <span
+          class="cart-count-badge"
+          th:if="${cartItemCount != null}"
+          style="
+            position: absolute;
+            top: -8px;
+            right: 30px;
+            background: #ff4d4f;
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 10px;
+            line-height: 1;
+            text-align: center;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            min-height: 18px;
+            padding: 0 4px;
+          "
+        >
+          <span th:text="${cartItemCount}">0</span>
+        </span>
+      </a>
+
+      <div class="header-action-wrapper">
+        <div
+          class="top-bar__action top-bar__action--account"
+          onclick="toggleProfileMenu()"
+        >
+          <i class="fa-regular fa-circle-user top-bar__icon"></i>
+          <span
+            th:text="${currentUserName != null ? currentUserName : 'Tài khoản'}"
+          ></span>
+        </div>
+
+        <div id="profileMenu" class="notification-dropdown">
+          <div th:if="${currentUserName != null}">
+            <div class="notification-header">
+              <!-- Hiển thị tên người dùng trong menu dropdown -->
+              Xin chào,
+              <strong th:text="${currentUserName}"></strong>
+            </div>
+            <a th:href="@{/Auth/profile}" class="notification-item"
+              ><i class="fa-regular fa-id-card"></i> Thông tin cá nhân</a
+            >
+            <a th:href="@{/User/order}" class="notification-item"
+              ><i class="fa-solid fa-box-open"></i> Lịch sử đơn hàng</a
+            >
+            <div class="notification-footer">
+              <form th:action="@{/logout}" method="post" style="margin: 0">
+                <button type="submit" class="logout-btn">
+                  <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                  Đăng xuất
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Nếu chưa đăng nhập (currentUserName null) -->
+          <div th:unless="${currentUserName != null}">
+            <a th:href="@{/Auth/login}" class="notification-item"
+              ><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</a
+            >
+            <a th:href="@{/register}" class="notification-item"
+              ><i class="fa-solid fa-user-plus"></i> Đăng ký</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="category-menu">
+    <ul class="category-menu__list">
+      <li class="category-menu__item" th:each="g : ${genres}">
+        <a
+          th:href="@{/products(genreId=${g.genreId})}"
+          class="category-menu__link"
+          th:text="${g.genreName}"
+        ></a>
+      </li>
+    </ul>
+  </nav>
+
+  <script th:inline="javascript">
     let suggestionTimer;
     function fetchSuggestions(input) {
       clearTimeout(suggestionTimer);

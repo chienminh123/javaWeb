@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -41,7 +42,6 @@ public class OrderService {
     @Autowired private UserRepository userRepo; 
     @Autowired private ProductService productService;
     @Autowired private CouponService couponService;
-    @Autowired private CartService cartService;
 
     private static final long RANK_SILVER = 100_000;  
     private static final long RANK_GOLD = 500_000;    
@@ -134,38 +134,64 @@ public class OrderService {
         return newOrder;
     }
 
-    @Transactional
+   @Transactional
     public Orders updateOrderStatus(Integer orderId, String newStatus) {
-        Orders order = ordersRepo.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+
+        Orders order = ordersRepo.findByIdWithDetails(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng ID: " + orderId));
+
         String oldStatus = order.getStatus();
 
         if (oldStatus.equals(newStatus)) return order;
+
+        List<String> stockOutStates = List.of(
+            "Mới tạo", 
+            "Chờ thanh toán", 
+            "Đang xử lý", 
+            "Đã xác nhận", 
+            "Đang giao hàng", 
+            "Giao hàng thành công", 
+            "Đã thanh toán VNPay", 
+            "Chờ thanh toán VNPay"
+        );
         
-        // Hoàn kho
-        List<String> stockOutStates = List.of("Đang xử lý", "Đã xác nhận", "Đang giao hàng", "Đã giao hàng", "Đã thanh toán (VNPay)", "Chờ thanh toán VNPay");
         List<String> restoreTriggerStates = List.of("Đã hủy", "Đã trả hàng");
 
         if (restoreTriggerStates.contains(newStatus) && stockOutStates.contains(oldStatus)) {
-            try { restoreStockForOrder(order); } catch (Exception e) { logger.error("Lỗi hoàn kho", e); }
+            try { 
+                restoreStockForOrder(order); 
+            } catch (Exception e) { 
+                logger.error("Lỗi hoàn kho cho đơn hàng " + orderId, e); 
+            }
         }
 
-        // Tích điểm
-        if ("Đã giao hàng".equals(newStatus) && !"Đã giao hàng".equals(oldStatus)) {
-            User user = order.getUser();
-            double orderValue = (order.getFinalTotal() != null) ? order.getFinalTotal() : getTotalPrice(order);
+        if ("Giao hàng thành công".equals(newStatus) && !"Giao hàng thành công".equals(oldStatus)) {
+            User user = userRepo.findById(order.getUser().getUserId())
+                    .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+
+            // Tính giá trị đơn hàng
+            double orderValue;
+            if (order.getFinalTotal() != null && order.getFinalTotal() > 0) {
+                orderValue = order.getFinalTotal();
+            } else {
+                orderValue = getTotalPrice(order);
+            }
+
             long pointsEarned = (long) (orderValue * 0.1); 
             
-            // `points` is a primitive long; no null check needed
-            long currentPoints = user.getPoints();
-            user.setPoints(currentPoints + pointsEarned);
-            
-            checkAndUpgradeRank(user);
-            userRepo.save(user);
+            if (pointsEarned > 0) {
+                long currentPoints = user.getPoints();
+                user.setPoints(currentPoints + pointsEarned);
+                checkAndUpgradeRank(user);
+                userRepo.save(user);
+                
+                logger.info("Đã cộng " + pointsEarned + " điểm cho User ID: " + user.getUserId());
+            }
         }
 
         order.setStatus(newStatus);
         Orders updatedOrder = ordersRepo.save(order);
-        
+    
         try {
             if(newStatus.equals("Đã trả hàng")) emailService.sendUserReturnNotification(updatedOrder);
             emailService.sendOrderStatusUpdate(updatedOrder, newStatus);
@@ -235,6 +261,16 @@ public class OrderService {
             if (!lowStockItems.isEmpty()) emailService.sendLowStockNotification(lowStockItems);
         } catch (MessagingException e) { logger.warn("Lỗi email", e); }
     }
+
+    public List<Orders> findOrdersByStatusAndDate(String status, LocalDate date) {
+    if (date == null) return List.of();
+    LocalDateTime start = date.atStartOfDay();
+    LocalDateTime end = date.atTime(java.time.LocalTime.MAX);
+    
+    return ordersRepo.findByStatusAndDateRange(status, start, end);
+}
+
+    
     public long countOrdersByStatus(String status) { return ordersRepo.countByStatus(status); }
     public List<Orders> findAllOrderByOrderDateDesc() { return ordersRepo.findAllWithDetailsOrderByOrderDateDesc(); }
     public List<Orders> findOrdersByStatus(String status) { return ordersRepo.findByStatusWithDetailsOrderByOrderDateDesc(status); }

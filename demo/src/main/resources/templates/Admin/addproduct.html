@@ -1,710 +1,760 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta charset="UTF-8" />
-        <title>Thêm Nhiều Sản Phẩm</title>
-        <link rel="stylesheet" th:href="@{/assets/css/admin.css}" />
-        <meta name="csrf-token" th:content="${_csrf.token}" />
-        <meta name="csrf-header" th:content="${_csrf.headerName}" />
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-            integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA== "
-            crossorigin="anonymous"
-            referrerpolicy="no-referrer"
-        />
-    </head>
-    <body class="admin-layout">
-        <div th:replace="Admin/sidebar :: sideBar"></div>
-        <div class="admin-content-wrapper">
-            <div th:replace="Admin/header :: Header"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Thêm Nhiều Sản Phẩm</title>
+    <link rel="stylesheet" th:href="@{/assets/css/admin.css}" />
+    <meta name="csrf-token" th:content="${_csrf.token}" />
+    <meta name="csrf-header" th:content="${_csrf.headerName}" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA== "
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body class="admin-layout">
+    <div th:replace="Admin/sidebar :: sideBar"></div>
+    <div class="admin-content-wrapper">
+      <div th:replace="Admin/header :: Header"></div>
 
-            <main class="admin-main">
-                <div
-                    class="product-form-container"
-                    th:fragment="addProductContent"
+      <main class="admin-main">
+        <div class="product-form-container" th:fragment="addProductContent">
+          <h2 class="page-title">
+            <i class="fa-solid fa-boxes-packing"></i> Nhập Kho Sản Phẩm
+          </h2>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="addProductRow()"
+            >
+              <i class="fa-solid fa-plus"></i> Thêm sản phẩm
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="openProviderManager()"
+              style="margin-left: 10px; color: white"
+            >
+              <i class="fa-solid fa-users-gear"></i> Quản lý Nhà cung cấp
+            </button>
+          </div>
+          <div id="providerManagerModal" class="modal">
+            <div class="modal-content" style="max-width: 1600px; width: 95%">
+              <span
+                class="close-btn"
+                onclick="closeModal('providerManagerModal')"
+                ><i class="fa-solid fa-xmark"></i
+              ></span>
+
+              <h3 class="modal-title">Quản lý Nhà Cung Cấp</h3>
+
+              <div
+                class="inline-form"
+                style="
+                  display: flex;
+                  gap: 10px;
+                  margin-bottom: 20px;
+                  flex-wrap: wrap;
+                "
+              >
+                <input type="hidden" id="manageProviderId" />
+                <input
+                  type="text"
+                  id="manageProviderName"
+                  placeholder="Tên NCC"
+                  class="form-input"
+                  style="flex: 2"
+                />
+                <input
+                  type="text"
+                  id="manageProviderPhone"
+                  placeholder="SĐT"
+                  class="form-input"
+                  style="flex: 1"
+                />
+                <input
+                  type="email"
+                  id="manageProviderEmail"
+                  placeholder="Email"
+                  class="form-input"
+                  style="flex: 1"
+                />
+                <input
+                  type="text"
+                  id="manageProviderAddress"
+                  placeholder="Địa chỉ"
+                  class="form-input"
+                  style="flex: 2"
+                />
+
+                <button
+                  type="button"
+                  onclick="saveOrUpdateProvider()"
+                  class="btn btn-success"
                 >
-                    <h2 class="page-title">
-                        <i class="fa-solid fa-boxes-packing"></i> Nhập Kho Sản
-                        Phẩm
-                    </h2>
-
-                    <div class="form-actions">
-                        <button
-                            type="button"
-                            class="btn btn-primary"
-                            onclick="addProductRow()"
-                        >
-                            <i class="fa-solid fa-plus"></i> Thêm sản phẩm
-                        </button>
-                        <button type="button" class="btn btn-primary" onclick="openProviderManager()" style="margin-left: 10px; color: white;">
-                        <i class="fa-solid fa-users-gear"></i> Quản lý Nhà cung cấp
-                        </button>
-                    </div>
-<div id="providerManagerModal" class="modal">
-    <div class="modal-content" style="max-width: 1600px; width: 95%;">
-        <span class="close-btn" onclick="closeModal('providerManagerModal')"><i class="fa-solid fa-xmark"></i></span>
-        
-        <h3 class="modal-title">Quản lý Nhà Cung Cấp</h3>
-        
-        <div class="inline-form" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-            <input type="hidden" id="manageProviderId"> <input type="text" id="manageProviderName" placeholder="Tên NCC" class="form-input" style="flex: 2;">
-            <input type="text" id="manageProviderPhone" placeholder="SĐT" class="form-input" style="flex: 1;">
-            <input type="email" id="manageProviderEmail" placeholder="Email" class="form-input" style="flex: 1;">
-             <input type="text" id="manageProviderAddress" placeholder="Địa chỉ" class="form-input" style="flex: 2;">
-            
-            <button type="button" onclick="saveOrUpdateProvider()" class="btn btn-success">
-                <i class="fa-solid fa-save"></i> Lưu
-            </button>
-            <button type="button" onclick="resetProviderForm()" class="btn btn-secondary">
-                <i class="fa-solid fa-rotate-right"></i> Hủy
-            </button>
-        </div>
-        <div style="max-height: 400px; overflow-y: auto;">
-            <table class="data-table" style="width: 100%;">
-                <thead>
+                  <i class="fa-solid fa-save"></i> Lưu
+                </button>
+                <button
+                  type="button"
+                  onclick="resetProviderForm()"
+                  class="btn btn-secondary"
+                >
+                  <i class="fa-solid fa-rotate-right"></i> Hủy
+                </button>
+              </div>
+              <div style="max-height: 400px; overflow-y: auto">
+                <table class="data-table" style="width: 100%">
+                  <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Tên</th>
-                        <th>SĐT</th>
-                        <th>Email</th>
-                        <th>Địa chỉ</th>
-                        <th>Thao tác</th>
+                      <th>ID</th>
+                      <th>Tên</th>
+                      <th>SĐT</th>
+                      <th>Email</th>
+                      <th>Địa chỉ</th>
+                      <th>Thao tác</th>
                     </tr>
+                  </thead>
+                  <tbody id="providerListBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <form
+            id="multiProductForm"
+            th:action="@{/Admin/saveMultipleProducts}"
+            method="post"
+            enctype="multipart/form-data"
+          >
+            <div class="table-wrapper">
+              <table id="productTable" class="data-table large-form-table">
+                <thead>
+                  <tr>
+                    <th style="width: 10%">
+                      NCC
+                      <button
+                        type="button"
+                        class="btn btn-icon btn-add-small"
+                        onclick="openProviderModal()"
+                      >
+                        <i class="fa-solid fa-plus"></i>
+                      </button>
+                    </th>
+                    <th style="width: 20%">Tên sản phẩm</th>
+                    <th style="width: 10%">
+                      Thể loại
+                      <button
+                        type="button"
+                        class="btn btn-icon btn-add-small"
+                        onclick="openGenreModal()"
+                      >
+                        <i class="fa-solid fa-plus"></i>
+                      </button>
+                    </th>
+                    <th style="width: 8%">Giá gốc</th>
+                    <th style="width: 17%">Size & SL</th>
+                    <th style="width: 15%">Mô tả</th>
+                    <th style="width: 15%">Hình ảnh</th>
+                    <th style="width: 5%"></th>
+                  </tr>
                 </thead>
-                <tbody id="providerListBody">
-                    </tbody>
-            </table>
+                <tbody>
+                  <tr class="product-row" style="display: none">
+                    <td>
+                      <select
+                        name="providerId"
+                        required
+                        class="form-select"
+                        onchange="loadProductSuggestions(this)"
+                      >
+                        <option value="">-- Chọn NCC --</option>
+                        <option
+                          th:each="p : ${providers}"
+                          th:value="${p.providerId}"
+                          th:text="${p.providerName}"
+                        ></option>
+                      </select>
+                    </td>
+                    <td class="autocomplete">
+                      <input
+                        type="text"
+                        name="productName"
+                        placeholder="Nhập tên..."
+                        required
+                        oninput="showSuggestions(this)"
+                        class="form-input"
+                      />
+                      <div class="autocomplete-items"></div>
+                    </td>
+                    <td>
+                      <select name="genreId" required class="form-select">
+                        <option value="">-- Chọn thể loại --</option>
+                        <option
+                          th:each="g : ${genres}"
+                          th:value="${g.genreId}"
+                          th:text="${g.genreName}"
+                        ></option>
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        step="0.01"
+                        name="basisPrice"
+                        required
+                        class="form-input text-right"
+                      />
+                    </td>
+                    <td>
+                      <div class="sizes-container">
+                        <div class="size-row">
+                          <input
+                            type="text"
+                            name="sizeName"
+                            placeholder="S"
+                            class="form-input small-input"
+                            style="width: 40px"
+                          />
+                          <input
+                            type="number"
+                            name="quantity"
+                            placeholder="0"
+                            min="0"
+                            class="form-input small-input text-right"
+                            style="width: 50px"
+                          />
+                          <button
+                            type="button"
+                            class="btn btn-icon add-size-btn"
+                            onclick="addSizeRow(this)"
+                          >
+                            <i class="fa-solid fa-plus"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <textarea
+                        name="description"
+                        rows="2"
+                        class="form-textarea"
+                      ></textarea>
+                    </td>
+                    <td>
+                      <input
+                        type="file"
+                        name="images"
+                        multiple
+                        accept="image/*"
+                        class="form-file"
+                      />
+                    </td>
+                    <td class="text-center">
+                      <button
+                        type="button"
+                        class="btn btn-icon remove-row remove-product-btn"
+                        onclick="removeRow(this)"
+                      >
+                        <i class="fa-solid fa-trash-can"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div
+              id="successMessage"
+              class="alert alert-success"
+              style="display: none"
+            >
+              Đã lưu thành công! Biên lai nhập kho đã được tạo theo nhà cung
+              cấp.
+            </div>
+
+            <div class="form-submit-area">
+              <button
+                type="button"
+                class="btn btn-success submit-all"
+                onclick="submitForm()"
+              >
+                <i class="fa-solid fa-floppy-disk"></i> LƯU TẤT CẢ
+              </button>
+            </div>
+          </form>
+
+          <div id="providerModal" class="modal">
+            <div class="modal-content">
+              <span class="close-btn" onclick="closeModal('providerModal')"
+                ><i class="fa-solid fa-xmark"></i
+              ></span>
+              <h4 class="modal-title">Thêm Nhà cung cấp</h4>
+              <input
+                type="text"
+                id="newProviderName"
+                placeholder="Tên NCC"
+                required
+                class="form-input"
+              />
+              <input
+                type="email"
+                id="newProviderEmail"
+                placeholder="Email"
+                class="form-input"
+              />
+              <input
+                type="text"
+                id="newProviderPhone"
+                placeholder="SĐT"
+                class="form-input"
+              />
+              <input
+                type="text"
+                id="newProviderAddress"
+                placeholder="Địa chỉ"
+                class="form-input"
+              />
+              <button
+                type="button"
+                onclick="saveProvider()"
+                class="btn btn-primary modal-save-btn"
+              >
+                Lưu
+              </button>
+            </div>
+          </div>
+
+          <div id="genreModal" class="modal">
+            <div class="modal-content">
+              <span class="close-btn" onclick="closeModal('genreModal')"
+                ><i class="fa-solid fa-xmark"></i
+              ></span>
+              <h4 class="modal-title">Thêm Thể loại</h4>
+              <input
+                type="text"
+                id="newGenre"
+                placeholder="Tên thể loại"
+                required
+                class="form-input"
+              />
+              <button
+                type="button"
+                onclick="saveGenre()"
+                class="btn btn-primary modal-save-btn"
+              >
+                Lưu
+              </button>
+            </div>
+          </div>
         </div>
+      </main>
+      <div th:replace="Admin/footer :: Footer"></div>
     </div>
-</div>
-                    <form
-                        id="multiProductForm"
-                        th:action="@{/Admin/saveMultipleProducts}"
-                        method="post"
-                        enctype="multipart/form-data"
-                    >
-                        <div class="table-wrapper">
-                            <table
-                                id="productTable"
-                                class="data-table large-form-table"
-                            >
-                                <thead>
-                                    <tr>
-                                        <th style="width: 10%">
-                                            NCC
-                                            <button
-                                                type="button"
-                                                class="btn btn-icon btn-add-small"
-                                                onclick="openProviderModal()"
-                                            >
-                                                <i class="fa-solid fa-plus"></i>
-                                            </button>
-                                        </th>
-                                        <th style="width: 20%">Tên sản phẩm</th>
-                                        <th style="width: 10%">
-                                            Thể loại
-                                            <button
-                                                type="button"
-                                                class="btn btn-icon btn-add-small"
-                                                onclick="openGenreModal()"
-                                            >
-                                                <i class="fa-solid fa-plus"></i>
-                                            </button>
-                                        </th>
-                                        <th style="width: 8%">Giá gốc</th>
-                                        <th style="width: 17%">Size & SL</th>
-                                        <th style="width: 15%">Mô tả</th>
-                                        <th style="width: 15%">Hình ảnh</th>
-                                        <th style="width: 5%"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr
-                                        class="product-row"
-                                        style="display: none"
-                                    >
-                                        <td>
-                                            <select
-                                                name="providerId"
-                                                required
-                                                class="form-select"
-                                                onchange="loadProductSuggestions(this)"
-                                            >
-                                                <option value="">
-                                                    -- Chọn NCC --
-                                                </option>
-                                                <option
-                                                    th:each="p : ${providers}"
-                                                    th:value="${p.providerId}"
-                                                    th:text="${p.providerName}"
-                                                ></option>
-                                            </select>
-                                        </td>
-                                        <td class="autocomplete">
-                                            <input
-                                                type="text"
-                                                name="productName"
-                                                placeholder="Nhập tên..."
-                                                required
-                                                oninput="showSuggestions(this)"
-                                                class="form-input"
-                                            />
-                                            <div
-                                                class="autocomplete-items"
-                                            ></div>
-                                        </td>
-                                        <td>
-                                            <select
-                                                name="genreId"
-                                                required
-                                                class="form-select"
-                                            >
-                                                <option value="">
-                                                    -- Chọn thể loại --
-                                                </option>
-                                                <option
-                                                    th:each="g : ${genres}"
-                                                    th:value="${g.genreId}"
-                                                    th:text="${g.genreName}"
-                                                ></option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                name="basisPrice"
-                                                required
-                                                class="form-input text-right"
-                                            />
-                                        </td>
-                                        <td>
-                                            <div class="sizes-container">
-                                                <div class="size-row">
-                                                    <input
-                                                        type="text"
-                                                        name="sizeName"
-                                                        placeholder="S"
-                                                        class="form-input small-input"
-                                                        style="width: 40px"
-                                                    />
-                                                    <input
-                                                        type="number"
-                                                        name="quantity"
-                                                        placeholder="0"
-                                                        min="0"
-                                                        class="form-input small-input text-right"
-                                                        style="width: 50px"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        class="btn btn-icon add-size-btn"
-                                                        onclick="addSizeRow(this)"
-                                                    >
-                                                        <i
-                                                            class="fa-solid fa-plus"
-                                                        ></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <textarea
-                                                name="description"
-                                                rows="2"
-                                                class="form-textarea"
-                                            ></textarea>
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="file"
-                                                name="images"
-                                                multiple
-                                                accept="image/*"
-                                                class="form-file"
-                                            />
-                                        </td>
-                                        <td class="text-center">
-                                            <button
-                                                type="button"
-                                                class="btn btn-icon remove-row remove-product-btn"
-                                                onclick="removeRow(this)"
-                                            >
-                                                <i
-                                                    class="fa-solid fa-trash-can"
-                                                ></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
 
-                        <div
-                            id="successMessage"
-                            class="alert alert-success"
-                            style="display: none"
-                        >
-                            Đã lưu thành công! Biên lai nhập kho đã được tạo
-                            theo nhà cung cấp.
-                        </div>
+    <script th:inline="javascript">
+      const productSuggestions = /*[[${productSuggestions}]]*/ {};
 
-                        <div class="form-submit-area">
-                            <button
-                                type="button"
-                                class="btn btn-success submit-all"
-                                onclick="submitForm()"
-                            >
-                                <i class="fa-solid fa-floppy-disk"></i> LƯU TẤT
-                                CẢ
-                            </button>
-                        </div>
-                    </form>
+      function submitForm() {
+        const form = document.getElementById("multiProductForm");
+        let valid = true;
 
-                    <div id="providerModal" class="modal">
-                        <div class="modal-content">
-                            <span
-                                class="close-btn"
-                                onclick="closeModal('providerModal')"
-                                ><i class="fa-solid fa-xmark"></i
-                            ></span>
-                            <h4 class="modal-title">Thêm Nhà cung cấp</h4>
-                            <input
-                                type="text"
-                                id="newProviderName"
-                                placeholder="Tên NCC"
-                                required
-                                class="form-input"
-                            />
-                            <input
-                                type="email"
-                                id="newProviderEmail"
-                                placeholder="Email"
-                                class="form-input"
-                            />
-                            <input
-                                type="text"
-                                id="newProviderPhone"
-                                placeholder="SĐT"
-                                class="form-input"
-                            />
-                            <input
-                                type="text"
-                                id="newProviderAddress"
-                                placeholder="Địa chỉ"
-                                class="form-input"
-                            />
-                            <button
-                                type="button"
-                                onclick="saveProvider()"
-                                class="btn btn-primary modal-save-btn"
-                            >
-                                Lưu
-                            </button>
-                        </div>
-                    </div>
+        const productRows = document.querySelectorAll(
+          "#productTable tbody tr:not([style*='display: none'])"
+        );
+        productRows.forEach((row) => {
+          const hasSize = Array.from(row.querySelectorAll(".size-row")).some(
+            (sizeRow) => {
+              const name = sizeRow
+                .querySelector('input[name="sizeName"]')
+                ?.value.trim();
+              const qty = sizeRow.querySelector(
+                'input[name="quantity"]'
+              )?.value;
+              return name && qty > 0;
+            }
+          );
+          if (!hasSize) valid = false;
+        });
 
-                    <div id="genreModal" class="modal">
-                        <div class="modal-content">
-                            <span
-                                class="close-btn"
-                                onclick="closeModal('genreModal')"
-                                ><i class="fa-solid fa-xmark"></i
-                            ></span>
-                            <h4 class="modal-title">Thêm Thể loại</h4>
-                            <input
-                                type="text"
-                                id="newGenre"
-                                placeholder="Tên thể loại"
-                                required
-                                class="form-input"
-                            />
-                            <button
-                                type="button"
-                                onclick="saveGenre()"
-                                class="btn btn-primary modal-save-btn"
-                            >
-                                Lưu
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </main>
-            <div th:replace="Admin/footer :: Footer"></div>
-        </div>
+        if (!valid) {
+          alert("Mỗi sản phẩm cần ít nhất 1 size có số lượng > 0!");
+          return;
+        }
 
-        <script th:inline="javascript">
-            // ... TOÀN BỘ JAVASCRIPT LOGIC GIỮ NGUYÊN (như file gốc) ...
-            const productSuggestions = /*[[${productSuggestions}]]*/ {};
+        productRows.forEach((row) => {
+          let sizeNames = [];
+          let quantities = [];
 
-            function submitForm() {
-                const form = document.getElementById("multiProductForm");
-                let valid = true;
+          row.querySelectorAll(".size-row").forEach((sizeRow) => {
+            let sInput = sizeRow.querySelector('input[name="sizeName"]');
+            let qInput = sizeRow.querySelector('input[name="quantity"]');
 
-                document
-                    .querySelectorAll(
-                        "#productTable tbody tr:not([style*='display: none'])"
-                    )
-                    .forEach((row) => {
-                        const hasSize = Array.from(
-                            row.querySelectorAll(".size-row")
-                        ).some((sizeRow) => {
-                            const name = sizeRow
-                                .querySelector('input[name="sizeName"]')
-                                ?.value.trim();
-                            const qty = sizeRow.querySelector(
-                                'input[name="quantity"]'
-                            )?.value;
-                            return name && qty > 0;
-                        });
-                        if (!hasSize) valid = false;
-                    });
+            let s = sInput ? sInput.value.trim() : "";
+            let q = qInput ? qInput.value.trim() : "";
 
-                if (!valid) {
-                    alert("Mỗi sản phẩm cần ít nhất 1 size có số lượng > 0!");
-                    return;
-                }
-
-                form.submit();
-                document.getElementById("successMessage").style.display =
-                    "block";
+            if (s && q) {
+              sizeNames.push(s);
+              quantities.push(q);
             }
 
-            // Các hàm JS: addProductRow, addSizeRow, removeRow, open/closeModal, saveProvider, saveGenre, load/showSuggestions
+            if (sInput) sInput.removeAttribute("name");
+            if (qInput) qInput.removeAttribute("name");
+          });
 
-            function addProductRow() {
-                const tbody = document.querySelector("#productTable tbody");
-                const template = tbody
-                    .querySelector(".product-row")
-                    .cloneNode(true);
-                template.style.display = "table-row"; // Cập nhật style.display
+          let hiddenSize = document.createElement("input");
+          hiddenSize.type = "hidden";
+          hiddenSize.name = "sizeName";
+          hiddenSize.value = sizeNames.join(",");
+          row.appendChild(hiddenSize);
 
-                // Reset tất cả input/select
-                template
-                    .querySelectorAll("input, select, textarea")
-                    .forEach((el) => {
-                        if (el.type === "file") el.value = "";
-                        else if (el.tagName === "SELECT") {
-                            el.selectedIndex = 0; // Chọn option đầu (disabled)
-                        } else {
-                            el.value = "";
-                        }
-                    });
-                // Reset size
-                const container = template.querySelector(".sizes-container");
-                container.innerHTML = `<div class="size-row">
+          let hiddenQty = document.createElement("input");
+          hiddenQty.type = "hidden";
+          hiddenQty.name = "quantity";
+          hiddenQty.value = quantities.join(",");
+          row.appendChild(hiddenQty);
+        });
+
+        form.submit();
+        document.getElementById("successMessage").style.display = "block";
+      }
+
+      function addProductRow() {
+        const tbody = document.querySelector("#productTable tbody");
+        const template = tbody.querySelector(".product-row").cloneNode(true);
+        template.style.display = "table-row";
+
+        template.querySelectorAll("input, select, textarea").forEach((el) => {
+          if (el.type === "file") el.value = "";
+          else if (el.tagName === "SELECT") {
+            el.selectedIndex = 0;
+          } else {
+            el.value = "";
+          }
+        });
+
+        const container = template.querySelector(".sizes-container");
+        container.innerHTML = `<div class="size-row">
           <input type="text" name="sizeName" placeholder="S" class="form-input small-input" style="width:40px" />
           <input type="number" name="quantity" placeholder="0" min="0" class="form-input small-input text-right" style="width:50px" />
           <button type="button" class="btn btn-icon add-size-btn" onclick="addSizeRow(this)"><i class="fa-solid fa-plus"></i></button>
         </div>`;
 
-                tbody.appendChild(template);
-            }
+        tbody.appendChild(template);
+      }
 
-            function addSizeRow(btn) {
-                const container = btn.closest(".sizes-container");
-                const row = document.createElement("div");
-                row.className = "size-row";
-                row.innerHTML = `
+      function addSizeRow(btn) {
+        const container = btn.closest(".sizes-container");
+        const row = document.createElement("div");
+        row.className = "size-row";
+        row.innerHTML = `
             <input type="text" name="sizeName" placeholder="M" class="form-input small-input" style="width:40px" />
             <input type="number" name="quantity" placeholder="0" min="0" class="form-input small-input text-right" style="width:50px" />
             <button type="button" class="btn btn-icon remove-size-btn" onclick="this.parentElement.remove()"><i class="fa-solid fa-minus"></i></button>
         `;
-                container.appendChild(row);
-            }
-            function removeRow(btn) {
-                // Chỉ xóa nếu có nhiều hơn 1 dòng hiển thị
-                if (
-                    document.querySelectorAll(
-                        "#productTable tbody tr:not([style*='display: none'])"
-                    ).length <= 1
-                ) {
-                    alert("Phải có ít nhất 1 sản phẩm!");
-                    return;
-                }
-                btn.closest("tr").remove();
-            }
-            function openProviderModal() {
-                document.getElementById("providerModal").style.display = "flex";
-            }
-            function openGenreModal() {
-                document.getElementById("genreModal").style.display = "flex";
-            }
-            function closeModal(id) {
-                document.getElementById(id).style.display = "none";
-            }
+        container.appendChild(row);
+      }
+      function removeRow(btn) {
+        if (
+          document.querySelectorAll(
+            "#productTable tbody tr:not([style*='display: none'])"
+          ).length <= 1
+        ) {
+          alert("Phải có ít nhất 1 sản phẩm!");
+          return;
+        }
+        btn.closest("tr").remove();
+      }
+      function openProviderModal() {
+        document.getElementById("providerModal").style.display = "flex";
+      }
+      function openGenreModal() {
+        document.getElementById("genreModal").style.display = "flex";
+      }
+      function closeModal(id) {
+        document.getElementById(id).style.display = "none";
+      }
 
-            function getCsrfToken() {
-                const token = document
-                    .querySelector('meta[name="csrf-token"]')
-                    .getAttribute("content");
-                const header = document
-                    .querySelector('meta[name="csrf-header"]')
-                    .getAttribute("content");
-                return { token, header };
-            }
+      function getCsrfToken() {
+        const token = document
+          .querySelector('meta[name="csrf-token"]')
+          .getAttribute("content");
+        const header = document
+          .querySelector('meta[name="csrf-header"]')
+          .getAttribute("content");
+        return { token, header };
+      }
 
-            function saveProvider() {
-                const { token, header } = getCsrfToken();
-                const data = {
-                    providerName: document
-                        .getElementById("newProviderName")
-                        .value.trim(),
-                    providerEmail: document
-                        .getElementById("newProviderEmail")
-                        .value.trim(),
-                    providerPhone: document
-                        .getElementById("newProviderPhone")
-                        .value.trim(),
-                    providerAddress: document
-                        .getElementById("newProviderAddress")
-                        .value.trim(),
-                };
-                if (!data.providerName) return alert("Nhập tên NCC!");
+      function saveProvider() {
+        const { token, header } = getCsrfToken();
+        const data = {
+          providerName: document.getElementById("newProviderName").value.trim(),
+          providerEmail: document
+            .getElementById("newProviderEmail")
+            .value.trim(),
+          providerPhone: document
+            .getElementById("newProviderPhone")
+            .value.trim(),
+          providerAddress: document
+            .getElementById("newProviderAddress")
+            .value.trim(),
+        };
+        if (!data.providerName) return alert("Nhập tên NCC!");
 
-                fetch("/Admin/addProvider", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        [header]: token,
-                    },
-                    body: JSON.stringify(data),
-                })
-                    .then((r) => r.json())
-                    .then((p) => {
-                        document
-                            .querySelectorAll('select[name="providerId"]')
-                            .forEach((s) => {
-                                s.add(new Option(p.providerName, p.providerId));
-                                s.value = p.providerId;
-                            });
-                        closeModal("providerModal");
-                        document
-                            .querySelectorAll("#providerModal input")
-                            .forEach((i) => (i.value = ""));
-                    });
-            }
+        fetch("/Admin/addProvider", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            [header]: token,
+          },
+          body: JSON.stringify(data),
+        })
+          .then((r) => r.json())
+          .then((p) => {
+            document
+              .querySelectorAll('select[name="providerId"]')
+              .forEach((s) => {
+                s.add(new Option(p.providerName, p.providerId));
+                s.value = p.providerId;
+              });
+            closeModal("providerModal");
+            document
+              .querySelectorAll("#providerModal input")
+              .forEach((i) => (i.value = ""));
+          });
+      }
 
-            function saveGenre() {
-                const { token, header } = getCsrfToken();
-                const name = document.getElementById("newGenre").value.trim();
-                if (!name) return alert("Nhập thể loại!");
+      function saveGenre() {
+        const { token, header } = getCsrfToken();
+        const name = document.getElementById("newGenre").value.trim();
+        if (!name) return alert("Nhập thể loại!");
 
-                fetch("/Admin/addGenre", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        [header]: token,
-                    },
-                    body: JSON.stringify({ genre: name }),
-                })
-                    .then((r) => r.json())
-                    .then((g) => {
-                        document
-                            .querySelectorAll('select[name="genreId"]')
-                            .forEach((s) => {
-                                s.add(new Option(g.genreName, g.genreId));
-                                s.value = g.genreId;
-                            });
-                        closeModal("genreModal");
-                        document.getElementById("newGenre").value = "";
-                    });
-            }
+        fetch("/Admin/addGenre", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            [header]: token,
+          },
+          body: JSON.stringify({ genre: name }),
+        })
+          .then((r) => r.json())
+          .then((g) => {
+            document.querySelectorAll('select[name="genreId"]').forEach((s) => {
+              s.add(new Option(g.genreName, g.genreId));
+              s.value = g.genreId;
+            });
+            closeModal("genreModal");
+            document.getElementById("newGenre").value = "";
+          });
+      }
 
-            function loadProductSuggestions(select) {
-                const suggestions = productSuggestions[select.value] || [];
-                select
-                    .closest("tr")
-                    .querySelector(
-                        'input[name="productName"]'
-                    ).dataset.suggestions = JSON.stringify(suggestions);
-            }
+      function loadProductSuggestions(select) {
+        const suggestions = productSuggestions[select.value] || [];
+        select
+          .closest("tr")
+          .querySelector('input[name="productName"]').dataset.suggestions =
+          JSON.stringify(suggestions);
+      }
 
-            function showSuggestions(input) {
-                const suggestions = JSON.parse(
-                    input.dataset.suggestions || "[]"
-                );
-                const val = input.value.toLowerCase();
-                const container = input.nextElementSibling;
-                container.innerHTML = "";
-                if (!val) return;
+      function showSuggestions(input) {
+        const suggestions = JSON.parse(input.dataset.suggestions || "[]");
+        const val = input.value.toLowerCase();
+        const container = input.nextElementSibling;
+        container.innerHTML = "";
+        if (!val) return;
 
-                suggestions
-                    .filter((p) => p.productName.toLowerCase().includes(val))
-                    .slice(0, 5)
-                    .forEach((p) => {
-                        const div = document.createElement("div");
-                        div.innerHTML = `<strong>${p.productName}</strong><br><small>Mã: ${p.productId} | Giá: ${p.basisPrice}</small>`;
-                        div.onclick = () => {
-                            input.value = p.productName;
-                            input
-                                .closest("tr")
-                                .querySelector('select[name="genreId"]').value =
-                                p.genreId;
-                            input
-                                .closest("tr")
-                                .querySelector(
-                                    'input[name="basisPrice"]'
-                                ).value = p.basisPrice;
-                            container.innerHTML = "";
-                        };
-                        container.appendChild(div);
-                    });
-            }
-            // --- CÁC HÀM QUẢN LÝ NHÀ CUNG CẤP (MỚI) ---
+        suggestions
+          .filter((p) => p.productName.toLowerCase().includes(val))
+          .slice(0, 5)
+          .forEach((p) => {
+            const div = document.createElement("div");
+            div.innerHTML = `<strong>${p.productName}</strong><br><small>Mã: ${p.productId} | Giá: ${p.basisPrice}</small>`;
+            div.onclick = () => {
+              input.value = p.productName;
+              input
+                .closest("tr")
+                .querySelector('select[name="genreId"]').value = p.genreId;
+              input
+                .closest("tr")
+                .querySelector('input[name="basisPrice"]').value = p.basisPrice;
+              container.innerHTML = "";
+            };
+            container.appendChild(div);
+          });
+      }
 
-    // 1. Mở Modal và tải dữ liệu
-    function openProviderManager() {
-        document.getElementById('providerManagerModal').style.display = 'flex';
+      function openProviderManager() {
+        document.getElementById("providerManagerModal").style.display = "flex";
         loadProviderList();
-    }
+      }
 
-    // 2. Tải danh sách NCC từ Server
-    function loadProviderList() {
-        fetch('/Admin/api/providers') // Cần tạo API này ở Bước 3
-            .then(res => res.json())
-            .then(data => {
-                const tbody = document.getElementById('providerListBody');
-                tbody.innerHTML = '';
-                data.forEach(p => {
-                    const row = `
+      function loadProviderList() {
+        fetch("/Admin/api/providers")
+          .then((res) => res.json())
+          .then((data) => {
+            const tbody = document.getElementById("providerListBody");
+            tbody.innerHTML = "";
+            data.forEach((p) => {
+              const row = `
                         <tr>
                             <td>${p.providerId}</td>
                             <td>${p.providerName}</td>
-                            <td>${p.providerPhone || ''}</td>
-                            <td>${p.providerEmail || ''}</td>
-                             <td>${p.providerAddress || ''}</td>
+                            <td>${p.providerPhone || ""}</td>
+                            <td>${p.providerEmail || ""}</td>
+                             <td>${p.providerAddress || ""}</td>
                             <td>
-                                <button type="button" class="btn btn-sm btn-warning" onclick="editProvider(${p.providerId}, '${p.providerName}', '${p.providerPhone || ''}', '${p.providerEmail || ''}', '${p.providerAddress || ''}')">
+                                <button type="button" class="btn btn-sm btn-warning" onclick="editProvider(${
+                                  p.providerId
+                                }, '${p.providerName}', '${
+                p.providerPhone || ""
+              }', '${p.providerEmail || ""}', '${p.providerAddress || ""}')">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteProvider(${p.providerId})">
+                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteProvider(${
+                                  p.providerId
+                                })">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </td>
                         </tr>
                     `;
-                    tbody.innerHTML += row;
-                });
+              tbody.innerHTML += row;
             });
-    }
+          });
+      }
 
-    // 3. Đưa dữ liệu lên form để sửa
-    function editProvider(id, name, phone, email, address) {
-        document.getElementById('manageProviderId').value = id;
-        document.getElementById('manageProviderName').value = name;
-        document.getElementById('manageProviderPhone').value = phone;
-        document.getElementById('manageProviderEmail').value = email;
-        document.getElementById('manageProviderAddress').value = address;
-    }
+      function editProvider(id, name, phone, email, address) {
+        document.getElementById("manageProviderId").value = id;
+        document.getElementById("manageProviderName").value = name;
+        document.getElementById("manageProviderPhone").value = phone;
+        document.getElementById("manageProviderEmail").value = email;
+        document.getElementById("manageProviderAddress").value = address;
+      }
 
-    // 4. Reset form
-    function resetProviderForm() {
-        document.getElementById('manageProviderId').value = '';
-        document.getElementById('manageProviderName').value = '';
-        document.getElementById('manageProviderPhone').value = '';
-        document.getElementById('manageProviderEmail').value = '';
-        document.getElementById('manageProviderAddress').value = '';
-    }
+      function resetProviderForm() {
+        document.getElementById("manageProviderId").value = "";
+        document.getElementById("manageProviderName").value = "";
+        document.getElementById("manageProviderPhone").value = "";
+        document.getElementById("manageProviderEmail").value = "";
+        document.getElementById("manageProviderAddress").value = "";
+      }
 
-    // 5. Lưu (Thêm mới hoặc Cập nhật)
-    function saveOrUpdateProvider() {
-        const id = document.getElementById('manageProviderId').value;
-        const name = document.getElementById('manageProviderName').value.trim();
-        const phone = document.getElementById('manageProviderPhone').value.trim();
-        const email = document.getElementById('manageProviderEmail').value.trim();
-         const address = document.getElementById('manageProviderAddress').value.trim();
-        
+      function saveOrUpdateProvider() {
+        const id = document.getElementById("manageProviderId").value;
+        const name = document.getElementById("manageProviderName").value.trim();
+        const phone = document
+          .getElementById("manageProviderPhone")
+          .value.trim();
+        const email = document
+          .getElementById("manageProviderEmail")
+          .value.trim();
+        const address = document
+          .getElementById("manageProviderAddress")
+          .value.trim();
+
         if (!name) return alert("Vui lòng nhập tên NCC");
 
         const { token, header } = getCsrfToken();
-        const data = { providerName: name, providerPhone: phone, providerEmail: email, providerAddress: address };
-        
-        let url = '/Admin/addProvider'; // Mặc định là thêm
-        let method = 'POST';
+        const data = {
+          providerName: name,
+          providerPhone: phone,
+          providerEmail: email,
+          providerAddress: address,
+        };
+
+        let url = "/Admin/addProvider"; // Mặc định là thêm
+        let method = "POST";
 
         // Nếu có ID -> Là chức năng Sửa
         if (id) {
-            url = '/Admin/updateProvider'; // Cần tạo API này ở Bước 3
-            method = 'PUT';
-            data.providerId = id;
+          url = "/Admin/updateProvider"; // Cần tạo API này ở Bước 3
+          method = "PUT";
+          data.providerId = id;
         }
 
         fetch(url, {
-            method: method,
-            headers: { "Content-Type": "application/json", [header]: token },
-            body: JSON.stringify(data)
+          method: method,
+          headers: { "Content-Type": "application/json", [header]: token },
+          body: JSON.stringify(data),
         })
-        .then(res => {
+          .then((res) => {
             if (res.ok) return res.json();
-            throw new Error('Lỗi khi lưu');
-        })
-        .then(() => {
-          // 1. Tải lại danh sách trong bảng (để thấy dòng mới thêm)
-            loadProviderList(); 
-            
+            throw new Error("Lỗi khi lưu");
+          })
+          .then(() => {
+            // 1. Tải lại danh sách trong bảng (để thấy dòng mới thêm)
+            loadProviderList();
+
             // 2. Xóa trắng form nhập liệu (để nhập người tiếp theo)
-            resetProviderForm(); 
-            
+            resetProviderForm();
+
             // 3. Cập nhật các ô chọn NCC ở màn hình chính (MỚI)
             refreshMainProviderDropdowns();
 
             // 4. KHÔNG reload trang nữa -> Modal sẽ giữ nguyên không bị tắt
             // location.reload(); <--- ĐÃ BỎ DÒNG NÀY
-            
+
             // 5. (Tùy chọn) Hiện thông báo nhỏ góc màn hình
             // alert("Đã lưu thành công!");
-        })
-        
-        .catch(err => alert("Có lỗi xảy ra: " + err));
-    }
+          })
 
-    // 6. Xóa NCC
-    function deleteProvider(id) {
-        if (!confirm('Bạn có chắc muốn xóa NCC này? Các sản phẩm liên quan có thể bị ảnh hưởng.')) return;
-        
+          .catch((err) => alert("Có lỗi xảy ra: " + err));
+      }
+
+      // 6. Xóa NCC
+      function deleteProvider(id) {
+        if (
+          !confirm(
+            "Bạn có chắc muốn xóa NCC này? Các sản phẩm liên quan có thể bị ảnh hưởng."
+          )
+        )
+          return;
+
         const { token, header } = getCsrfToken();
-        
-        fetch(`/Admin/deleteProvider/${id}`, { // Cần tạo API này ở Bước 3
-            method: 'DELETE',
-            headers: { [header]: token }
-        })
-        .then(res => {
-            if (res.ok) {
-                loadProviderList();
-                location.reload(); // Đồng bộ lại dropdown
-            } else {
-                alert("Không thể xóa (có thể do ràng buộc dữ liệu sản phẩm)");
-            }
-        });
-    }
-    function refreshMainProviderDropdowns() {
-        fetch('/Admin/api/providers')
-            .then(res => res.json())
-            .then(data => {
-                // Tìm tất cả thẻ select chọn NCC trong bảng nhập hàng
-                const selects = document.querySelectorAll('select[name="providerId"]');
-                
-                selects.forEach(select => {
-                    const currentValue = select.value; // Giữ lại giá trị đang chọn (nếu có)
-                    
-                    // Xóa hết option cũ
-                    select.innerHTML = '<option value="">-- Chọn NCC --</option>';
-                    
-                    // Thêm option mới
-                    data.forEach(p => {
-                        const option = new Option(p.providerName, p.providerId);
-                        select.add(option);
-                    });
-                    
-                    // Khôi phục giá trị đã chọn (nếu NCC đó vẫn còn)
-                    select.value = currentValue;
-                });
-            });
-        }
 
-            window.onload = () => addProductRow();
-        </script>
-    </body>
+        fetch(`/Admin/deleteProvider/${id}`, {
+          // Cần tạo API này ở Bước 3
+          method: "DELETE",
+          headers: { [header]: token },
+        }).then((res) => {
+          if (res.ok) {
+            loadProviderList();
+            location.reload(); // Đồng bộ lại dropdown
+          } else {
+            alert("Không thể xóa (có thể do ràng buộc dữ liệu sản phẩm)");
+          }
+        });
+      }
+      function refreshMainProviderDropdowns() {
+        fetch("/Admin/api/providers")
+          .then((res) => res.json())
+          .then((data) => {
+            // Tìm tất cả thẻ select chọn NCC trong bảng nhập hàng
+            const selects = document.querySelectorAll(
+              'select[name="providerId"]'
+            );
+
+            selects.forEach((select) => {
+              const currentValue = select.value; // Giữ lại giá trị đang chọn (nếu có)
+
+              // Xóa hết option cũ
+              select.innerHTML = '<option value="">-- Chọn NCC --</option>';
+
+              // Thêm option mới
+              data.forEach((p) => {
+                const option = new Option(p.providerName, p.providerId);
+                select.add(option);
+              });
+
+              // Khôi phục giá trị đã chọn (nếu NCC đó vẫn còn)
+              select.value = currentValue;
+            });
+          });
+      }
+
+      window.onload = () => addProductRow();
+    </script>
+  </body>
 </html>

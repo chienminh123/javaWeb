@@ -63,14 +63,31 @@
       .items-table th {
         background-color: #f2f2f2;
       }
+      /* Cập nhật lại CSS phần tổng tiền cho đẹp hơn */
       .total-summary {
-        text-align: right;
-        font-size: 18px;
-        font-weight: bold;
         margin-top: 20px;
-        padding-top: 10px;
-        border-top: 1px solid #eee;
+        padding-top: 15px;
+        border-top: 2px solid #eee;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
       }
+      .summary-row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 20px;
+        font-size: 16px;
+      }
+      .summary-row.final {
+        font-size: 20px;
+        font-weight: bold;
+        color: #d9534f;
+        margin-top: 5px;
+        padding-top: 10px;
+        border-top: 1px dashed #ccc;
+      }
+
       /* Status update form */
       .status-update select {
         width: 100%;
@@ -104,11 +121,11 @@
         background-color: #ff4d4f;
       }
       .status-Chờ_thanh_toán,
-      .status-Đã-thanh-toán-VNPay,
+      .status-Đã_thanh_toán_VNPay,
       .status-Đang_xử_lý {
         background-color: #faad14;
       }
-      .status-Đã_hoàn_thành,
+      .status-Giao_hàng_thành_công,
       .status-Đang_chuẩn_bị,
       .status-Đã_xác_nhận,
       .status-Đang_giao_hàng {
@@ -124,7 +141,7 @@
         border-radius: 4px;
       }
 
-      /* === CSS NÚT QUAY LẠI (MỚI THÊM) === */
+      /* === CSS NÚT QUAY LẠI === */
       .btn-back {
         display: inline-flex;
         align-items: center;
@@ -230,12 +247,41 @@
                       </tr>
                     </tbody>
                   </table>
-                  <div class="total-summary">
-                    Tổng cộng:
-                    <span
-                      th:with="total=${#aggregates.sum(order.orderDetails.![price * quantity])}"
-                      th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + ' đ'"
-                    ></span>
+
+                  <div
+                    class="total-summary"
+                    th:with="subTotal=${#aggregates.sum(order.orderDetails.![price * quantity])},
+                                discount=${order.discountAmount != null ? order.discountAmount : 0},
+                                finalTotal=${subTotal - discount}"
+                  >
+                    <div class="summary-row">
+                      <span>Tổng tiền hàng:</span>
+                      <span
+                        th:text="${#numbers.formatDecimal(subTotal, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                      ></span>
+                    </div>
+
+                    <div
+                      class="summary-row"
+                      th:if="${discount > 0}"
+                      style="color: red"
+                    >
+                      <span>Voucher giảm giá:</span>
+                      <span
+                        >-
+                        <span
+                          th:text="${#numbers.formatDecimal(discount, 0, 'COMMA', 0, 'POINT')}"
+                        ></span>
+                        đ</span
+                      >
+                    </div>
+
+                    <div class="summary-row final">
+                      <span>Tổng thanh toán:</span>
+                      <span
+                        th:text="${#numbers.formatDecimal(finalTotal, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                      ></span>
+                    </div>
                   </div>
                 </div>
               </div>

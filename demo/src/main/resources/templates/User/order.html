@@ -3,12 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <title>Đơn Hàng Của Tôi</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
     />
 
     <link
@@ -24,140 +27,398 @@
     <link rel="stylesheet" th:href="@{/user-css/header.css}" />
     <link rel="stylesheet" th:href="@{/user-css/footer.css}" />
     <link rel="stylesheet" th:href="@{/user-css/product.css}" />
+
     <style>
-      .container {
-        max-width: 1200px;
-        margin: 30px auto;
-        padding: 20px;
+      /* --- BIẾN MÀU SẮC ĐỒNG BỘ VỚI TRANG CHI TIẾT --- */
+      :root {
+        --primary-color: #ff9f43; /* Cam ấm */
+        --secondary-color: #ff6b6b; /* Hồng cam */
+        --blue-soft: #54a0ff;
+        --green-soft: #1dd1a1;
+        --bg-body: #f1f2f6;
+        --bg-white: #ffffff;
+        --text-dark: #2d3436;
+        --text-gray: #636e72;
+        --radius: 16px; /* Bo góc mềm mại hơn */
+        --shadow-soft: 0 10px 20px rgba(0, 0, 0, 0.05);
       }
+
+      body {
+        font-family: "Quicksand", sans-serif;
+        background-color: var(--bg-body);
+        color: var(--text-dark);
+      }
+
+      .container-custom {
+        max-width: 900px; /* Thu hẹp lại chút cho gọn mắt */
+        margin: 40px auto;
+        padding: 0 20px;
+        min-height: 70vh;
+      }
+
+      /* --- HEADER TRANG --- */
+      .page-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 30px;
+        gap: 15px;
+      }
+
+      .btn-back-clean {
+        background: var(--bg-white);
+        color: var(--text-gray);
+        border: 1px solid #e1e1e1;
+        padding: 8px 16px;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+      }
+      .btn-back-clean:hover {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+      }
+
       h1 {
-        font-size: 28px;
-        font-weight: bold;
-        margin-bottom: 20px;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
       }
+
+      /* --- ORDER CARD --- */
       .order-item {
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        margin-bottom: 15px;
+        background: var(--bg-white);
+        border-radius: var(--radius);
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-soft);
+        border: 1px solid white;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
       }
+
+      .order-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+        border-color: #ffeaa7; /* Highlight nhẹ khi hover */
+      }
+
+      /* Header của Card: Mã đơn & Ngày */
       .order-header {
-        background: #f9f9f9;
-        padding: 10px 15px;
+        padding: 15px 25px;
         display: flex;
         justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(to right, #fff, #fdfdfd);
+        border-bottom: 1px dashed #eee;
       }
-      .order-header span {
-        font-weight: bold;
+
+      .order-id {
+        font-weight: 700;
+        color: var(--text-dark);
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
       }
+
+      .hash-icon {
+        color: var(--secondary-color);
+        background: #ffeaa7;
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-size: 13px;
+      }
+
+      .order-date {
+        color: var(--text-gray);
+        font-size: 13px;
+        font-weight: 500;
+        background: #f1f2f6;
+        padding: 4px 10px;
+        border-radius: 20px;
+      }
+
+      /* Body của Card */
       .order-body {
-        padding: 15px;
+        padding: 20px 25px;
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Chia đôi để gọn hơn */
+        gap: 20px;
       }
-      .order-body p {
-        margin: 5px 0;
+
+      /* Row thông tin có Icon màu */
+      .info-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 14px;
+        color: var(--text-dark);
+        line-height: 1.5;
       }
+
+      /* Style chung cho icon tròn */
+      .icon-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 14px;
+      }
+
+      /* MÀU SẮC CHO ICON (Theo yêu cầu) */
+      .icon-user {
+        background-color: #e3f2fd; /* Nền xanh nhạt */
+        color: #2196f3; /* Icon xanh dương */
+      }
+
+      .icon-location {
+        background-color: #ffebee; /* Nền đỏ nhạt */
+        color: #ef5350; /* Icon đỏ */
+      }
+
+      .icon-status {
+        background-color: #f3e5f5; /* Nền tím nhạt */
+        color: #ab47bc; /* Icon tím */
+      }
+
+      .info-content strong {
+        display: block;
+        font-size: 12px;
+        color: var(--text-gray);
+        text-transform: uppercase;
+        margin-bottom: 2px;
+        letter-spacing: 0.5px;
+      }
+
+      /* Badge trạng thái */
+      .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 4px;
+      }
+
+      /* Màu sắc badge (Đồng bộ file trước) */
       .status-processing {
-        color: #f39c12;
-        font-weight: bold;
+        background-color: #fff7e6;
+        color: #fa8c16;
       }
       .status-completed {
-        color: #27ae60;
-        font-weight: bold;
+        background-color: #e6fffa;
+        color: #00b894;
       }
       .status-cancelled {
-        color: #e74c3c;
-        font-weight: bold;
+        background-color: #fff0f0;
+        color: #ff4d4f;
       }
+      .status-default {
+        background-color: #f1f2f6;
+        color: #636e72;
+      }
+
+      /* Footer của Card */
       .order-footer {
+        padding: 15px 25px;
+        border-top: 1px solid #f5f5f5;
         display: flex;
         justify-content: flex-end;
-        padding-top: 5px;
-        border-top: 1px solid #f0f0f0;
+        align-items: center;
       }
+
       .btn-detail {
-        background-color: #007bff;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 4px;
+        background-color: white;
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+        padding: 8px 24px;
+        border-radius: 30px;
         text-decoration: none;
         font-size: 14px;
-        transition: background-color 0.3s;
+        font-weight: 700;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
       }
       .btn-detail:hover {
-        background-color: #0056b3;
-      }
-      .btn-detail i {
-        margin-right: 5px;
-      }
-      .btn-back-main {
-        background-color: #6c757d;
+        background-color: var(--primary-color);
         color: white;
-        padding: 8px 15px;
-        border-radius: 4px;
+        box-shadow: 0 5px 15px rgba(255, 159, 67, 0.4);
+        transform: translateX(5px); /* Hiệu ứng đẩy nhẹ sang phải */
+      }
+
+      /* Empty State - Làm đẹp hơn */
+      .empty-order {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-soft);
+      }
+      .empty-icon-box {
+        width: 100px;
+        height: 100px;
+        background: #fff3e0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+      }
+      .empty-icon-box i {
+        font-size: 40px;
+        color: var(--primary-color);
+      }
+      .empty-order p {
+        color: var(--text-gray);
+        font-size: 16px;
+        margin-bottom: 20px;
+      }
+      .btn-shop-now {
+        background: var(--primary-color);
+        color: white;
+        padding: 12px 30px;
+        border-radius: 30px;
         text-decoration: none;
-        font-size: 14px;
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.3s;
+        font-weight: 700;
+        display: inline-block;
+        transition: all 0.3s;
       }
-      .btn-back-main:hover {
-        background-color: #5a6268;
+      .btn-shop-now:hover {
+        background: #e67e22;
+        box-shadow: 0 5px 15px rgba(230, 126, 34, 0.4);
       }
-      .btn-back-main i {
-        margin-right: 5px;
+
+      /* Mobile Responsive */
+      @media (max-width: 768px) {
+        .order-body {
+          grid-template-columns: 1fr; /* Chuyển về 1 cột trên mobile */
+          gap: 15px;
+        }
+        .page-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .order-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+        .order-date {
+          align-self: flex-start;
+        }
       }
     </style>
   </head>
   <body>
     <div th:replace="User/userHeader::user-header"></div>
-    <div class="back-button">
-      <button type="button" onclick="window.history.back()" class="btn-back">
-        <i class="fa-solid fa-arrow-left"></i> Quay lại Trang trước
-      </button>
-    </div>
-    <main class="main-content container">
-      <h1>Đơn Hàng Của Tôi</h1>
 
-      <!-- Nếu không có đơn hàng -->
-      <div th:if="${#lists.isEmpty(orders)}">
-        <p>Bạn chưa có đơn hàng nào.</p>
+    <main class="main-content container-custom">
+      <div class="page-header">
+        <a th:href="@{/User/index}" class="btn-back-clean">
+          <i class="fa-solid fa-arrow-left"></i> Trang chủ
+        </a>
+        <h1>Đơn Hàng Của Tôi</h1>
       </div>
 
-      <!-- Lặp qua các đơn hàng -->
+      <div th:if="${#lists.isEmpty(orders)}" class="empty-order">
+        <div class="empty-icon-box">
+          <i class="fa-solid fa-box-open"></i>
+        </div>
+        <p>Bạn chưa mua sắm đơn hàng nào cả.</p>
+        <a href="/User/index" class="btn-shop-now">
+          Mua sắm ngay <i class="fa-solid fa-cart-shopping"></i>
+        </a>
+      </div>
+
       <div class="order-item" th:each="order : ${orders}">
         <div class="order-header">
-          <span th:text="'Mã đơn: #' + ${order.orderId}">Mã đơn: #123</span>
-          <span
-            th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"
-            >Ngày đặt</span
-          >
-        </div>
-        <div class="order-body">
-          <p>
-            <strong>Người nhận:</strong>
-            <span th:text="${order.user?.userName ?: order.phone}"></span>
-          </p>
-          <p>
-            <strong>Địa chỉ:</strong> <span th:text="${order.address}"></span>
-          </p>
-          <p>
-            <strong>Trạng thái:</strong>
+          <span class="order-id">
+            <span class="hash-icon"><i class="fa-solid fa-hashtag"></i></span>
+            Mã đơn: <span th:text="${order.orderId}">123</span>
+          </span>
+          <span class="order-date">
+            <i class="fa-regular fa-calendar" style="margin-right: 5px"></i>
             <span
-              th:text="${order.status}"
-              th:classappend="${order.status == 'Đang xử lý'} ? 'status-processing' : 
-                                           (${order.status == 'Hoàn thành'} ? 'status-completed' : 
-                                           (${order.status == 'Đã hủy'} ? 'status-cancelled' : ''))"
-            >
-              Đang xử lý
-            </span>
-          </p>
-          <div class="order-footer">
-            <a
-              th:href="@{'/User/order-detail/' + ${order.orderId}}"
-              class="btn-detail"
-            >
-              <i class="fa-solid fa-file-invoice"></i> Xem chi tiết
-            </a>
+              th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"
+            ></span>
+          </span>
+        </div>
+
+        <div class="order-body">
+          <div class="info-row">
+            <div class="icon-circle icon-user">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="info-content">
+              <strong>Người nhận</strong>
+              <span th:text="${order.user?.userName ?: order.phone}"
+                >Nguyễn Văn A</span
+              >
+            </div>
           </div>
+
+          <div class="info-row">
+            <div class="icon-circle icon-location">
+              <i class="fa-solid fa-location-dot"></i>
+            </div>
+            <div class="info-content">
+              <strong>Giao đến</strong>
+              <span th:text="${order.address}">Hà Nội</span>
+            </div>
+          </div>
+
+          <div
+            class="info-row"
+            style="
+              grid-column: 1 / -1;
+              border-top: 1px dashed #f1f2f6;
+              padding-top: 15px;
+            "
+          >
+            <div class="icon-circle icon-status">
+              <i class="fa-solid fa-rotate"></i>
+            </div>
+            <div class="info-content">
+              <strong>Trạng thái đơn hàng</strong>
+              <span
+                class="status-badge"
+                th:text="${order.status}"
+                th:classappend="${order.status == 'Đang xử lý' or order.status == 'Chờ thanh toán' or order.status == 'Đã xác nhận' or order.status == 'Đang giao hàng' or order.status == 'Đã thanh toán VNPay'} ? 'status-processing' : 
+                                 (${order.status == 'Hoàn thành' or order.status == 'Giao hàng thành công'} ? 'status-completed' : 
+                                 (${order.status == 'Đã hủy' or order.status == 'Đã trả hàng'} ? 'status-cancelled' : 'status-default'))"
+              >
+                Đang xử lý
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-footer">
+          <a
+            th:href="@{'/User/order-detail/' + ${order.orderId}}"
+            class="btn-detail"
+          >
+            Xem chi tiết <i class="fa-solid fa-arrow-right-long"></i>
+          </a>
         </div>
       </div>
     </main>

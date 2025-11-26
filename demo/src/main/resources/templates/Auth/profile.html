@@ -3,247 +3,378 @@
   <head>
     <meta charset="UTF-8" />
     <title>Thông Tin Tài Khoản</title>
-    <link th:if="${user.role == 'ADMIN'}" rel="stylesheet" th:href="@{/assets/css/admin.css}" />
-    
-    <style>
-      /* CSS chung */
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f5f7fa;
-      }
-      
-      .container {
-        padding: 20px;
-        /* Margin-left sẽ được xử lý inline bằng Thymeleaf */
-        max-width: 1200px;
-      }
 
-      .profile-container {
-        display: flex;
-        gap: 30px;
-        flex-wrap: wrap; /* Cho phép xuống dòng trên màn hình nhỏ */
-      }
+    <!-- 1. FONT DÙNG CHUNG (Không gây xung đột) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
 
-      .form-section {
-        flex: 1; /* Chia đều không gian */
-        min-width: 300px;
-        background: #fff;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-      }
-
-      .form-section h3 {
-        margin-top: 0;
-        color: #2c3e50;
-        border-bottom: 2px solid #eee;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-      }
-
-      .form-section label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: #555;
-      }
-
-      .form-section input {
-        width: 100%;
-        padding: 10px;
-        margin-bottom: 20px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        box-sizing: border-box; /* Quan trọng để padding không làm vỡ layout */
-      }
-
-      .form-section input[readonly] {
-        background: #f8f9fa;
-        color: #777;
-      }
-
-      .submit-btn {
-        background: #4caf50;
-        color: white;
-        padding: 12px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        width: 100%;
-        font-size: 16px;
-        font-weight: bold;
-        transition: background 0.3s;
-      }
-      .submit-btn:hover {
-        background: #45a049;
-      }
-
-      .message {
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-      }
-      .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-      .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-
-      /* CSS Rank Card */
-      .rank-card {
-        background: white;
-        border-radius: 10px;
-        padding: 25px;
-        margin-bottom: 30px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        position: relative;
-        overflow: hidden;
-      }
-      /* Đường viền màu theo rank */
-      .rank-card.rank-member { border-top: 5px solid #6c757d; }
-      .rank-card.rank-silver { border-top: 5px solid #bdc3c7; }
-      .rank-card.rank-gold { border-top: 5px solid #f1c40f; }
-      .rank-card.rank-diamond { border-top: 5px solid #3498db; }
-
-      .rank-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        margin-bottom: 15px;
-      }
-
-      .rank-badge {
-        font-size: 2rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        margin-top: 5px;
-      }
-      
-      .point-display {
-        font-size: 2rem;
-        font-weight: 800;
-        color: #27ae60;
-      }
-
-      .rank-progress {
-        background: #f8f9fa;
-        padding: 15px;
-        border-radius: 8px;
-        color: #666;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-    </style>
-    
-    <div th:if="${user.role == 'USER'}">
+    <!-- 2. CSS RIÊNG CHO USER (Chỉ nạp khi là USER) -->
+    <th:block th:if="${user.role == 'USER'}">
+      <link rel="stylesheet" th:href="@{/user-css/reset.css}" />
+      <link rel="stylesheet" th:href="@{/user-css/main.css}" />
       <link rel="stylesheet" th:href="@{/user-css/header.css}" />
       <link rel="stylesheet" th:href="@{/user-css/footer.css}" />
-    </div>
+    </th:block>
+
+    <!-- 3. CSS RIÊNG CHO ADMIN (Chỉ nạp khi là ADMIN) -->
+    <th:block th:if="${user.role == 'ADMIN'}">
+      <link rel="stylesheet" th:href="@{/assets/css/admin.css}" />
+      <!-- Link CSS gốc của Admin nếu có -->
+    </th:block>
+
+    <!-- 4. CSS TÙY CHỈNH CHO TRANG PROFILE (Phạm vi hẹp, không phá vỡ layout cũ) -->
+    <style>
+      /* Thiết lập biến màu */
+      :root {
+        --p-color: #ff4d4f;
+        --bg-gray: #f8f9fa;
+        --txt-color: #333;
+        --radius: 10px;
+      }
+
+      /* Chỉ áp dụng font đẹp cho phần nội dung profile */
+      .profile-content-area {
+        font-family: "Quicksand", sans-serif;
+        color: var(--txt-color);
+        background-color: var(--bg-gray);
+        min-height: 80vh;
+      }
+
+      /* --- LAYOUT ĐỘNG --- */
+      /* Nếu là User: Căn giữa */
+      .layout-user {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+      /* Nếu là Admin: Có Margin trái để tránh Sidebar */
+      .layout-admin {
+        margin-left: 225px; /* Độ rộng sidebar admin thường là 225px */
+        padding: 30px;
+        width: auto;
+      }
+      /* Responsive cho Admin Mobile */
+      @media (max-width: 768px) {
+        .layout-admin {
+          margin-left: 0;
+        }
+      }
+
+      .page-heading {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 30px;
+        color: #444;
+        border-left: 5px solid var(--p-color);
+        padding-left: 15px;
+      }
+
+      /* --- RANK CARD (Thẻ thành viên) --- */
+      .rank-card {
+        background: linear-gradient(135deg, #fff 0%, #fff0f0 100%);
+        border-radius: var(--radius);
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid #ffe6e6;
+      }
+      .rank-badge {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--p-color);
+        text-transform: uppercase;
+      }
+      .point-display {
+        font-size: 32px;
+        font-weight: 800;
+        color: #333;
+      }
+
+      /* --- FORM GRID --- */
+      .profile-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 30px;
+      }
+      .card-box {
+        background: #fff;
+        padding: 30px;
+        border-radius: var(--radius);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      }
+      .card-header {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+      }
+
+      /* Input đẹp */
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        font-weight: 600;
+        font-size: 14px;
+        display: block;
+        margin-bottom: 5px;
+      }
+      .form-control-custom {
+        width: 100%;
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        background: #fff;
+        color: #333;
+        box-sizing: border-box; /* Quan trọng */
+      }
+      .form-control-custom:focus {
+        border-color: var(--p-color);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.1);
+      }
+      .form-control-custom[readonly] {
+        background: #f1f3f5;
+        cursor: not-allowed;
+      }
+
+      .btn-save {
+        width: 100%;
+        padding: 12px;
+        background: var(--p-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+      .btn-save:hover {
+        background: #e04346;
+      }
+
+      .btn-warning-custom {
+        background: #f39c12;
+        color: white;
+      }
+      .btn-warning-custom:hover {
+        background: #e67e22;
+      }
+
+      @media (max-width: 900px) {
+        .profile-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
   </head>
+
   <body>
-    
+    <!-- HEADER & SIDEBAR (Điều kiện hiển thị) -->
     <div th:if="${user.role == 'ADMIN'}">
-      <div th:replace="~{Admin/header :: Header}"></div>
       <div th:replace="~{Admin/sidebar :: sideBar}"></div>
+      <div th:replace="~{Admin/header :: Header}"></div>
     </div>
     <div th:if="${user.role == 'USER'}">
       <div th:replace="~{User/userHeader :: user-header}"></div>
     </div>
 
-    <div class="container" 
-         th:style="${user.role == 'ADMIN'} ? 'margin-left: 270px;' : 'margin: 0 auto;'">
-         
-      <h2 style="margin-bottom: 30px; color: #333;">Thông Tin Tài Khoản</h2>
+    <!-- KHU VỰC NỘI DUNG CHÍNH -->
+    <!-- Tự động đổi class layout dựa trên Role -->
+    <div
+      class="profile-content-area"
+      th:classappend="${user.role == 'ADMIN'} ? 'layout-admin' : 'layout-user'"
+    >
+      <h2 class="page-heading">Hồ Sơ Của Tôi</h2>
 
-    <div th:if="${user.role == 'USER'}">
-            <div class="rank-card" 
-                 th:with="currentRank=${user.rank != null ? user.rank : 'MEMBER'}"
-                 th:classappend="'rank-' + ${#strings.toLowerCase(currentRank)}">
-                 
-                <div class="rank-header">
-                    <div>
-                        <span class="rank-title text-muted">Hạng thành viên</span>
-                        <div class="rank-badge" th:text="${currentRank}">MEMBER</div>
-                    </div>
-                    
-                    <div style="text-align: right">
-                        <span class="rank-title text-muted">Điểm tích lũy</span>
-                        <div>
-                            <span class="point-display"
-                                  th:text="${user.points != null ? #numbers.formatDecimal(user.points, 0, 'COMMA', 0, 'POINT') : '0'}">
-                                0
-                            </span>
-                            <span style="font-weight: bold;">điểm</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rank-progress">
-                    <i class="fa-solid fa-circle-info" style="color: #17a2b8;"></i>
-                    
-                    <span th:if="${currentRank == 'MEMBER'}">
-                       Bạn cần thêm <b th:text="${100000 - (user.points ?: 0)}"></b> điểm để lên hạng <b>SILVER</b>.
-                    </span>
-                    <span th:if="${currentRank == 'SILVER'}">
-                       Bạn cần thêm <b th:text="${500000 - (user.points ?: 0)}"></b> điểm để lên hạng <b>GOLD</b>.
-                    </span>
-                    <span th:if="${currentRank == 'GOLD'}">
-                       Bạn cần thêm <b th:text="${1000000 - (user.points ?: 0)}"></b> điểm để lên hạng <b>DIAMOND</b>.
-                    </span>
-                    <span th:if="${currentRank == 'DIAMOND'}" style="color: #27ae60; font-weight: bold;">
-                       Chúc mừng! Bạn đang ở hạng cao nhất.
-                    </span>
-                </div>
+      <!-- THẺ THÀNH VIÊN (Chỉ hiện cho USER) -->
+      <div th:if="${user.role == 'USER'}" class="rank-card">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+          "
+        >
+          <div>
+            <div
+              style="font-size: 13px; color: #888; text-transform: uppercase"
+            >
+              Hạng thành viên
             </div>
+            <div
+              class="rank-badge"
+              th:text="${user.rank != null ? user.rank : 'MEMBER'}"
+            >
+              MEMBER
+            </div>
+          </div>
+          <div style="text-align: right">
+            <div
+              style="font-size: 13px; color: #888; text-transform: uppercase"
+            >
+              Điểm tích lũy
+            </div>
+            <div>
+              <span
+                class="point-display"
+                th:text="${user.points != null ? #numbers.formatDecimal(user.points, 0, 'COMMA', 0, 'POINT') : '0'}"
+              >
+                0
+              </span>
+              <span style="font-weight: 600; color: #666">điểm</span>
+            </div>
+          </div>
         </div>
-      <div class="profile-container" th:object="${user}">
-        
-        <div class="form-section">
-          <h3><i class="fa-solid fa-user-pen"></i> Cập nhật thông tin</h3>
-          
-          <div th:if="${successMessage}" class="message success" th:text="${successMessage}"></div>
-          <div th:if="${errorMessage}" class="message error" th:text="${errorMessage}"></div>
+      </div>
+
+      <div class="profile-grid" th:object="${user}">
+        <!-- CỘT TRÁI: THÔNG TIN -->
+        <div class="card-box">
+          <div class="card-header">
+            <i class="fa-regular fa-id-card" style="color: #ff4d4f"></i>
+            Cập nhật thông tin
+          </div>
+
+          <div
+            th:if="${successMessage}"
+            style="color: green; margin-bottom: 10px"
+            th:text="${successMessage}"
+          ></div>
+          <div
+            th:if="${errorMessage}"
+            style="color: red; margin-bottom: 10px"
+            th:text="${errorMessage}"
+          ></div>
 
           <form th:action="@{/Auth/updateProfile}" method="post">
-            <label>Số điện thoại (Tài khoản):</label>
-            <input type="text" th:value="*{phone}" readonly />
+            <div class="form-group">
+              <label>Số điện thoại:</label>
+              <input
+                type="text"
+                class="form-control-custom"
+                th:value="*{phone}"
+                readonly
+              />
+            </div>
 
-            <label>Vai trò:</label>
-            <input type="text" th:value="*{role}" readonly />
+            <div class="form-group" th:if="${user.role == 'ADMIN'}">
+              <label>Vai trò:</label>
+              <input
+                type="text"
+                class="form-control-custom"
+                th:value="*{role}"
+                readonly
+                style="color: blue; font-weight: bold"
+              />
+            </div>
 
-            <label>Họ và tên hiển thị:</label>
-            <input type="text" name="userName" th:value="*{userName}" required placeholder="Nhập tên hiển thị..."/>
+            <div class="form-group">
+              <label>Họ tên hiển thị:</label>
+              <input
+                type="text"
+                class="form-control-custom"
+                name="userName"
+                th:value="*{userName}"
+                required
+              />
+            </div>
 
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" th:value="*{email}" required placeholder="example@email.com"/>
+            <div class="form-group">
+              <label>Email:</label>
+              <input
+                type="email"
+                class="form-control-custom"
+                name="email"
+                th:value="*{email}"
+                required
+              />
+            </div>
 
-            <label for="address">Địa chỉ giao hàng:</label>
-            <input type="text" id="address" name="address" th:value="*{address}" required placeholder="Số nhà, đường, phường/xã..."/>
+            <div class="form-group">
+              <label>Địa chỉ:</label>
+              <input
+                type="text"
+                class="form-control-custom"
+                name="address"
+                th:value="*{address}"
+                required
+              />
+            </div>
 
-            <button type="submit" class="submit-btn">Lưu thay đổi</button>
+            <button type="submit" class="btn-save">Lưu thay đổi</button>
           </form>
         </div>
 
-        <div class="form-section">
-          <h3><i class="fa-solid fa-key"></i> Đổi Mật Khẩu</h3>
-          
-          <div th:if="${passwordSuccess}" class="message success" th:text="${passwordSuccess}"></div>
-          <div th:if="${passwordError}" class="message error" th:text="${passwordError}"></div>
+        <!-- CỘT PHẢI: MẬT KHẨU -->
+        <div class="card-box">
+          <div class="card-header">
+            <i class="fa-solid fa-shield-halved" style="color: #f39c12"></i>
+            Bảo mật
+          </div>
+
+          <div
+            th:if="${passwordSuccess}"
+            style="color: green; margin-bottom: 10px"
+            th:text="${passwordSuccess}"
+          ></div>
+          <div
+            th:if="${passwordError}"
+            style="color: red; margin-bottom: 10px"
+            th:text="${passwordError}"
+          ></div>
 
           <form th:action="@{/Auth/changePassword}" method="post">
-            <label for="oldPassword">Mật khẩu hiện tại:</label>
-            <input type="password" id="oldPassword" name="oldPassword" required placeholder="••••••"/>
+            <div class="form-group">
+              <label>Mật khẩu hiện tại:</label>
+              <input
+                type="password"
+                class="form-control-custom"
+                name="oldPassword"
+                required
+                placeholder="••••••"
+              />
+            </div>
 
-            <label for="newPassword">Mật khẩu mới:</label>
-            <input type="password" id="newPassword" name="newPassword" required placeholder="••••••"/>
+            <div class="form-group">
+              <label>Mật khẩu mới:</label>
+              <input
+                type="password"
+                class="form-control-custom"
+                name="newPassword"
+                required
+                placeholder="••••••"
+              />
+            </div>
 
-            <label for="confirmPassword">Nhập lại mật khẩu mới:</label>
-            <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="••••••"/>
+            <div class="form-group">
+              <label>Nhập lại mật khẩu mới:</label>
+              <input
+                type="password"
+                class="form-control-custom"
+                name="confirmPassword"
+                required
+                placeholder="••••••"
+              />
+            </div>
 
-            <button type="submit" class="submit-btn" style="background: #f39c12;">Xác nhận đổi</button>
+            <button type="submit" class="btn-save btn-warning-custom">
+              Đổi mật khẩu
+            </button>
           </form>
         </div>
       </div>
     </div>
 
+    <!-- FOOTER -->
     <div th:if="${user.role == 'ADMIN'}">
       <div th:replace="~{Admin/footer :: Footer}"></div>
     </div>

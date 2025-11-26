@@ -1,100 +1,100 @@
 <div
-    th:fragment="sideBar"
-    xmlns:th="http://www.thymeleaf.org"
-    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+  th:fragment="sideBar"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
 >
-    <aside class="sidebar">
-        <div class="sidebar__brand">
-            <span class="brand-icon">
-                <i class="fa-solid fa-baby"></i>
-            </span>
-            Adminator
-        </div>
-        <nav class="sidebar__nav">
-            <a
-                th:href="@{/Admin/home}"
-                sec:authorize="hasRole('ADMIN')"
-                th:class="${currentPage == '/Admin/home'} ? 'sidebar-link active' : 'sidebar-link'"
-            >
-                <span class="icon">
-                    <i class="fa-solid fa-house"></i>
-                </span>
-                <span class="label">Trang chủ</span>
-            </a>
-            <a th:href="@{/Admin/customers}" 
-            sec:authorize="hasRole('ADMIN')"
-            th:class="${currentPage == '/Admin/customers'} ? 'sidebar-link active' : 'sidebar-link'">
-                <span class="icon">
-                    <i class="fa-solid fa-users"></i>
-                </span>
-                <span class="label">Khách hàng</span>
-            </a>
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <span class="brand-icon">
+        <i class="fa-solid fa-baby"></i>
+      </span>
+      Adminator
+    </div>
+    <nav class="sidebar__nav">
+      <a
+        th:href="@{/Admin/home}"
+        sec:authorize="hasRole('ADMIN')"
+        th:class="${currentPage == '/Admin/home'} ? 'sidebar-link active' : 'sidebar-link'"
+      >
+        <span class="icon">
+          <i class="fa-solid fa-house"></i>
+        </span>
+        <span class="label">Trang chủ</span>
+      </a>
+      <a
+        th:href="@{/Admin/customers}"
+        sec:authorize="hasRole('ADMIN')"
+        th:class="${currentPage == '/Admin/customers'} ? 'sidebar-link active' : 'sidebar-link'"
+      >
+        <span class="icon">
+          <i class="fa-solid fa-users"></i>
+        </span>
+        <span class="label">Khách hàng</span>
+      </a>
 
-            <a
-                th:href="@{/Admin/tonkho}"
-                sec:authorize="hasRole('ADMIN')"
-                th:class="${currentPage == '/Admin/tonkho'} ? 'sidebar-link active' : 'sidebar-link'"
-            >
-                <span class="icon">
-                    <i class="fa-solid fa-warehouse"></i>
-                </span>
-                <span class="label">Tồn kho</span>
-            </a>
+      <a
+        th:href="@{/Admin/tonkho}"
+        sec:authorize="hasRole('ADMIN')"
+        th:class="${currentPage == '/Admin/tonkho'} ? 'sidebar-link active' : 'sidebar-link'"
+      >
+        <span class="icon">
+          <i class="fa-solid fa-warehouse"></i>
+        </span>
+        <span class="label">Kho hàng</span>
+      </a>
 
-            <a
-                th:href="@{/Admin/export}"
-                sec:authorize="hasRole('ADMIN')"
-                th:class="${currentPage == '/Admin/export'} ? 'sidebar-link active' : 'sidebar-link'"
-            >
-                <span class="icon">
-                    <i class="fa-solid fa-truck-ramp-box"></i>
-                </span>
-                <span class="label">Xuất kho</span>
-            </a>
+      <a
+        th:href="@{/Admin/export}"
+        sec:authorize="hasRole('ADMIN')"
+        th:class="${currentPage == '/Admin/export'} ? 'sidebar-link active' : 'sidebar-link'"
+      >
+        <span class="icon">
+          <i class="fa-solid fa-truck-ramp-box"></i>
+        </span>
+        <span class="label">Xuất kho</span>
+      </a>
 
-            <a
-                th:href="@{/Admin/addproduct}"
-                sec:authorize="hasRole('ADMIN')"
-                th:class="${currentPage == '/Admin/addproduct'} ? 'sidebar-link active' : 'sidebar-link'"
-            >
-                <span class="icon">
-                    <i class="fa-solid fa-boxes-packing"></i>
-                </span>
-                <span class="label">Nhập kho</span>
-            </a>
+      <a
+        th:href="@{/Admin/addproduct}"
+        sec:authorize="hasRole('ADMIN')"
+        th:class="${currentPage == '/Admin/addproduct'} ? 'sidebar-link active' : 'sidebar-link'"
+      >
+        <span class="icon">
+          <i class="fa-solid fa-boxes-packing"></i>
+        </span>
+        <span class="label">Nhập kho</span>
+      </a>
 
-            <a
-                th:href="@{/Admin/inventory}"
-                sec:authorize="hasRole('ADMIN')"
-                th:class="${currentPage == '/Admin/inventory'} ? 'sidebar-link active' : 'sidebar-link'"
-            >
-                <span class="icon"
-                    ><i class="fa-solid fa-list-check"></i>
-                </span>
-                <span class="label">Kiểm kê</span>
-            </a>
+      <a
+        th:href="@{/Admin/inventory}"
+        sec:authorize="hasRole('ADMIN')"
+        th:class="${currentPage == '/Admin/inventory'} ? 'sidebar-link active' : 'sidebar-link'"
+      >
+        <span class="icon"><i class="fa-solid fa-list-check"></i> </span>
+        <span class="label">Kiểm kê</span>
+      </a>
 
-            <a
-                th:href="@{/Admin/fixproduct}"
-                sec:authorize="hasRole('ADMIN')"
-                th:class="${currentPage == '/Admin/fixproduct'} ? 'sidebar-link active' : 'sidebar-link'"
-            >
-                <span class="icon"
-                    ><i class="fa-solid fa-screwdriver-wrench"></i>
-                </span>
-                <span class="label">Sửa đổi</span>
-            </a>
+      <a
+        th:href="@{/Admin/fixproduct}"
+        sec:authorize="hasRole('ADMIN')"
+        th:class="${currentPage == '/Admin/fixproduct'} ? 'sidebar-link active' : 'sidebar-link'"
+      >
+        <span class="icon"
+          ><i class="fa-solid fa-screwdriver-wrench"></i>
+        </span>
+        <span class="label">Sửa đổi</span>
+      </a>
 
-            <a
-                th:href="@{/Admin/report}"
-                sec:authorize="hasRole('ADMIN')"
-                th:class="${currentPage == '/Admin/report'} ? 'sidebar-link active' : 'sidebar-link'"
-            >
-                <span class="icon">
-                    <i class="fa-solid fa-chart-line"></i>
-                </span>
-                <span class="label">Báo cáo</span>
-            </a>
-        </nav>
-    </aside>
+      <a
+        th:href="@{/Admin/report}"
+        sec:authorize="hasRole('ADMIN')"
+        th:class="${currentPage == '/Admin/report'} ? 'sidebar-link active' : 'sidebar-link'"
+      >
+        <span class="icon">
+          <i class="fa-solid fa-chart-line"></i>
+        </span>
+        <span class="label">Báo cáo</span>
+      </a>
+    </nav>
+  </aside>
 </div>

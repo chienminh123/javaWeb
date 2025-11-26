@@ -67,81 +67,80 @@
                   <tr th:each="p, iter : ${productsWithSizes}">
                     <td
                       th:text="${iter.index + 1}"
-                      th:rowspan="${p.sizes.size() > 0 ? p.sizes.size() : 1}"
-                      class="row-header"
+                      class="row-header stt-cell"
                     ></td>
+
                     <td
                       th:text="${p.provider.providerName}"
-                      th:rowspan="${p.sizes.size() > 0 ? p.sizes.size() : 1}"
-                      class="row-header"
+                      class="row-header provider-cell"
                     ></td>
+
                     <td
                       th:text="${p.productName}"
-                      th:rowspan="${p.sizes.size() > 0 ? p.sizes.size() : 1}"
                       class="row-header product-name-cell"
                     ></td>
 
-                    <th:block th:each="size, sizeIter : ${p.sizes}">
-                      <th:block th:if="${sizeIter.first}">
-                        <td colspan="5" class="size-detail-cell">
-                          <div th:each="size : ${p.sizes}" class="size-group">
-                            <div class="size-row">
-                              <strong
-                                th:text="${size.sizeName}"
-                                class="size-name"
-                              ></strong>
+                    <th:block th:if="${p.sizes.size() > 0}">
+                      <td colspan="5" class="size-detail-cell">
+                        <div class="size-group-container">
+                          <div th:each="size : ${p.sizes}" class="size-row">
+                            <strong
+                              th:text="${size.sizeName}"
+                              class="size-name"
+                            ></strong>
 
-                              <input
-                                type="hidden"
-                                name="productId"
-                                th:value="${p.productId}"
-                              />
-                              <input
-                                type="hidden"
-                                name="sizeName"
-                                th:value="${size.sizeName}"
-                              />
-                              <input
-                                type="hidden"
-                                name="systemQty"
-                                th:value="${size.quantity}"
-                              />
+                            <input
+                              type="hidden"
+                              name="productId"
+                              th:value="${p.productId}"
+                            />
+                            <input
+                              type="hidden"
+                              name="sizeName"
+                              th:value="${size.sizeName}"
+                            />
+                            <input
+                              type="hidden"
+                              name="systemQty"
+                              th:value="${size.quantity}"
+                            />
 
-                              <span
-                                th:text="${size.quantity}"
-                                class="system-qty"
-                              ></span>
+                            <span
+                              th:text="${size.quantity}"
+                              class="system-qty"
+                            ></span>
 
-                              <input
-                                type="number"
-                                name="actualQty"
-                                min="0"
-                                th:data-system="${size.quantity}"
-                                onchange="calcDiff(this)"
-                                class="form-input actual-qty-input"
-                                required
-                              />
+                            <input
+                              type="number"
+                              name="actualQty"
+                              min="0"
+                              th:data-system="${size.quantity}"
+                              onchange="calcDiff(this)"
+                              class="form-input actual-qty-input"
+                              required
+                            />
 
-                              <span class="diff diff-display">0</span>
+                            <span class="diff diff-display">0</span>
 
-                              <textarea
-                                name="note"
-                                placeholder="Lý do chênh lệch..."
-                                th:if="${size.quantity != 0}"
-                                class="form-textarea diff-note"
-                              ></textarea>
-                              <div
-                                th:unless="${size.quantity != 0}"
-                                class="diff-note-placeholder"
-                              ></div>
-                            </div>
+                            <textarea
+                              name="note"
+                              placeholder="Lý do..."
+                              th:if="${size.quantity != 0}"
+                              class="form-textarea diff-note"
+                            ></textarea>
+                            <div
+                              th:unless="${size.quantity != 0}"
+                              class="diff-note-placeholder"
+                            ></div>
                           </div>
-                        </td>
-                      </th:block>
+                        </div>
+                      </td>
                     </th:block>
 
                     <th:block th:if="${p.sizes.size() == 0}">
-                      <td colspan="5" class="no-size-data">Không có size</td>
+                      <td colspan="5" class="no-size-data">
+                        Sản phẩm chưa thiết lập phân loại size
+                      </td>
                     </th:block>
                   </tr>
                 </tbody>

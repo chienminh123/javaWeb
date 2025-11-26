@@ -20,6 +20,6 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
            "JOIN od.orders o " +
            "WHERE od.product.productId = :productId " +
            "AND o.user.userId = :userId " +
-           "AND o.status = 'Đã giao hàng'") 
+           "AND o.status = 'Giao hàng thành công'") 
     boolean hasUserBoughtProduct(@Param("userId") Integer userId, @Param("productId") Integer productId);
 }

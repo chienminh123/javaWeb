@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,73 +42,51 @@ public class ProductController {
     @Autowired
     private ReviewService reviewService;
 
-    // @GetMapping("/products") 
-    // public String showProductsByGenre(Model model, 
-    //     @RequestParam(name = "genreId") Integer genreId,
-    //     @RequestParam(name = "sort", required = false) String sort,
-    //     @RequestParam(name = "priceRange", required = false) String priceRange, 
-    //     @RequestParam(name = "brandId", required = false) Integer brandId 
-    // ) {
-    //     // 1. Gọi Service với các tham số mới
-    //     List<Product> products = productService.findProductsByGenre(
-    //         genreId, sort, priceRange, brandId); 
-        
-        
-    //     // 2. Lấy TẤT CẢ Thể loại và NCC
-    //     List<Genre> genres = genreService.findAllGenres();
-    //     List<Provider> providerList = providerService.findAll(); 
-        
-    //     // 3. Gửi dữ liệu vào Model
-    //     model.addAttribute("products", products);
-    //     model.addAttribute("genres", genres);
-    //     model.addAttribute("providerList", providerList); 
-    //     model.addAttribute("currentGenreId", genreId); 
 
-    //     return "User/products"; 
-    // }
 
     @GetMapping("/products") 
     public String showProductsByGenre(Model model, 
-        @RequestParam(name = "genreId", required = false) Integer genreId, 
+        @RequestParam(name = "genreId", required = false) Integer genreId,
         @RequestParam(name = "sort", required = false) String sort,
         @RequestParam(name = "priceRange", required = false) String priceRange, 
-        @RequestParam(name = "brandId", required = false) Integer brandId 
+        @RequestParam(name = "brandId", required = false) Integer brandId,
+        @RequestParam(name = "page", defaultValue = "1") int page 
     ) {
-        List<Product> products;
-        List<Provider> providerList;
+        int pageSize = 8; 
 
-        if (genreId != null) {
-             // Lấy sản phẩm thuộc Genre
-             products = productService.findProductsByGenre(genreId, sort, priceRange, brandId);
-             
-          
-             providerList = providerService.findByGenreId(genreId); 
-        } else {
-            
-             products = java.util.Collections.emptyList(); 
-             providerList = providerService.findAll(); 
-        }
+        Page<Product> productPage = productService.findProductsByGenreWithPagination(
+            genreId, sort, priceRange, brandId, page, pageSize); 
         
-        // 2. Lấy danh sách thể loại (để hiển thị menu bên trái)
+        List<Product> products = productPage.getContent();
+        
+        // 2. Lấy dữ liệu bổ trợ
         List<Genre> genres = genreService.findAllGenres();
+        List<Provider> providerList;
+        if (genreId != null) {
+            providerList = providerService.findByGenreId(genreId);
+            Genre currentGenre = genreService.getById(genreId).orElse(null);
+            if (currentGenre != null) {
+                model.addAttribute("pageTitle", currentGenre.getGenreName());
+            } else {
+                model.addAttribute("pageTitle", "Sản phẩm");
+            }
+        } else {
+            providerList = providerService.findAll(); 
+        }
         
         // 3. Gửi dữ liệu vào Model
         model.addAttribute("products", products);
         model.addAttribute("genres", genres);
         model.addAttribute("providerList", providerList); 
-        model.addAttribute("currentGenreId", genreId); 
-
-        if(genreId != null) {
-          
-            Genre currentGenre = genreService.getById(genreId).orElse(null);
-            model.addAttribute("pageTitle", currentGenre != null ? currentGenre.getGenreName() : "Sản phẩm");
-        } else {
-            model.addAttribute("pageTitle", "Danh sách sản phẩm");
-        }
+        model.addAttribute("currentGenreId", genreId);
+        
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", productPage.getTotalPages());
+        model.addAttribute("totalItems", productPage.getTotalElements());
 
         return "User/products"; 
     }
-
+    
     @GetMapping("/product/{id}")
     public String showProductDetail(
         @PathVariable("id") Integer id, 
@@ -120,7 +99,7 @@ public class ProductController {
 
         // 1. Lấy danh sách đánh giá (Có lọc theo rating nếu user chọn)
         List<Review> reviews = reviewService.getReviews(id, rating);
-        
+        List<Genre> genres = genreService.findAllGenres();
         // 2. Lấy thống kê (để vẽ biểu đồ 5 sao, 4 sao...)
         Map<String, Object> stats = reviewService.getReviewStats(id);
 
@@ -130,6 +109,7 @@ public class ProductController {
         model.addAttribute("product", product);
         model.addAttribute("reviews", reviews);
         model.addAttribute("stats", stats);
+        model.addAttribute("genres", genres);
         model.addAttribute("currentFilter", rating); // Để highlight nút lọc đang chọn
         model.addAttribute("canReview", canReview);
 

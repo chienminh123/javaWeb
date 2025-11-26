@@ -54,12 +54,16 @@
       .status-Đã_trả_hàng {
         background-color: #ff4d4f;
       }
+      .status-Mới_tạo,
+      .status-Thanh_toán_thất_bại {
+        background-color: #8d8c8b;
+      }
       .status-Chờ_thanh_toán,
-      .status-Đã-thanh-toán-VNPay,
+      .status-Đã_thanh_toán_VNPay,
       .status-Đang_xử_lý {
         background-color: #faad14;
       }
-      .status-Đã_hoàn_thành,
+      .status-Giao_hàng_thành_công,
       .status-Đang_chuẩn_bị,
       .status-Đã_xác_nhận,
       .status-Đang_giao_hàng {
@@ -134,10 +138,26 @@
                   >
                     12/11/2025 10:00
                   </td>
-                  <td>
+                  <td
+                    th:with="subTotal=${#aggregates.sum(order.orderDetails.![price * quantity])},
+             discount=${order.discountAmount != null ? order.discountAmount : 0},
+             finalTotal=${subTotal - discount}"
+                  >
                     <span
-                      th:text="${#numbers.formatDecimal(#aggregates.sum(order.orderDetails.![price * quantity]), 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                      th:text="${#numbers.formatDecimal(finalTotal, 0, 'COMMA', 0, 'POINT')} + ' đ'"
                     ></span>
+                    <div
+                      th:if="${discount > 0}"
+                      style="
+                        font-size: 14px;
+                        color: #888;
+                        text-decoration: line-through;
+                      "
+                    >
+                      <span
+                        th:text="${#numbers.formatDecimal(subTotal, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                      ></span>
+                    </div>
                   </td>
                   <td>
                     <span

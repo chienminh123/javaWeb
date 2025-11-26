@@ -82,9 +82,8 @@ public class AdminController {
         @RequestParam String[] description,
         @RequestParam(required = false) MultipartFile[][] images,
        
-        @RequestParam(required = false) String[][] sizeName,
-        @RequestParam(required = false) Integer[][] quantity
-        
+        @RequestParam(required = false) String[] sizeName,
+        @RequestParam(required = false) String[] quantity  
     ) {
         productService.saveMultipleProducts(
             productName, providerId, genreId, basisPrice, description, images,
@@ -92,7 +91,18 @@ public class AdminController {
         );
         return "redirect:/Admin/tonkho";
     }
-
+    @org.springframework.web.bind.annotation.DeleteMapping("/deleteProduct/{id}")
+        @ResponseBody
+        public org.springframework.http.ResponseEntity<String> deleteProduct(@PathVariable Integer id) {
+            try {
+                // Gọi Service để xóa
+                productService.deleteProduct(id);
+                return org.springframework.http.ResponseEntity.ok("Deleted");
+            } catch (Exception e) {
+                // Trả về lỗi nếu không xóa được (ví dụ: ràng buộc khóa ngoại)
+                return org.springframework.http.ResponseEntity.badRequest().body(e.getMessage());
+            }
+        }
     @PostMapping("/addProvider")
     @ResponseBody
     @Transactional  // Đảm bảo lưu DB
@@ -284,20 +294,20 @@ public class AdminController {
         long outOfStockCount = productService.countOutOfStockProducts();
 
         long adminCancelledCount = orderService.countOrdersByStatus("Đã hủy");
-        // 2. Đếm số đơn User Trả
-        long userReturnedCount = orderService.countOrdersByStatus("Đã trả hàng");
-        
+        long userReturnedCount = orderService.countOrdersByStatus("Đã trả hàng"); 
         // 3. Gộp tổng số lượng
         long totalCancelledAndReturned = adminCancelledCount + userReturnedCount;
-        long pendingOrdersCount = orderService.countOrdersByStatus("Đang xử lý"); // Hoặc "Chờ thanh toán" tùy vào logic bạn muốn
-        
+
+        long pendingOrdersCount = orderService.countOrdersByStatus("Đang xử lý"); 
+        long vnpOrdersCount = orderService.countOrdersByStatus("Đã thanh toán VNPay");
+        long totalPendingAndVnp = pendingOrdersCount + vnpOrdersCount;
         // 2. Đưa dữ liệu vào Model
         model.addAttribute("totalInventoryValue", totalInventoryValue);
         model.addAttribute("outOfStockCount", outOfStockCount);
         
         // === CODE MỚI: Đưa dữ liệu đếm vào Model ===
         model.addAttribute("cancelledOrdersCount", totalCancelledAndReturned);
-        model.addAttribute("pendingOrdersCount", pendingOrdersCount);
+        model.addAttribute("pendingOrdersCount", totalPendingAndVnp );
         
         return "Admin/home";
     }
@@ -315,7 +325,7 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
         "Đang xử lý",
         "Đã xác nhận",
         "Đang giao hàng",
-        "Đã giao hàng",
+        "Giao hàng thành công",
         "Đã hủy"
     );
 
@@ -353,33 +363,46 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
         return "redirect:/Admin/order-detail?orderId=" + orderId;
     }
     
-    // Đảm bảo hàm showOrdersByStatus đã có (đã tạo ở bước trước)
-    // Nếu bạn muốn hiển thị tất cả đơn hàng cho /Admin/orders, bạn cần dùng hàm sau:
-    @GetMapping("/orders")
-    public String showOrdersByStatus(@RequestParam(required = false) String status, Model model) {
-        String title = "Danh sách Đơn hàng";
-        List<Orders> orders;
+    // Trong file: src/main/java/com/example/demo/controller/AdminController.java
+
+@GetMapping("/orders")
+public String showOrdersByStatus(
+        @RequestParam(required = false) String status, 
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date, // Thêm tham số này
+        Model model) {
+    
+    String title = "Danh sách Đơn hàng";
+    List<Orders> orders;
+    
+    // 1. Ưu tiên lọc theo Ngày + Trạng thái (Logic click từ biểu đồ)
+    if (date != null) {
+        // Mặc định biểu đồ doanh thu tính cho "Giao hàng thành công"
+        String targetStatus = (status != null && !status.isEmpty()) ? status : "Giao hàng thành công";
         
-        if ("Đã hủy".equals(status)) {
-        // Nếu admin bấm xem "Đã hủy", gộp cả 2 danh sách
+        orders = orderService.findOrdersByStatusAndDate(targetStatus, date);
+        title = "Đơn hàng " + targetStatus + " ngày " + date.toString();
+    } 
+    // 2. Logic cũ: Lọc theo Trạng thái hủy/trả
+    else if ("Đã hủy".equals(status)) {
         List<Orders> cancelled = orderService.findOrdersByStatus("Đã hủy");
         List<Orders> returned = orderService.findOrdersByStatus("Đã trả hàng");
-        
-        // Gộp 2 danh sách
         orders = new java.util.ArrayList<>(cancelled);
         orders.addAll(returned);
+        orders.sort((o1, o2) -> o2.getOrderDate().compareTo(o1.getOrderDate()));
+        title = "Đơn hàng Hủy & Trả hàng";
+    } 
+    else if ("Cho_Xu_Ly".equals(status)) {
+        List<Orders> processing = orderService.findOrdersByStatus("Đang xử lý");
+        List<Orders> vnpay = orderService.findOrdersByStatus("Đã thanh toán VNPay");
         
-        // Sắp xếp lại theo ngày (nếu cần)
+        orders = new java.util.ArrayList<>(processing);
+        orders.addAll(vnpay);
+
         orders.sort((o1, o2) -> o2.getOrderDate().compareTo(o1.getOrderDate()));
         
-        title = "Đơn hàng Hủy & Trả hàng";
-        
-    } else if (status != null && !status.isEmpty()) {
-        // Logic cũ cho các trạng thái khác (Đang xử lý, Đã trả hàng)
-        orders = orderService.findOrdersByStatus(status);
-        title = "Đơn hàng (" + status + ")";
-    } else {
-        // Lấy tất cả
+        title = "Đơn hàng Chờ xác nhận (Gồm VNPay)";
+    } 
+    else {
         orders = orderService.findAllOrderByOrderDateDesc();
         title = "Danh sách Đơn hàng";
     }
@@ -388,7 +411,8 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
     model.addAttribute("pageTitle", title);
     
     return "Admin/orders";
-    }
+}
+
     @GetMapping("/export/inventory")
     public ResponseEntity<InputStreamResource> exportInventory() {
         List<com.example.demo.model.Product> products = productService.getAllProductsWithInventory();
@@ -466,18 +490,8 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
             .filter(p -> p.getProviderId() == id)
             .findFirst()
             .ifPresent(p -> {
-                 // Gọi service xóa (Bạn cần thêm hàm delete vào ProviderService nếu chưa có)
-                 // providerService.delete(id); 
-                 // Tạm thời gọi repo trực tiếp nếu service chưa có hàm delete:
-                 // providerRepo.deleteById(id);
+                
             });
-            
-        // Vì trong ProviderService bạn chưa gửi hàm delete, 
-        // hãy thêm hàm này vào ProviderService.java:
-        // public void delete(Integer id) { repo.deleteById(id); }
-        
-        // Sau đó dùng:
-        // providerService.delete(id);
         
         return "Deleted";
     }
@@ -505,8 +519,7 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
         return "Admin/customers";
     }
 
-    // --- 2. SỬA LẠI: XÓA TÀI KHOẢN (Đồng bộ URL với HTML) ---
-    // HTML gọi: /Admin/user/delete/{id} -> Controller chỉ cần: /user/delete/{id}
+ 
     @GetMapping("/user/delete/{id}") 
     public String deleteUser(@PathVariable("id") int userId, RedirectAttributes redirectAttributes) {
         try {
@@ -527,8 +540,6 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
         return "redirect:/Admin/customers";
     }
 
-    // --- 3. SỬA LẠI: KHÓA TÀI KHOẢN ---
-    // Bỏ chữ "/Admin" ở đầu vì class đã có rồi
     @GetMapping("/user/lock/{id}") 
     public String lockUser(@PathVariable("id") int userId, RedirectAttributes redirectAttributes) {
         User user = userRepository.findById(userId).orElse(null);
@@ -542,7 +553,6 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
         return "redirect:/Admin/customers";
     }
 
-    // --- 4. SỬA LẠI: MỞ KHÓA ---
     @GetMapping("/user/unlock/{id}")
     public String unlockUser(@PathVariable("id") int userId, RedirectAttributes redirectAttributes) {
         User user = userRepository.findById(userId).orElse(null);
@@ -554,8 +564,7 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
         return "redirect:/Admin/customers";
     }
 
-    // --- 5. THÊM MỚI: CHỨC NĂNG SỬA (Xem chi tiết & Cập nhật) ---
-    // HTML của bạn đang gọi: /Admin/user-detail/{id}
+
     
     // a. Hiển thị form sửa
     @GetMapping("/user-detail/{id}")
