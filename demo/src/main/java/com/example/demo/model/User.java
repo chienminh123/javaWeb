@@ -36,11 +36,10 @@ public class User {
     private String resetToken;
     private LocalDateTime resetTokenExpiry;
 
-    // SỬA Ở ĐÂY: Ánh xạ tên cột khác để tránh lỗi SQL
     @Column(name = "member_rank") 
     private String rank = "MEMBER";
     @Column(columnDefinition = "boolean default true")
-    private boolean enabled = true; // true = hoạt động, false = bị khóa
+    private boolean enabled = true;
     
     @OneToOne(mappedBy = "user")
     @ToString.Exclude

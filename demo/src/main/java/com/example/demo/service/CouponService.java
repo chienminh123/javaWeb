@@ -19,7 +19,6 @@ public class CouponService {
     
     public void delete(Integer id) { couponRepo.deleteById(id); }
 
-    // Validate mã giảm giá
     public Coupon checkCoupon(String code) throws Exception {
         Coupon coupon = couponRepo.findByCode(code)
             .orElseThrow(() -> new Exception("Mã giảm giá không tồn tại!"));
@@ -38,13 +37,9 @@ public class CouponService {
         double discount = 0.0;
 
         if ("FIXED".equals(coupon.getDiscountType())) {
-            // 1. GIẢM TIỀN MẶT (VD: 50.000)
             discount = coupon.getDiscountValue();
-        } else {
-            // 2. GIẢM PHẦN TRĂM (VD: 10%)
+
             discount = orderTotal * (coupon.getDiscountValue() / 100.0);
-            
-            // Kiểm tra giảm tối đa (nếu có set giới hạn)
             if (coupon.getMaxDiscountAmount() != null && coupon.getMaxDiscountAmount() > 0) {
                 if (discount > coupon.getMaxDiscountAmount()) {
                     discount = coupon.getMaxDiscountAmount();

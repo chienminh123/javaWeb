@@ -33,7 +33,7 @@ public class GenreService {
         return genreRepo.findByGenreName(name).orElse(null);
     }
     public Optional<Genre> getById(Integer id) { 
-    // Bỏ .orElse(null) và trả về trực tiếp Optional từ Repository
+   
     return genreRepo.findByGenreId(id);
 }
 }

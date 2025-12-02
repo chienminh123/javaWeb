@@ -9,13 +9,10 @@ import org.springframework.data.repository.query.Param;
 import com.example.demo.model.Review;
 
 public interface ReviewRepository extends JpaRepository<Review, Integer> {
-    // 1. Lấy tất cả theo sản phẩm (Mới nhất trước)
     List<Review> findByProductProductIdOrderByReviewDateDesc(Integer productId);
 
-    // 2. Lọc theo số sao (Ví dụ: chỉ lấy 5 sao)
     List<Review> findByProductProductIdAndRatingOrderByReviewDateDesc(Integer productId, Integer rating);
 
-    // 3. Kiểm tra quyền đánh giá (User đã mua và đơn hàng thành công)
     @Query("SELECT COUNT(od) > 0 FROM OrderDetail od " +
            "JOIN od.orders o " +
            "WHERE od.product.productId = :productId " +

@@ -20,15 +20,12 @@ public class PaymentController {
     @Autowired private OrderService orderService;
     
 
-    /**
-     * SỬA ĐỔI: Nhận HttpServletRequest để xác thực chữ ký thật
-     */
+
     @GetMapping("/vnpay_return")
     public String vnPayReturnHandler(
         HttpServletRequest request,
         RedirectAttributes redirectAttributes) {
 
-        // Lấy tham số từ VNPay
         String orderIdStr = request.getParameter("vnp_TxnRef");
         String responseCode = request.getParameter("vnp_ResponseCode");
 
@@ -45,28 +42,21 @@ public class PaymentController {
             return "redirect:/User/order";
         }
 
-        // 1. [SỬA ĐỔI] Xác thực chữ ký bằng service thật
         if (vnpayService.processVnPayReturn(request)) {
-            // Chữ ký hợp lệ
             
             if ("00".equals(responseCode)) {
-                // Giao dịch thành công
                 order.setStatus("Đã thanh toán VNPay");
                 orderService.save(order);
                 
-                // Gửi email xác nhận
-                // sendOrderEmails(order);
                 orderService.notifyOrderSuccess(order);
 
                 redirectAttributes.addFlashAttribute("successMessage", "Thanh toán thành công! Đơn hàng #" + orderId);
             } else {
-                // Giao dịch thất bại (ví dụ: hủy, thiếu tiền)
                 order.setStatus("Thanh toán thất bại");
                 orderService.save(order);
                 redirectAttributes.addFlashAttribute("errorMessage", "Thanh toán thất bại qua VNPay (Mã lỗi: " + responseCode + ")");
             }
         } else {
-            // Chữ ký KHÔNG hợp lệ (Cảnh báo gian lận)
             logger.warn("Cảnh báo: Chữ ký VNPay không hợp lệ cho đơn hàng #{}", orderId);
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi xác thực thanh toán: Chữ ký không hợp lệ.");
         }

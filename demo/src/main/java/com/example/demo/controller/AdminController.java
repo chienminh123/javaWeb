@@ -64,11 +64,12 @@ public class AdminController {
     @Autowired
     private ExcelExportService excelExportService;
     @Autowired private CouponService couponService;
+    @Autowired private com.example.demo.service.AutoStockDiscountConfigService autoStockDiscountConfigService;
 
     @GetMapping("/addproduct")
     public String addProduct(Model model) {
         model.addAttribute("providers", providerService.findAll());
-        model.addAttribute("genres", genreService.findAllGenres()); // List<Genre>
+        model.addAttribute("genres", genreService.findAllGenres());
         model.addAttribute("productSuggestions", productService.getAllProductSuggestionsMap());
         return "Admin/addproduct";
     }
@@ -95,22 +96,20 @@ public class AdminController {
         @ResponseBody
         public org.springframework.http.ResponseEntity<String> deleteProduct(@PathVariable Integer id) {
             try {
-                // Gọi Service để xóa
                 productService.deleteProduct(id);
                 return org.springframework.http.ResponseEntity.ok("Deleted");
             } catch (Exception e) {
-                // Trả về lỗi nếu không xóa được (ví dụ: ràng buộc khóa ngoại)
                 return org.springframework.http.ResponseEntity.badRequest().body(e.getMessage());
             }
         }
     @PostMapping("/addProvider")
     @ResponseBody
-    @Transactional  // Đảm bảo lưu DB
+    @Transactional
     public Provider addProvider(@RequestBody Provider provider) {
         if (provider.getProviderName() == null || provider.getProviderName().trim().isEmpty()) {
             throw new IllegalArgumentException("Tên nhà cung cấp không được để trống");
         }
-        return providerService.save(provider); // Trả về đối tượng có ID
+        return providerService.save(provider);
     }
 
     @PostMapping("/addGenre")
@@ -123,17 +122,46 @@ public class AdminController {
 
     @GetMapping("/fixproduct")
     public String fixProduct(Model model) {
-        // === SỬA HÀM NÀY ===
-        // Nạp tất cả sản phẩm, NCC, và Thể loại
         model.addAttribute("products", productService.getAllProductsWithInventory());
         model.addAttribute("providers", providerService.findAll());
         model.addAttribute("genres", genreService.findAllGenres());
-        model.addAttribute("coupons", couponService.findAll());
-        return "Admin/fixproduct"; // Trả về file HTML mới
+        
+        var activeConfig = autoStockDiscountConfigService.getActiveConfig();
+        model.addAttribute("autoStockDiscountConfig", activeConfig.orElse(null));
+        model.addAttribute("allConfigs", autoStockDiscountConfigService.getAllConfigs());
+        
+        return "Admin/fixproduct";
+    }
+    
+    @PostMapping("/saveAutoStockDiscountConfig")
+    public String saveAutoStockDiscountConfig(
+            @RequestParam Integer minStockQuantity,
+            @RequestParam Integer discountPercent,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            RedirectAttributes redirectAttributes) {
+        try {
+            autoStockDiscountConfigService.createConfig(minStockQuantity, discountPercent, startDate, endDate);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã cấu hình giảm giá tự động thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+        return "redirect:/Admin/coupons";
+    }
+    
+    @GetMapping("/deleteAutoStockDiscountConfig")
+    public String deleteAutoStockDiscountConfig(@RequestParam Integer id, RedirectAttributes redirectAttributes) {
+        try {
+            autoStockDiscountConfigService.deleteConfig(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa cấu hình giảm giá tự động thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+        return "redirect:/Admin/coupons";
     }
     
     @PostMapping("/updateSingleProduct")
-    @ResponseBody // Rất quan trọng, để trả về JSON
+    @ResponseBody
     public Map<String, Object> updateSingleProduct(
             @RequestParam("productId") Integer productId,
             @RequestParam("providerId") Integer providerId,
@@ -146,23 +174,20 @@ public class AdminController {
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile
     ) {
         try {
-            // Gọi Service để xử lý
             String newImageUrl = productService.updateSingleProduct( 
                 productId, providerId, genreId, productName,
                 basisPrice, markupPercent, discount,description, imageFile
             );
 
-            // Trả về kết quả thành công
             return Map.of(
                 "success", true,
                 "message", "Cập nhật thành công!",
                 "newImageUrl", (newImageUrl != null ? newImageUrl : "")
             );
         } catch (Exception e) {
-            // Trả về lỗi
             return Map.of(
                 "success", false,
-                "message", e.getMessage() // Gửi thông báo lỗi về cho alert()
+                "message", e.getMessage()
             );
         }
     }
@@ -172,22 +197,17 @@ public class AdminController {
     
     @GetMapping("/report")
     public String reports(Model model,
-            // Nhận 2 tham số ngày tháng, nếu không có thì dùng 30 ngày qua
             @RequestParam(required = false) 
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             
             @RequestParam(required = false) 
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
-        
-        // === LOGIC MỚI CHO BÁO CÁO ===
-        
-        // 1. Đặt ngày mặc định (nếu user không chọn)
         if (endDate == null) {
             endDate = LocalDate.now();
         }
         if (startDate == null) {
-            startDate = endDate.minusDays(30); // 30 ngày gần nhất
+            startDate = endDate.minusDays(30);
         }
         
         List<com.example.demo.dto.RevenueByDateDTO> revenueData = reportService.getRevenueReport(startDate, endDate);
@@ -215,10 +235,9 @@ public class AdminController {
     }
     @GetMapping("/export")
     public String export(Model model) {
-        // Tái sử dụng các service để nạp dữ liệu cho form
         model.addAttribute("providers", providerService.findAll());
         model.addAttribute("productSuggestions", productService.getAllProductSuggestionsMap());
-        return "Admin/export"; // Trả về trang export.html mới
+        return "Admin/export";
     }
     @PostMapping("/processExport")
     public String processExport(
@@ -228,28 +247,19 @@ public class AdminController {
         @RequestParam(required = false) Integer[][] quantity,
         Model model
     ) {
-        // Kiểm tra xem người dùng có nhập gì không
         if (providerId == null || productId == null) {
             model.addAttribute("errorMessage", "Bạn chưa thêm sản phẩm nào để xuất kho.");
-            // Nạp lại dữ liệu cho form
             model.addAttribute("providers", providerService.findAll());
             model.addAttribute("productSuggestions", productService.getAllProductSuggestionsMap());
             return "Admin/export";
         }
 
         try {
-            // Gọi service mới để xử lý logic
             productService.exportMultipleProducts(providerId, productId, sizeName, quantity);
-            
-            // Nếu thành công, quay về trang tồn kho
             return "redirect:/Admin/tonkho"; 
 
         } catch (IllegalArgumentException | IllegalStateException e) {
-            // Nếu có lỗi (ví dụ: không đủ hàng), quay lại trang
-            // export và hiển thị thông báo lỗi
             model.addAttribute("errorMessage", e.getMessage());
-            
-            // Nạp lại dữ liệu cho form
             model.addAttribute("providers", providerService.findAll());
             model.addAttribute("productSuggestions", productService.getAllProductSuggestionsMap());
             return "Admin/export";
@@ -258,31 +268,24 @@ public class AdminController {
     
     @GetMapping("/inventory")
     public String inventory(Model model) {
-        // 1. Lấy tất cả sản phẩm và size
         model.addAttribute("productsWithSizes", productService.getAllProductsWithInventory());
         return "Admin/inventory";
     }
     @PostMapping("/saveInventoryCheck")
     public String saveInventoryCheck(
-        // Các mảng dữ liệu từ form
         @RequestParam Integer[] productId,
         @RequestParam String[] sizeName,
         @RequestParam Integer[] systemQty,
         @RequestParam Integer[] actualQty,
         @RequestParam String[] note
-        
     ) {
-        // 2. Gọi service để lưu
         productService.saveInventoryCheck(
-            
             productId,
             sizeName,
             systemQty,
             actualQty,
             note
         );
-        
-        // 3. Xong thì quay về trang tồn kho
         return "redirect:/Admin/tonkho";
     }
 
@@ -295,17 +298,14 @@ public class AdminController {
 
         long adminCancelledCount = orderService.countOrdersByStatus("Đã hủy");
         long userReturnedCount = orderService.countOrdersByStatus("Đã trả hàng"); 
-        // 3. Gộp tổng số lượng
         long totalCancelledAndReturned = adminCancelledCount + userReturnedCount;
 
         long pendingOrdersCount = orderService.countOrdersByStatus("Đang xử lý"); 
         long vnpOrdersCount = orderService.countOrdersByStatus("Đã thanh toán VNPay");
         long totalPendingAndVnp = pendingOrdersCount + vnpOrdersCount;
-        // 2. Đưa dữ liệu vào Model
+        
         model.addAttribute("totalInventoryValue", totalInventoryValue);
         model.addAttribute("outOfStockCount", outOfStockCount);
-        
-        // === CODE MỚI: Đưa dữ liệu đếm vào Model ===
         model.addAttribute("cancelledOrdersCount", totalCancelledAndReturned);
         model.addAttribute("pendingOrdersCount", totalPendingAndVnp );
         
@@ -314,12 +314,9 @@ public class AdminController {
 
     @GetMapping("/order-detail")
 public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model model) {
-    // 1. Lấy đơn hàng theo ID
-    Orders order = orderService.findOrderById(orderId)
+    Orders order = orderService.findOrderDetailsById(orderId)
         .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng ID: " + orderId));
 
-    // 2. Định nghĩa danh sách các trạng thái có thể có
-    // Đây là danh sách các trạng thái cố định (bạn có thể tùy chỉnh)
     List<String> statusList = List.of(
         "Chờ thanh toán",
         "Đang xử lý",
@@ -329,14 +326,12 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
         "Đã hủy"
     );
 
-    // 3. Truyền dữ liệu sang view
     model.addAttribute("order", order);
     model.addAttribute("statusList", statusList);
 
     return "Admin/order-detail";
 }
 
-    // === MAPPING MỚI: Xử lý cập nhật trạng thái đơn hàng (POST) ===
     @PostMapping("/updateOrderStatus")
     public String updateOrderStatus(
             @RequestParam Integer orderId,
@@ -347,42 +342,34 @@ public String showOrderDetail(@RequestParam("orderId") Integer orderId, Model mo
             Orders updatedOrder = orderService.updateOrderStatus(orderId, newStatus);
             redirectAttributes.addFlashAttribute("successMessage", 
                 "Cập nhật trạng thái đơn hàng #" + orderId + " thành công sang: " + updatedOrder.getStatus());
-                try {
-                // newStatus sẽ được truyền vào template
+            try {
                 emailService.sendOrderStatusUpdate(updatedOrder, newStatus); 
             } catch (Exception e) {
-                // Log lỗi gửi email nhưng vẫn tiếp tục
                 System.err.println("LỖI GỬI EMAIL CẬP NHẬT TRẠNG THÁI: " + e.getMessage());
             }
-        } catch (RuntimeException e) {
-            // Xử lý lỗi (ví dụ: không tìm thấy đơn hàng)
+        } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            e.printStackTrace();
         }
         
-        // Chuyển hướng về trang chi tiết đơn hàng để thấy kết quả
         return "redirect:/Admin/order-detail?orderId=" + orderId;
     }
-    
-    // Trong file: src/main/java/com/example/demo/controller/AdminController.java
 
 @GetMapping("/orders")
 public String showOrdersByStatus(
         @RequestParam(required = false) String status, 
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date, // Thêm tham số này
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
         Model model) {
     
     String title = "Danh sách Đơn hàng";
     List<Orders> orders;
     
-    // 1. Ưu tiên lọc theo Ngày + Trạng thái (Logic click từ biểu đồ)
     if (date != null) {
-        // Mặc định biểu đồ doanh thu tính cho "Giao hàng thành công"
         String targetStatus = (status != null && !status.isEmpty()) ? status : "Giao hàng thành công";
         
         orders = orderService.findOrdersByStatusAndDate(targetStatus, date);
         title = "Đơn hàng " + targetStatus + " ngày " + date.toString();
     } 
-    // 2. Logic cũ: Lọc theo Trạng thái hủy/trả
     else if ("Đã hủy".equals(status)) {
         List<Orders> cancelled = orderService.findOrdersByStatus("Đã hủy");
         List<Orders> returned = orderService.findOrdersByStatus("Đã trả hàng");
@@ -427,7 +414,6 @@ public String showOrdersByStatus(
                 .body(new InputStreamResource(in));
     }
 
-    // 2. API Xuất Excel Phiếu Kiểm Kê
     @GetMapping("/export/stocktake")
     public ResponseEntity<InputStreamResource> exportStocktake() {
         List<com.example.demo.model.Product> products = productService.getAllProductsWithInventory();
@@ -442,25 +428,56 @@ public String showOrdersByStatus(
                 .body(new InputStreamResource(in));
     }
 
+    @GetMapping("/coupons")
+    public String coupons(Model model) {
+        model.addAttribute("coupons", couponService.findAll());
+        
+        var activeConfig = autoStockDiscountConfigService.getActiveConfig();
+        model.addAttribute("autoStockDiscountConfig", activeConfig.orElse(null));
+        model.addAttribute("allConfigs", autoStockDiscountConfigService.getAllConfigs());
+        
+        return "Admin/coupons";
+    }
+
     @PostMapping("/addCoupon")
-    public String addCoupon(Coupon coupon) {
+    public String addCoupon(
+            @RequestParam String code,
+            @RequestParam String discountType,
+            @RequestParam Double discountValue,
+            @RequestParam(required = false) Double maxDiscountAmount,
+            @RequestParam Integer quantity,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "false") boolean isActive) {
+        Coupon coupon = new Coupon();
+        coupon.setCode(code);
+        coupon.setDiscountType(discountType);
+        coupon.setDiscountValue(discountValue);
+        coupon.setMaxDiscountAmount(maxDiscountAmount);
+        coupon.setQuantity(quantity);
+        coupon.setStartDate(startDate);
+        coupon.setEndDate(endDate);
+        coupon.setActive(isActive);
         couponService.save(coupon);
-        return "redirect:/Admin/fixproduct";
+        return "redirect:/Admin/coupons";
     }
 
     @GetMapping("/deleteCoupon")
     public String deleteCoupon(@RequestParam Integer id) {
         couponService.delete(id);
-        return "redirect:/Admin/fixproduct";
+        return "redirect:/Admin/coupons";
     }
-    // 1. API lấy danh sách NCC (Trả về JSON)
+    @GetMapping("/login")
+    public String adminLogin(Model model) {
+        return "Admin/login";
+    }
+
     @GetMapping("/api/providers")
     @ResponseBody
     public List<Provider> getProvidersApi() {
         return providerService.findAll();
     }
 
-    // 2. API Cập nhật NCC
     @org.springframework.web.bind.annotation.PutMapping("/updateProvider")
     @ResponseBody
     @Transactional
@@ -478,14 +495,10 @@ public String showOrdersByStatus(
         return providerService.save(exist);
     }
 
-    // 3. API Xóa NCC
     @org.springframework.web.bind.annotation.DeleteMapping("/deleteProvider/{id}")
     @ResponseBody
     @Transactional
     public String deleteProvider(@PathVariable Integer id) {
-        // Lưu ý: Nếu DB có khóa ngoại, bạn cần xử lý try-catch ở đây
-        // hoặc xóa các sản phẩm liên quan trước.
-        // Ở đây giả định xóa cơ bản:
         providerService.findAll().stream()
             .filter(p -> p.getProviderId() == id)
             .findFirst()
@@ -500,7 +513,6 @@ public String showOrdersByStatus(
   @Autowired
     private UserRepository userRepository;
 
-    // --- 1. HIỂN THỊ DANH SÁCH + LỌC ---
   @GetMapping("/customers")
     public String listCustomers(Model model, 
                                 @RequestParam(value = "min", required = false) Long min,
@@ -565,27 +577,22 @@ public String showOrdersByStatus(
     }
 
 
-    
-    // a. Hiển thị form sửa
     @GetMapping("/user-detail/{id}")
     public String showUserDetail(@PathVariable("id") Integer id, Model model) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
         model.addAttribute("user", user);
-        return "Admin/user-detail"; // Bạn cần tạo file này (xem bước 2)
+        return "Admin/user-detail";
     }
 
-    // b. Xử lý lưu sau khi sửa
     @PostMapping("/updateUser")
     public String updateUser(@ModelAttribute("user") User user, RedirectAttributes redirectAttributes) {
         User existingUser = userRepository.findById(user.getUserId()).orElse(null);
         if (existingUser != null) {
-            // Chỉ cho phép cập nhật thông tin cá nhân, KHÔNG cập nhật mật khẩu/điểm ở đây nếu không cần thiết
             existingUser.setUserName(user.getUserName());
             existingUser.setPhone(user.getPhone());
             existingUser.setAddress(user.getAddress());
             existingUser.setEmail(user.getEmail());
-            // existingUser.setRank(user.getRank()); // Nếu muốn sửa hạng thủ công
             
             userRepository.save(existingUser);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin khách hàng thành công!");

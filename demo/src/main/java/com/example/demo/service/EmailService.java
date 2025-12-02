@@ -31,9 +31,7 @@ public class EmailService {
     // ĐỊA CHỈ ADMIN NHẬN THÔNG BÁO
     private final String ADMIN_EMAIL = "nguyenminhchien8424@gmail.com"; 
 
-    /**
-     * Gửi email xác nhận đơn hàng cho KHÁCH HÀNG (User)
-     */
+
     public void sendOrderConfirmation(Orders order) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -56,16 +54,13 @@ public class EmailService {
         context.setVariable("order", order);
         context.setVariable("totalPrice", totalPrice);
 
-        // Xử lý template HTML: Sử dụng template "email/order-confirmation.html"
         String htmlContent = templateEngine.process("email/order-confirmation", context);
         helper.setText(htmlContent, true);
 
         mailSender.send(message);
     }
     
-    /**
-     * Gửi email thông báo đơn hàng mới cho ADMIN
-     */
+
     public void sendNewOrderNotification(Orders order) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -79,9 +74,7 @@ public class EmailService {
 
         mailSender.send(message);
     }
-   /**
-     * Gửi email thông báo trạng thái đơn hàng thay đổi cho KHÁCH HÀNG (User)
-     */
+
     public void sendOrderStatusUpdate(Orders order, String newStatus) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -99,10 +92,7 @@ public class EmailService {
 
         mailSender.send(message);
     }
-    /**
-     * Gửi email cảnh báo cho ADMIN khi có sản phẩm tồn kho thấp
-     * @param lowStockItems Danh sách các Sizes có số lượng < 5
-     */
+
     public void sendLowStockNotification(List<Sizes> lowStockItems) throws MessagingException {
         if (lowStockItems == null || lowStockItems.isEmpty()) {
             return;
@@ -128,7 +118,7 @@ public class EmailService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setFrom(FROM_EMAIL);
-        helper.setTo(ADMIN_EMAIL); // Gửi cho Admin
+        helper.setTo(ADMIN_EMAIL); 
         helper.setSubject("[THÔNG BÁO] Khách hàng yêu cầu trả hàng - Đơn #" + order.getOrderId());
         
         Context context = new Context();
@@ -165,7 +155,6 @@ public class EmailService {
     helper.setTo(user.getEmail());
     helper.setSubject("CHÚC MỪNG! BẠN ĐÃ THĂNG HẠNG " + newRank + " - Nhận ngay quà tặng!");
 
-    // Nội dung Email (Có thể chuyển sang Template Thymeleaf sau)
     String htmlContent = "<h3>Xin chào " + user.getUserName() + ",</h3>"
             + "<p>Chúc mừng bạn đã đạt mốc tích lũy điểm mới và thăng hạng thành viên <b>" + newRank + "</b>!</p>"
             + "<p>Để tri ân, chúng tôi gửi tặng bạn mã giảm giá đặc biệt:</p>"

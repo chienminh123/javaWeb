@@ -22,7 +22,6 @@ public class ReviewService {
     @Autowired private UserRepository userRepo;
     @Autowired private ProductRepository productRepo;
 
-    // Lấy danh sách đánh giá (Có lọc hoặc không)
     public List<Review> getReviews(Integer productId, Integer ratingFilter) {
         if (ratingFilter != null && ratingFilter > 0) {
             return reviewRepo.findByProductProductIdAndRatingOrderByReviewDateDesc(productId, ratingFilter);
@@ -30,12 +29,10 @@ public class ReviewService {
         return reviewRepo.findByProductProductIdOrderByReviewDateDesc(productId);
     }
 
-    // Thêm đánh giá mới
     public void addReview(String userPhone, Integer productId, Integer rating, String comment) throws Exception {
         User user = userRepo.findByPhone(userPhone);
         if (user == null) throw new Exception("Vui lòng đăng nhập.");
 
-        // Check quyền: Phải mua hàng thành công
         if (!reviewRepo.hasUserBoughtProduct(user.getUserId(), productId)) {
             throw new Exception("Bạn phải mua sản phẩm này mới được đánh giá.");
         }
@@ -52,7 +49,6 @@ public class ReviewService {
         reviewRepo.save(review);
     }
     
-    // Tính thống kê (Số lượng từng sao, TB sao)
     public Map<String, Object> getReviewStats(Integer productId) {
         List<Review> all = reviewRepo.findByProductProductIdOrderByReviewDateDesc(productId);
         Map<String, Object> stats = new HashMap<>();

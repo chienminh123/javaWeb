@@ -28,7 +28,6 @@ public List<String> getProductSuggestions(
         @RequestParam("keyword") String keyword,
         @RequestParam(name = "genreId", required = false) Integer genreId) { 
     
-    // Truyền cả keyword và genreId xuống Service
     return productService.searchSuggestions(keyword, genreId) 
             .stream()
             .map(Product::getProductName) // Chỉ lấy tên

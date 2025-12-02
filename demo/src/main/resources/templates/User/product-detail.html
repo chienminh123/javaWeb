@@ -542,7 +542,7 @@
             >
 
             <div class="price-wrapper">
-              <div th:if="${product.discount > 0}">
+              <div th:if="${product.getTotalDiscountPercent() > 0}">
                 <div class="price-group">
                   <span class="current-price">
                     <span
@@ -557,11 +557,14 @@
                     >đ
                   </span>
                   <span class="detail-discount-badge">
-                    Giảm [[${product.discount}]]%
+                    Giảm [[${product.getTotalDiscountPercent()}]]%
+                    <span th:if="${product.hasAutoStockDiscount()}" style="font-size: 11px; display: block; margin-top: 2px;">
+                      ( tri ân khách hàng )
+                    </span>
                   </span>
                 </div>
               </div>
-              <div th:unless="${product.discount > 0}">
+              <div th:unless="${product.getTotalDiscountPercent() > 0}">
                 <span class="current-price">
                   <span
                     th:text="${#numbers.formatDecimal(product.sellPrice, 0, 'COMMA', 0, 'POINT')}"

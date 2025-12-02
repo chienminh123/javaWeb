@@ -251,8 +251,9 @@
                   <div
                     class="total-summary"
                     th:with="subTotal=${#aggregates.sum(order.orderDetails.![price * quantity])},
-                                discount=${order.discountAmount != null ? order.discountAmount : 0},
-                                finalTotal=${subTotal - discount}"
+                                quantityDiscount=${order.quantityDiscountAmount != null ? order.quantityDiscountAmount : 0},
+                                couponDiscount=${order.discountAmount != null ? order.discountAmount : 0},
+                                finalTotal=${order.finalTotal != null ? order.finalTotal : (subTotal - quantityDiscount - couponDiscount)}"
                   >
                     <div class="summary-row">
                       <span>Tổng tiền hàng:</span>
@@ -263,14 +264,29 @@
 
                     <div
                       class="summary-row"
-                      th:if="${discount > 0}"
+                      th:if="${quantityDiscount > 0}"
+                      style="color: red"
+                    >
+                      <span>Giảm giá số lượng:</span>
+                      <span
+                        >-
+                        <span
+                          th:text="${#numbers.formatDecimal(quantityDiscount, 0, 'COMMA', 0, 'POINT')}"
+                        ></span>
+                        đ</span
+                      >
+                    </div>
+
+                    <div
+                      class="summary-row"
+                      th:if="${couponDiscount > 0}"
                       style="color: red"
                     >
                       <span>Voucher giảm giá:</span>
                       <span
                         >-
                         <span
-                          th:text="${#numbers.formatDecimal(discount, 0, 'COMMA', 0, 'POINT')}"
+                          th:text="${#numbers.formatDecimal(couponDiscount, 0, 'COMMA', 0, 'POINT')}"
                         ></span>
                         đ</span
                       >

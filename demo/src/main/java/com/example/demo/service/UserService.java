@@ -21,11 +21,9 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     public User findByPhone(String phone) {
-        // Sử dụng hàm có sẵn của bạn
         return userRepo.findByPhone(phone); 
     }
 
-    // Chức năng 1: Sửa thông tin
     @Transactional
     public User updateUserProfile(String phone,String userName, String email, String address) {
         User user = userRepo.findByPhone(phone);
@@ -35,11 +33,9 @@ public class UserService {
         user.setUserName(userName);
         user.setEmail(email);
         user.setAddress(address);
-        // (Không cho sửa SĐT vì nó là ID đăng nhập)
         return userRepo.save(user);
     }
 
-    // Chức năng 2: Đổi mật khẩu
     @Transactional
     public void changeUserPassword(String phone, String oldPassword, String newPassword) {
         User user = userRepo.findByPhone(phone);
@@ -47,27 +43,23 @@ public class UserService {
             throw new RuntimeException("Không tìm thấy người dùng với SĐT: " + phone);
         }
 
-        // Kiểm tra mật khẩu cũ có khớp không
         if (!passwordEncoder.matches(oldPassword, user.getPassWord())) {
             throw new IllegalArgumentException("Mật khẩu cũ không chính xác!");
         }
 
-        // Mã hóa và lưu mật khẩu mới
         user.setPassWord(passwordEncoder.encode(newPassword));
         userRepo.save(user);
     }
-    // 3. ĐỔI SỐ ĐIỆN THOẠI (Tài khoản đăng nhập)
+
     @Transactional
     public void changeUserPhone(String currentPhone, String newPhone, String password) {
         User user = userRepo.findByPhone(currentPhone);
         if (user == null) throw new RuntimeException("User không tồn tại");
 
-        // Kiểm tra mật khẩu xác nhận
         if (!passwordEncoder.matches(password, user.getPassWord())) {
             throw new IllegalArgumentException("Mật khẩu xác nhận không đúng");
         }
 
-        // Kiểm tra SĐT mới đã tồn tại chưa
         if (userRepo.findByPhone(newPhone) != null) {
             throw new IllegalArgumentException("Số điện thoại này đã được sử dụng bởi tài khoản khác");
         }
@@ -76,7 +68,6 @@ public class UserService {
         userRepo.save(user);
     }
 
-    // 1. Xử lý yêu cầu quên mật khẩu (Tạo token)
     @Transactional
     public String generateResetToken(String email) {
         User user = userRepo.findByEmail(email);
@@ -84,10 +75,8 @@ public class UserService {
             throw new RuntimeException("Không tìm thấy tài khoản với email này.");
         }
 
-        // Tạo token ngẫu nhiên
         String token = UUID.randomUUID().toString();
-        
-        // Lưu token và thời gian hết hạn (15 phút)
+
         user.setResetToken(token);
         user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
         userRepo.save(user);
@@ -95,7 +84,6 @@ public class UserService {
         return token;
     }
 
-    // 2. Xử lý đặt mật khẩu mới từ token
     @Transactional
     public void resetPassword(String token, String newPassword) {
         User user = userRepo.findByResetToken(token);
@@ -108,10 +96,8 @@ public class UserService {
             throw new RuntimeException("Token đã hết hạn.");
         }
 
-        // Cập nhật mật khẩu mới
         user.setPassWord(passwordEncoder.encode(newPassword));
-        
-        // Xóa token sau khi dùng xong
+
         user.setResetToken(null);
         user.setResetTokenExpiry(null);
         

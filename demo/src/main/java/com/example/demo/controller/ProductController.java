@@ -58,8 +58,7 @@ public class ProductController {
             genreId, sort, priceRange, brandId, page, pageSize); 
         
         List<Product> products = productPage.getContent();
-        
-        // 2. Lấy dữ liệu bổ trợ
+     
         List<Genre> genres = genreService.findAllGenres();
         List<Provider> providerList;
         if (genreId != null) {
@@ -74,7 +73,6 @@ public class ProductController {
             providerList = providerService.findAll(); 
         }
         
-        // 3. Gửi dữ liệu vào Model
         model.addAttribute("products", products);
         model.addAttribute("genres", genres);
         model.addAttribute("providerList", providerList); 
@@ -90,27 +88,24 @@ public class ProductController {
     @GetMapping("/product/{id}")
     public String showProductDetail(
         @PathVariable("id") Integer id, 
-        @RequestParam(required = false) Integer rating, // Nhận tham số lọc sao (nếu có)
+        @RequestParam(required = false) Integer rating,
         Model model,
         Principal principal
     ) {
         Product product = productService.findById(id) 
              .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm: " + id));
 
-        // 1. Lấy danh sách đánh giá (Có lọc theo rating nếu user chọn)
         List<Review> reviews = reviewService.getReviews(id, rating);
         List<Genre> genres = genreService.findAllGenres();
-        // 2. Lấy thống kê (để vẽ biểu đồ 5 sao, 4 sao...)
         Map<String, Object> stats = reviewService.getReviewStats(id);
 
-        // 3. Kiểm tra quyền hiển thị form (Đã đăng nhập là hiện form, Service sẽ chặn nếu chưa mua)
         boolean canReview = (principal != null);
 
         model.addAttribute("product", product);
         model.addAttribute("reviews", reviews);
         model.addAttribute("stats", stats);
         model.addAttribute("genres", genres);
-        model.addAttribute("currentFilter", rating); // Để highlight nút lọc đang chọn
+        model.addAttribute("currentFilter", rating);
         model.addAttribute("canReview", canReview);
 
         return "User/product-detail"; 
@@ -118,22 +113,18 @@ public class ProductController {
 @GetMapping("/products/top-selling")
     public String showTopSellingProducts(Model model) {
         
-        // Lấy top bán chạy trong 30 ngày qua
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(30);
         
         List<TopProductDTO> topSellingDTOs = reportService.getTopSellingProducts(startDate, endDate);
         
-        // Chuyển đổi từ DTO sang List<Product> để tái sử dụng template
         List<Product> products = topSellingDTOs.stream()
                                 .map(TopProductDTO::getProduct)
                                 .collect(Collectors.toList());
 
-        // Lấy dữ liệu phụ trợ cho Sidebar (để không bị lỗi giao diện)
         List<Genre> genres = genreService.findAllGenres();
         List<Provider> providerList = providerService.findAll(); 
 
-        // Gửi dữ liệu sang view
         model.addAttribute("products", products);
         model.addAttribute("genres", genres);
         model.addAttribute("providerList", providerList);
@@ -155,15 +146,12 @@ public class ProductController {
         try {
             if (principal == null) return "redirect:/Auth/login";
             
-            // Gọi Service thêm đánh giá
             reviewService.addReview(principal.getName(), productId, rating, comment);
             
             redirectAttributes.addFlashAttribute("successMessage", "Cảm ơn bạn đã đánh giá sản phẩm!");
         } catch (Exception e) {
-            // Nếu chưa mua hàng hoặc lỗi khác, thông báo lỗi
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        // Quay lại trang chi tiết sản phẩm
         return "redirect:/product/" + productId;
     }
 

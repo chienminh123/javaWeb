@@ -27,11 +27,11 @@ import com.example.demo.model.Quittance;
 import com.example.demo.model.Sizes;
 import com.example.demo.repository.InventoryCheckRepository;
 import com.example.demo.repository.InventoryDetailRepository;
+import com.example.demo.repository.OrderDetailRepository;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.ProviderRepository;
 import com.example.demo.repository.QuittanceRepository;
 import com.example.demo.repository.SizesRepository;
-import com.example.demo.repository.OrderDetailRepository;
 
 @Service
 public class ProductService {
@@ -45,6 +45,7 @@ public class ProductService {
     @Autowired private InventoryCheckRepository checkRepo;
     @Autowired private InventoryDetailRepository detailRepo;
     @Autowired private OrderDetailRepository orderDetailRepo;
+  
 
     @Transactional
     public void saveMultipleProducts(
@@ -320,13 +321,9 @@ public class ProductService {
         return productRepo.findAllWithDetails(); 
     }
     
-    // =========================================================================
-    // === [HÀM MỚI] HỖ TRỢ PHÂN TRANG CHO CONTROLLER ===
-    // =========================================================================
     public Page<Product> findProductsByGenreWithPagination(
         Integer genreId, String sortParam, String priceRange, Integer brandId, int page, int pageSize) {
         
-        // 1. Xử lý Sắp xếp
         Sort sorting = Sort.unsorted();
         if ("price_asc".equals(sortParam)) {
             sorting = Sort.by(Sort.Direction.ASC, "sellPrice");
@@ -336,7 +333,6 @@ public class ProductService {
             sorting = Sort.by(Sort.Direction.DESC, "productId");
         }
 
-        // 2. Xử lý Khoảng giá
         Float minPrice = null;
         Float maxPrice = null;
         if (priceRange != null && !priceRange.isEmpty()) {
@@ -349,23 +345,17 @@ public class ProductService {
                     maxPrice = Float.parseFloat(parts[1]);
                 }
             } catch (NumberFormatException e) {
-                // Ignore
             }
         }
 
-        // 3. Tạo Pageable (Lưu ý: Trang 1 ở UI là trang 0 ở JPA)
         Pageable pageable = PageRequest.of(page - 1, pageSize, sorting);
 
-        // 4. Gọi Repository (Hàm trả về Page)
         return productRepo.findFilteredProducts(genreId, brandId, minPrice, maxPrice, pageable);
     }
 
-    // === [CẬP NHẬT HÀM CŨ] ĐỂ TRÁNH LỖI BIÊN DỊCH ===
-    // Do Repository đã đổi tham số Sort thành Pageable, ta dùng PageRequest để giả lập lấy tất cả
     public List<Product> findProductsByGenre(
         Integer genreId, String sortParam, String priceRange, Integer brandId) {
         
-        // Gọi lại hàm phân trang ở trên nhưng lấy trang đầu với kích thước cực lớn
         Page<Product> page = findProductsByGenreWithPagination(
             genreId, sortParam, priceRange, brandId, 1, Integer.MAX_VALUE);
             

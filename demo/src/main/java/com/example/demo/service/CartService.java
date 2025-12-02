@@ -25,10 +25,8 @@ public class CartService {
     @Autowired private UserRepository userRepo;
     @Autowired private ProductRepository productRepo;
     @Autowired private SizesRepository sizesRepo;
+    @Autowired private com.example.demo.service.AutoStockDiscountConfigService autoStockDiscountConfigService;
 
-    /**
-     * Lấy giỏ hàng của user (hoặc tạo mới nếu chưa có)
-     */
     @Transactional
     public Carts findOrCreateCart(User user) {
         return cartsRepo.findByUser(user).orElseGet(() -> {
@@ -38,13 +36,9 @@ public class CartService {
         });
     }
 
-    /**
-     * Thêm sản phẩm vào giỏ hàng
-     */
     @Transactional
     public void addToCart(String userPhone, Integer productId, Integer sizeId, Integer quantity) {
-        // 1. Lấy thông tin
-        User user = userRepo.findByPhone(userPhone); //
+        User user = userRepo.findByPhone(userPhone);
         if (user == null) {
             throw new RuntimeException("Không tìm thấy user");
         }
@@ -54,7 +48,6 @@ public class CartService {
         Sizes size = sizesRepo.findById(sizeId)
             .orElseThrow(() -> new RuntimeException("Size không tồn tại"));
 
-    
         if (quantity > size.getQuantity()) {
             throw new IllegalStateException("Số lượng tồn kho không đủ (Chỉ còn " + size.getQuantity() + ")");
         }
@@ -62,41 +55,31 @@ public class CartService {
         Optional<CartDetail> existingItem = cartDetailRepo.findByCartsAndProductAndSizes(cart, product, size);
 
         if (existingItem.isPresent()) {
-            // Nếu đã có: Cộng dồn số lượng
             CartDetail item = existingItem.get();
             int newQuantity = item.getQuantity() + quantity;
-            // Kiểm tra lại tồn kho khi cộng dồn
             if (newQuantity > size.getQuantity()) {
-                newQuantity = size.getQuantity(); // Chỉ cho phép thêm tối đa
+                newQuantity = size.getQuantity();
             }
             item.setQuantity(newQuantity);
             cartDetailRepo.save(item);
         } else {
-            // Nếu chưa có: Tạo mới
             CartDetail newItem = new CartDetail();
             newItem.setCarts(cart);
             newItem.setProduct(product);
             newItem.setSizes(size);
             newItem.setQuantity(quantity);
-            newItem.setPrice((float) product.getDiscountedPrice());// Lưu giá ĐÃ GIẢM
+            double discountedPrice = getDiscountedPriceWithConfig(product);
+            newItem.setPrice((float) discountedPrice);
             cartDetailRepo.save(newItem);
         }
     }
 
-    /**
-     * Lấy giỏ hàng để hiển thị
-     */
     public Carts getCart(String userPhone) {
         User user = userRepo.findByPhone(userPhone);
         if (user == null) return null;
-        
-        // Trả về giỏ hàng (có thể là null nếu user chưa có giỏ)
         return cartsRepo.findByUser(user).orElse(null);
     }
 
-    /**
-     * Tính tổng tiền (Constraint 1)
-     */
     public float calculateTotal(Carts cart) {
         if (cart == null || cart.getCartDetails() == null) {
             return 0;
@@ -118,19 +101,16 @@ public class CartService {
         
         Sizes size = item.getSizes();
         
-        // KIỂM TRA TỒN KHO
         if (newQuantity > size.getQuantity()) {
             throw new IllegalStateException("Số lượng tồn kho không đủ (Chỉ còn " + size.getQuantity() + ")");
         }
         
-        // Lưu số lượng mới
         item.setQuantity(newQuantity);
         cartDetailRepo.save(item);
     }
 
     @Transactional
     public void deleteItem(Integer cartDetailId) {
-        // Chỉ cần xóa item khỏi repository
         cartDetailRepo.deleteById(cartDetailId);
     }
 
@@ -143,7 +123,6 @@ public class CartService {
         Optional<Carts> cartOptional = cartsRepo.findByUser(user);
         
         if (cartOptional.isPresent() && cartOptional.get().getCartDetails() != null) {
-            // Trả về số lượng các dòng sản phẩm (CartDetail)
             return cartOptional.get().getCartDetails().size();
         }
         
@@ -153,9 +132,17 @@ public class CartService {
         if (cart == null || cart.getCartDetails() == null) {
             return 0;
         }
-        // Dùng stream để tính tổng trường quantity trong CartDetail
         return cart.getCartDetails().stream()
                 .mapToInt(CartDetail::getQuantity)
                 .sum();
+    }
+    
+    private double getDiscountedPriceWithConfig(com.example.demo.model.Product product) {
+        var configOpt = autoStockDiscountConfigService.getActiveConfig();
+        if (configOpt.isPresent() && configOpt.get().isActiveNow()) {
+            var config = configOpt.get();
+            return product.getDiscountedPrice(config.getMinStockQuantity(), config.getDiscountPercent());
+        }
+        return product.getDiscountedPrice();
     }
 }

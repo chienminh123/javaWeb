@@ -92,10 +92,9 @@ public class AuthController {
     @GetMapping("Auth/profile")
     public String userProfile(Model model, Principal principal) {
         if (principal == null) {
-            return "redirect:Auth/login"; // (Hoặc trang đăng nhập của bạn)
+            return "redirect:Auth/login"; 
         }
         
-        // principal.getName() sẽ là SĐT (vì bạn dùng SĐT để đăng nhập)
         String phone = principal.getName(); 
         User currentUser = userService.findByPhone(phone);
 
@@ -104,12 +103,10 @@ public class AuthController {
         }
 
         model.addAttribute("user", currentUser);
-        return "Auth/profile"; // Trả về file HTML mới
+        return "Auth/profile"; 
     }
 
-    /**
-     * POST: Xử lý Sửa Thông Tin
-     */
+
     @PostMapping("Auth/updateProfile")
     public String updateProfile(
             @RequestParam String email,
@@ -119,7 +116,6 @@ public class AuthController {
             RedirectAttributes redirectAttributes) {
         
         try {
-            // Sửa SĐT và địa chỉ, SĐT lấy từ user đang đăng nhập
             userService.updateUserProfile(principal.getName(),userName, email, address);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin thành công!");
         } catch (Exception e) {
@@ -128,9 +124,6 @@ public class AuthController {
         return "redirect:/Auth/profile";
     }
 
-    /**
-     * POST: Xử lý Đổi Mật Khẩu
-     */
     @PostMapping("Auth/changePassword")
     public String changePassword(
             @RequestParam String oldPassword,
@@ -162,7 +155,6 @@ public class AuthController {
         
         String userPhone = principal.getName();
         
-        // (Dùng hàm cũ để lấy TẤT CẢ)
         List<Orders> orderList = ordersRepo.findByUserPhoneOrderByOrderDateDesc(userPhone);
         
         model.addAttribute("orders", orderList);
@@ -174,16 +166,13 @@ public class AuthController {
         if (principal == null) {
             return "redirect:/Auth/login";
         }
-        
-        // 1. Lấy đơn hàng và chi tiết
+
         Orders order = orderService.findOrderDetailsById(orderId) 
             .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng ID: " + orderId));
         
         String userPhone = principal.getName();
-        
-        // 2. Kiểm tra quyền sở hữu
+
         if (!order.getUser().getPhone().equals(userPhone)) {
-            // Ngăn người dùng xem đơn hàng của người khác
             throw new RuntimeException("Bạn không có quyền xem đơn hàng này."); 
         }
         double totalPrice;
@@ -207,13 +196,11 @@ public class AuthController {
             Principal principal,
             RedirectAttributes redirectAttributes) {
 
-        // 1. Kiểm tra đăng nhập
         if (principal == null) {
             return "redirect:/Auth/login";
         }
 
         try {
-            // Lấy thông tin đơn hàng
             Orders order = orderService.findOrderById(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng."));
 
@@ -228,7 +215,6 @@ public class AuthController {
                 
                 redirectAttributes.addFlashAttribute("successMessage", "Đã hủy đơn hàng #" + orderId + " thành công.");
             } else {
-                // Nếu trạng thái đã thay đổi (ví dụ Admin vừa chuyển sang Đang giao hàng)
                 redirectAttributes.addFlashAttribute("errorMessage", "Không thể hủy đơn hàng đang ở trạng thái: " + currentStatus);
             }
 
@@ -253,19 +239,16 @@ public class AuthController {
             Orders order = orderService.findOrderById(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng."));
 
-            // 1. Kiểm tra bảo mật: Đơn hàng này có phải của user đang đăng nhập không?
             if (!order.getUser().getPhone().equals(principal.getName())) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: Bạn không có quyền thực hiện thao tác này.");
                 return "redirect:/User/orders";
             }
 
-            // 2. Kiểm tra nghiệp vụ: Chỉ cho phép trả hàng khi "Đã giao hàng"
             if (!order.getStatus().equals("Đã giao hàng")) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Không thể trả hàng cho đơn hàng đang ở trạng thái: " + order.getStatus());
                 return "redirect:/User/order-detail/" + orderId;
             }
             
-            // 3. Thực hiện cập nhật trạng thái (Logic hoàn kho sẽ chạy trong service này)
             orderService.updateOrderStatus(orderId, "Đã trả hàng");
 
             redirectAttributes.addFlashAttribute("successMessage", "Yêu cầu trả hàng cho đơn hàng #" + orderId + " đã được gửi. Kho đã được cập nhật.");
@@ -282,18 +265,14 @@ public class AuthController {
     public String showForgotPasswordForm() {
         return "Auth/forgot-password";
     }
-    // 2. Xử lý gửi email
     @PostMapping("/forgot-password")
     public String processForgotPassword(@RequestParam String email, Model model, HttpServletRequest request) {
         try {
-            // Tạo token
-            String token = userService.generateResetToken(email); // Cần thêm hàm này vào interface UserService nếu bạn dùng Interface
+            String token = userService.generateResetToken(email); 
             
-            // Tạo URL reset (ví dụ: http://localhost:8080/reset-password?token=xyz...)
             String resetUrl = request.getRequestURL().toString().replace(request.getServletPath(), "") 
                             + "/reset-password?token=" + token;
             
-            // Gửi email
             emailService.sendResetPasswordEmail(email, resetUrl);
             
             model.addAttribute("message", "Link đặt lại mật khẩu đã được gửi vào email của bạn.");
@@ -303,14 +282,12 @@ public class AuthController {
         return "Auth/forgot-password";
     }
 
-    // 3. Hiển thị form nhập mật khẩu mới (từ link email)
     @GetMapping("/reset-password")
     public String showResetPasswordForm(@RequestParam String token, Model model) {
         model.addAttribute("token", token);
         return "Auth/reset-password";
     }
 
-    // 4. Xử lý đổi mật khẩu
     @PostMapping("/reset-password")
     public String processResetPassword(
             @RequestParam String token, 

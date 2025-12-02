@@ -16,27 +16,21 @@ import com.example.demo.model.Product;
 @Repository
 public interface OrderDetailRepository extends JpaRepository<OrderDetail, Integer> {
 
-    /**
-     * Truy vấn Top Sản phẩm bán chạy (theo ID)
-     * Dùng od.product.productId để truy cập đúng
-     */
+
     @Query("SELECT new com.example.demo.dto.TopProductIdDTO(od.product.productId, SUM(od.quantity)) " +
            "FROM OrderDetail od JOIN od.orders o " +
            "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
-           "GROUP BY od.product.productId " + // Sửa cả GROUP BY
+           "GROUP BY od.product.productId " + 
            "ORDER BY SUM(od.quantity) DESC")
     List<TopProductIdDTO> findTopSellingProducts(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
 
-    /**
-     * Truy vấn Doanh thu theo ngày
-     */
-   @Query("SELECT FUNCTION('DATE', o.orderDate), SUM(od.quantity * od.price) " +
-       "FROM OrderDetail od JOIN od.orders o " +
+ 
+   @Query("SELECT FUNCTION('DATE', o.orderDate), SUM(COALESCE(o.finalTotal, 0)) " +
+       "FROM Orders o " +
        "WHERE (o.orderDate BETWEEN :startDate AND :endDate) " +
-       // [ĐIỀU KIỆN LỌC] Chỉ tính doanh thu cho các đơn hàng GIAO THÀNH CÔNG
        "AND o.status IN ('Giao hàng thành công') " + 
        "GROUP BY FUNCTION('DATE', o.orderDate) " +
        "ORDER BY FUNCTION('DATE', o.orderDate) ASC")

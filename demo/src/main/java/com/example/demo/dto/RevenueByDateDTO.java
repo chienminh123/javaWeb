@@ -12,11 +12,4 @@ import lombok.NoArgsConstructor;
 public class RevenueByDateDTO {
     private LocalDate date;
     private Double revenue;
-
-    // public RevenueByDateDTO(Date sqlDate, Double revenue) {
-    //     this.date = sqlDate != null ? sqlDate.toLocalDate() : null;
-    //     this.revenue = revenue;
-    // }
-
-    
 }

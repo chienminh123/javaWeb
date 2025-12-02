@@ -317,6 +317,36 @@
             <div id="couponMessage" class="coupon-message"></div>
           </div>
 
+          <div class="summary-breakdown" style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+            <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+              <span>Tạm tính:</span>
+              <span id="subtotalDisplay" th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</span>
+            </div>
+            
+            <div 
+              id="quantityDiscountRow" 
+              class="summary-row" 
+              style="display: none; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #27ae60;"
+            >
+              <span>
+                <i class="fas fa-tag"></i> Giảm giá số lượng:
+                <span id="quantityDiscountPercent" style="font-weight: bold;"></span>
+              </span>
+              <span id="quantityDiscountAmount" style="color: #27ae60; font-weight: 600;">0đ</span>
+            </div>
+            
+            <div 
+              id="couponDiscountRow" 
+              class="summary-row" 
+              style="display: none; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #27ae60;"
+            >
+              <span>
+                <i class="fas fa-ticket-alt"></i> Mã giảm giá:
+              </span>
+              <span id="couponDiscountAmount" style="color: #27ae60; font-weight: 600;">0đ</span>
+            </div>
+          </div>
+          
           <div class="summary-total-big">
             <div class="label">Tổng thanh toán</div>
             <div
@@ -385,18 +415,56 @@
 
     <script th:inline="javascript">
       let originalTotal = 0;
+      let quantityDiscount = 0;
+      let couponDiscount = 0;
 
       document.addEventListener("DOMContentLoaded", function () {
         const priceInput = document.getElementById("rawTotalPrice");
         if (priceInput) {
-          // Cách 1: Lấy từ Input ẩn (An toàn nhất)
           originalTotal = parseFloat(priceInput.value);
         } else {
-          // Cách 2: Fallback dùng comment Thymeleaf để tránh lỗi đỏ IDE
           originalTotal = /*[[${totalPrice != null ? totalPrice : 0}]]*/ 0;
         }
-        console.log("Original Total:", originalTotal);
+        
+        // Lấy giảm giá số lượng từ server
+        quantityDiscount = /*[[${quantityDiscount != null ? quantityDiscount : 0}]]*/ 0;
+        const totalQuantity = /*[[${totalQuantity != null ? totalQuantity : 0}]]*/ 0;
+        
+        // Hiển thị giảm giá số lượng nếu có
+        updateQuantityDiscountDisplay();
+        
+        // Tính tổng ban đầu
+        updateFinalTotal();
+        
+        console.log("Original Total:", originalTotal, "Quantity Discount:", quantityDiscount);
       });
+      
+      function updateQuantityDiscountDisplay() {
+        const quantityDiscountRow = document.getElementById("quantityDiscountRow");
+        const quantityDiscountAmount = document.getElementById("quantityDiscountAmount");
+        const quantityDiscountPercent = document.getElementById("quantityDiscountPercent");
+        
+        if (quantityDiscount > 0 && originalTotal > 0) {
+          const discountPercent = (quantityDiscount / originalTotal) * 100;
+          quantityDiscountRow.style.display = "flex";
+          quantityDiscountAmount.textContent = "-" + formatCurrency(quantityDiscount);
+          quantityDiscountPercent.textContent = "(" + Math.round(discountPercent) + "%)";
+        } else {
+          quantityDiscountRow.style.display = "none";
+        }
+      }
+      
+      function updateFinalTotal() {
+        const finalTotal = originalTotal - quantityDiscount - couponDiscount;
+        const finalTotalDisplay = document.getElementById("finalTotalDisplay");
+        if (finalTotalDisplay) {
+          finalTotalDisplay.textContent = formatCurrency(finalTotal) + "đ";
+        }
+      }
+      
+      function formatCurrency(amount) {
+        return new Intl.NumberFormat("vi-VN").format(Math.round(amount));
+      }
 
       function applyCoupon() {
         const code = document.getElementById("couponInput").value.trim();
@@ -417,32 +485,37 @@
         msg.innerText = "Đang kiểm tra...";
         msg.style.color = "#666";
 
-        fetch(`/api/coupon/check?code=${code}&total=${originalTotal}`)
+        // Tính tổng sau khi trừ giảm giá số lượng
+        const totalAfterQuantityDiscount = originalTotal - quantityDiscount;
+        
+        fetch(`/api/coupon/check?code=${code}&total=${totalAfterQuantityDiscount}`)
           .then((res) => res.json())
           .then((data) => {
             if (data.valid) {
-              const discountText = new Intl.NumberFormat("vi-VN").format(
-                data.discountAmount
-              );
+              couponDiscount = data.discountAmount;
+              const discountText = formatCurrency(data.discountAmount);
               msg.innerText = `Áp dụng thành công! ${data.messageText} (-${discountText}đ)`;
               msg.style.color = "green";
 
-              const newTotalText = new Intl.NumberFormat("vi-VN").format(
-                data.newTotal
-              );
-              document.getElementById("finalTotalDisplay").innerText =
-                newTotalText + "đ";
+              // Hiển thị giảm giá coupon
+              const couponDiscountRow = document.getElementById("couponDiscountRow");
+              const couponDiscountAmount = document.getElementById("couponDiscountAmount");
+              couponDiscountRow.style.display = "flex";
+              couponDiscountAmount.textContent = "-" + formatCurrency(couponDiscount) + "đ";
+              
+              // Cập nhật tổng cuối cùng
+              updateFinalTotal();
               document.getElementById("hiddenCouponCode").value = code;
             } else {
+              couponDiscount = 0;
               msg.innerText = data.message;
               msg.style.color = "red";
 
-              // Reset về giá gốc
-              const originalText = new Intl.NumberFormat("vi-VN").format(
-                originalTotal
-              );
-              document.getElementById("finalTotalDisplay").innerText =
-                originalText + "đ";
+              // Ẩn giảm giá coupon
+              document.getElementById("couponDiscountRow").style.display = "none";
+              
+              // Reset về giá sau giảm giá số lượng
+              updateFinalTotal();
               document.getElementById("hiddenCouponCode").value = "";
             }
           })

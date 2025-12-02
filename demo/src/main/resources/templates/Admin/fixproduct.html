@@ -15,128 +15,9 @@
     <div th:replace="Admin/sidebar :: sideBar"></div>
     <div class="admin-content-wrapper">
       <div th:replace="Admin/header :: Header"></div>
-<div
-          class="coupon-manager-section"
-          
-        >
-          <h2 class="page-title">
-            <i class="fa-solid fa-ticket"></i> Quản lý Mã Giảm Giá
-          </h2>
-          <form
-            th:action="@{/Admin/addCoupon}"
-            method="post"
-            class="coupon-form"
-            style="
-              background: #fff;
-              padding: 20px;
-              margin-bottom: 20px;
-              display: flex;
-              flex-wrap: wrap;
-              gap: 15px;
-            "
+
+      <main class="admin-main" 
           >
-            <input
-              type="hidden"
-              th:name="${_csrf.parameterName}"
-              th:value="${_csrf.token}"
-            />
-            <div style="flex: 1">
-              <label>Mã Code</label
-              ><input
-                type="text"
-                name="code"
-                class="form-input"
-                required
-                placeholder="SALE10"
-              />
-            </div>
-            <div style="flex: 1">
-              <label>Loại</label
-              ><select name="discountType" class="form-select">
-                <option value="PERCENT">Theo %</option>
-                <option value="FIXED">Tiền Mặt</option>
-              </select>
-            </div>
-            <div style="flex: 1">
-              <label>Giá trị</label
-              ><input
-                type="number"
-                name="discountValue"
-                class="form-input"
-                required
-                placeholder="10"
-              />
-            </div>
-            <div style="flex: 1">
-              <label>Giảm Tối Đa</label
-              ><input
-                type="number"
-                name="maxDiscountAmount"
-                class="form-input"
-              />
-            </div>
-            <div style="flex: 0.5">
-              <label>SL</label
-              ><input
-                type="number"
-                name="quantity"
-                class="form-input"
-                value="100"
-              />
-            </div>
-            <div style="flex: 1">
-              <label>Từ</label
-              ><input
-                type="date"
-                name="startDate"
-                class="form-input"
-                required
-              />
-            </div>
-            <div style="flex: 1">
-              <label>Đến</label
-              ><input type="date" name="endDate" class="form-input" required />
-            </div>
-            <button type="submit" class="btn btn-primary">Tạo</button>
-          </form>
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Loại</th>
-                  <th>Giá trị</th>
-                  <th>SL</th>
-                  <th>Hạn</th>
-                  <th>Xóa</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr th:each="c : ${coupons}">
-                  <td
-                    th:text="${c.code}"
-                    style="font-weight: bold; color: #d63031"
-                  ></td>
-                  <td th:text="${c.discountType}"></td>
-                  <td th:text="${c.discountValue}"></td>
-                  <td th:text="${c.quantity}"></td>
-                  <td th:text="${c.endDate}"></td>
-                  <td>
-                    <a
-                      th:href="@{/Admin/deleteCoupon(id=${c.couponId})}"
-                      style="color: red"
-                      ><i class="fa-solid fa-trash"></i
-                    ></a>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-      <main class="admin-main" style="
-            margin-top: 50px;
-            padding-top: 20px;
-            border-top: 2px dashed #ccc;
-          ">
         <div class="product-edit-container">
           <h2 class="page-title">
             <i class="fa-solid fa-pen-to-square"></i> Sửa đổi sản phẩm
@@ -327,10 +208,10 @@
           </div>
         </div>
 
-        
+        <div th:replace="Admin/footer :: Footer"></div>
         </div>
       </main>
-      <div th:replace="Admin/footer :: Footer"></div>
+      
     </div>
 
     <script>

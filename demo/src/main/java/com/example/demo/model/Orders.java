@@ -26,8 +26,9 @@ public class Orders {
     private String Address;
     private String Phone;
     private String paymentMethod;
-    private String couponCode;      // Mã voucher đã dùng
-    private Double discountAmount;  // Số tiền được giảm
+    private String couponCode;      
+    private Double discountAmount;  
+    private Double quantityDiscountAmount;  
     private Double finalTotal;
     
     @OneToMany(mappedBy="orders" ,cascade = CascadeType.ALL)
@@ -38,5 +39,5 @@ public class Orders {
     @JoinColumn(name = "user_id", referencedColumnName = "userId")
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private User user; // Quan hệ nhiều-một với User
+    private User user;
 }

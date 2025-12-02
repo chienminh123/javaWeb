@@ -26,22 +26,19 @@ import jakarta.servlet.http.HttpServletRequest;
 @Service
 public class VNPayService {
 
-    // Lấy config từ file VNPayConfig.java
     private final String vnp_PayUrl = VNPayConfig.vnp_PayUrl;
     private final String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
     private final String vnp_HashSecret = VNPayConfig.vnp_HashSecret;
     private final String vnp_ReturnUrl = VNPayConfig.vnp_ReturnUrl;
 
-    /**
-     * [THẬT] Tạo URL thanh toán VNPay Sandbox
-     */
+
     public String createPaymentUrl(Orders order, HttpServletRequest req) {
         
         long amount;
         if (order.getFinalTotal() != null && order.getFinalTotal() > 0) {
             amount = (long) (order.getFinalTotal() * 100);
         } else {
-            // Fallback nếu là đơn cũ
+  
             double totalPrice = order.getOrderDetails().stream().mapToDouble(d -> d.getPrice() * d.getQuantity()).sum();
             amount = (long) (totalPrice * 100);
         }
@@ -68,7 +65,6 @@ public class VNPayService {
         String vnp_CreateDate = sdf.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        // Build data to hash
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
@@ -102,9 +98,7 @@ public class VNPayService {
         return vnp_PayUrl + "?" + queryUrl;
     }
 
-    /**
-     * [THẬT] Xác thực chữ ký khi VNPay trả về
-     */
+
     public boolean processVnPayReturn(HttpServletRequest request) {
         Map<String, String> params = new HashMap<>();
         Enumeration<String> paramsEnum = request.getParameterNames();
@@ -124,14 +118,12 @@ public class VNPayService {
             params.remove("vnp_SecureHash");
         }
 
-        // Sắp xếp và hash
         String signValue = VNPayConfig.hashAllFields(params, vnp_HashSecret);
         
-        // So sánh chữ ký
+
         return signValue.equals(vnp_SecureHash);
     }
-    
-    // Hàm băm (Lấy từ VNPay)
+
     public static String hmacSHA512(final String key, final String data) {
         try {
             Mac sha512Hmac = Mac.getInstance("HmacSHA512");

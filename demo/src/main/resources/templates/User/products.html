@@ -577,8 +577,8 @@
             th:each="product : ${products}"
           >
             <!-- Sticker -->
-            <span class="discount-sticker" th:if="${product.discount > 0}">
-              -[[${product.discount}]]%
+            <span class="discount-sticker" th:if="${product.getTotalDiscountPercent() > 0}">
+              -[[${product.getTotalDiscountPercent()}]]%
             </span>
 
             <i class="far fa-heart product-wishlist"></i>
@@ -597,7 +597,7 @@
               </h3>
 
               <div class="price-box">
-                <th:block th:if="${product.discount > 0}">
+                <th:block th:if="${product.getTotalDiscountPercent() > 0}">
                   <span class="main-price">
                     <span
                       th:text="${#numbers.formatDecimal(product.getDiscountedPrice(), 0, 'COMMA', 0, 'POINT')}"
@@ -611,7 +611,7 @@
                     >đ
                   </span>
                 </th:block>
-                <th:block th:unless="${product.discount > 0}">
+                <th:block th:unless="${product.getTotalDiscountPercent() > 0}">
                   <span class="main-price">
                     <span
                       th:text="${#numbers.formatDecimal(product.sellPrice, 0, 'COMMA', 0, 'POINT')}"

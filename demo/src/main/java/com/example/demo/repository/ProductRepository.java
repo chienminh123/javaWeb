@@ -6,7 +6,6 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -43,8 +42,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer>{
            "FROM Product p WHERE p.provider.providerId = :providerId")
     List<Map<String, Object>> findSuggestionsByProvider(@Param("providerId") Integer providerId);
 
-    // === [ĐÃ CẬP NHẬT] HỖ TRỢ PHÂN TRANG ===
-    // Lưu ý: Đã bỏ "LEFT JOIN FETCH p.sizes" để tối ưu hóa query Count cho phân trang
     @Query("SELECT p FROM Product p " + 
            "LEFT JOIN FETCH p.genre g " +
            "LEFT JOIN FETCH p.provider pv " +
@@ -57,7 +54,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>{
         @Param("brandId") Integer brandId,
         @Param("minPrice") Float minPrice,
         @Param("maxPrice") Float maxPrice,
-        Pageable pageable); // Thay Sort bằng Pageable
+        Pageable pageable); 
         
     @Query("SELECT p FROM Product p LEFT JOIN FETCH p.sizes WHERE p.genre.genreId = :genreId")
     List<Product> findByGenreGenreId(Integer genreId);

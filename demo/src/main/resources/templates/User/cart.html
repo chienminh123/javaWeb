@@ -201,6 +201,18 @@
               <span id="tempTotal" class="font-medium text-gray-800">0đ</span>
             </div>
 
+            <div 
+              id="quantityDiscountRow" 
+              class="flex justify-between items-center text-gray-600"
+              style="display: none; color: #27ae60;"
+            >
+              <span>
+                <i class="fas fa-tag"></i> Giảm giá số lượng:
+                <span id="quantityDiscountPercent" style="font-weight: bold;"></span>
+              </span>
+              <span id="quantityDiscountAmount" class="font-medium" style="color: #27ae60;">0đ</span>
+            </div>
+
             <div class="flex justify-between items-center text-gray-600">
               <span>Phí vận chuyển:</span>
               <span class="font-medium text-green-600">Miễn phí</span>
@@ -227,9 +239,6 @@
     <!-- Footer Placeholder -->
     <div th:replace="User/userFooter::user-footer"></div>
 
-    <!-- 
-      The JavaScript remains unchanged as it has no external dependencies.
-    -->
     <script th:inline="javascript">
       /* Hàm định dạng tiền tệ */
       function formatCurrency(amount) {
@@ -251,7 +260,6 @@
           (cb) => cb.value
         );
 
-        // Tạo Query String thủ công: ?selectedItems=1&selectedItems=2...
         const queryString = selectedIds
           .map((id) => `selectedItems=${id}`)
           .join("&");
@@ -262,6 +270,7 @@
       /* Hàm tính toán tổng tiền */
       function updateTotal() {
         let total = 0;
+        let totalQuantity = 0;
         const selectedItems = document.querySelectorAll(
           ".cart-item .item-selector:checked"
         );
@@ -271,6 +280,13 @@
           const itemDiv = checkbox.closest(".cart-item");
           const itemTotal = parseFloat(itemDiv.getAttribute("data-item-total"));
           total += itemTotal;
+          
+          // Tính tổng số lượng
+          const qtyInput = itemDiv.querySelector('input[type="number"]');
+          if (qtyInput) {
+            totalQuantity += parseInt(qtyInput.value) || 0;
+          }
+          
           updateSelectAllLabel();
         });
 
@@ -315,10 +331,41 @@
             updateSelectAllLabel();
           });
 
+        // Tính giảm giá theo số lượng
+        if (total > 0 && totalQuantity > 0) {
+          fetch(`/api/quantity-discount/calculate?totalQuantity=${totalQuantity}&orderTotal=${total}`)
+            .then(res => res.json())
+            .then(data => {
+              const quantityDiscountRow = document.getElementById("quantityDiscountRow");
+              const quantityDiscountAmount = document.getElementById("quantityDiscountAmount");
+              const quantityDiscountPercent = document.getElementById("quantityDiscountPercent");
+              const finalTotalEl = document.getElementById("finalTotal");
+              
+              if (data.hasDiscount && data.discountAmount > 0) {
+                // Hiển thị giảm giá
+                quantityDiscountRow.style.display = "flex";
+                quantityDiscountAmount.textContent = "-" + formatCurrency(data.discountAmount);
+                quantityDiscountPercent.textContent = "(" + Math.round(data.discountPercent) + "%)";
+                
+                // Cập nhật tổng cuối cùng
+                finalTotalEl.textContent = formatCurrency(data.newTotal);
+              } else {
+                // Ẩn giảm giá nếu không có
+                quantityDiscountRow.style.display = "none";
+                finalTotalEl.textContent = formatCurrency(total);
+              }
+            })
+            .catch(err => {
+              console.error("Lỗi tính giảm giá số lượng:", err);
+              document.getElementById("finalTotal").textContent = formatCurrency(total);
+            });
+        } else {
+          document.getElementById("quantityDiscountRow").style.display = "none";
+          document.getElementById("finalTotal").textContent = formatCurrency(total);
+        }
+
         // Cập nhật hiển thị
         document.getElementById("tempTotal").textContent =
-          formatCurrency(total);
-        document.getElementById("finalTotal").textContent =
           formatCurrency(total);
 
         // Vô hiệu hóa nút Thanh toán nếu không có sản phẩm nào được chọn

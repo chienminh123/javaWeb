@@ -35,9 +35,9 @@ import jakarta.servlet.http.HttpServletRequest;
 public class CartController {
 
     @Autowired
-    private CartService cartService; // Inject Service mới
+    private CartService cartService; 
     @Autowired
-    private OrderService orderService; // Inject OrderService để xử lý đặt hàng
+    private OrderService orderService;
     @Autowired
     private EmailService emailService;
     @Autowired
@@ -65,10 +65,8 @@ public class CartController {
         }
 
         try {
-            // Gọi Service để xử lý logic
             cartService.addToCart(principal.getName(), productId, sizeId, quantity);
         } catch (Exception e) {
-            // Gửi thông báo lỗi (ví dụ: Hết hàng) về trang chi tiết
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/product/" + productId;
         }
@@ -81,11 +79,8 @@ public class CartController {
         if (principal == null) {
             return "redirect:/Auth/login";
         }
+                Carts cart = cartService.getCart(principal.getName());
         
-        // Lấy giỏ hàng của user
-        Carts cart = cartService.getCart(principal.getName());
-        
-        // Tính tổng tiền
         float total = cartService.calculateTotal(cart);
         
         model.addAttribute("cart", cart);
@@ -94,7 +89,7 @@ public class CartController {
         return "User/cart";
     }
     @PostMapping("/cart/update")
-    @ResponseBody // Yêu cầu Spring trả về dữ liệu (String) thay vì tên view
+    @ResponseBody 
     public String updateCartItemQuantity(
             @RequestParam Integer cartDetailId,
             @RequestParam Integer quantity) {
@@ -103,7 +98,6 @@ public class CartController {
             cartService.updateQuantity(cartDetailId, quantity);
             return "SUCCESS";
         } catch (Exception e) {
-            // Trả về thông báo lỗi cho JavaScript xử lý
             return "ERROR: " + e.getMessage();
         }
     }
@@ -122,33 +116,33 @@ public class CartController {
     @GetMapping("/checkout")
     public String showCheckout(Model model, Principal principal,
                                @RequestParam(name = "selectedItems", required = false) List<Integer> selectedItems) {
-        // 1. Kiểm tra đăng nhập
         if (principal == null) {
             return "redirect:/Auth/login";
         }
         
-        // 2. Lấy giỏ hàng gốc
         Carts cart = cartService.getCart(principal.getName());
         
         if (cart == null || cart.getCartDetails() == null || cart.getCartDetails().isEmpty()) {
             return "redirect:/cart?error=Giỏ hàng rỗng";
         }
 
-        // 3. LỌC SẢN PHẨM ĐƯỢC CHỌN (QUAN TRỌNG: Fix lỗi chọn 1 ra tất cả)
-        // Nếu có danh sách ID được gửi lên, chỉ giữ lại các item đó
         if (selectedItems != null && !selectedItems.isEmpty()) {
             List<CartDetail> filteredDetails = cart.getCartDetails().stream()
                 .filter(item -> selectedItems.contains(item.getCartDetailId()))
                 .collect(Collectors.toList());
             
-            // Set tạm vào object cart để view hiển thị (không lưu DB)
             cart.setCartDetails(filteredDetails); 
         }
 
-        // 4. Tính lại tổng tiền dựa trên danh sách (đã lọc)
         float total = cartService.calculateTotal(cart);
         
-        // 5. Lấy danh sách Coupon hợp lệ
+        int totalQuantity = cart.getCartDetails().stream()
+            .mapToInt(CartDetail::getQuantity)
+            .sum();
+        
+        double quantityDiscount = orderService.calculateQuantityDiscount(totalQuantity, total);
+        
+       
         List<Coupon> allCoupons = couponService.findAll();
         List<Coupon> validCoupons = allCoupons.stream()
             .filter(c -> c.isActive())
@@ -160,9 +154,10 @@ public class CartController {
             })
             .collect(Collectors.toList());
 
-        // 6. Gửi dữ liệu sang View
         model.addAttribute("cart", cart);
         model.addAttribute("totalPrice", total); 
+        model.addAttribute("totalQuantity", totalQuantity);
+        model.addAttribute("quantityDiscount", quantityDiscount);
         model.addAttribute("userCoupons", validCoupons); 
         model.addAttribute("currentUser", cart.getUser());
         
@@ -179,7 +174,6 @@ public class CartController {
         RedirectAttributes redirectAttributes,
         HttpServletRequest request,
         @RequestParam(required = false) String couponCode,
-        // THÊM THAM SỐ NÀY ĐỂ NHẬN LIST ID SẢN PHẨM
         @RequestParam(name = "selectedItems", required = false) List<Integer> selectedItems 
     ) {
         if (principal == null) return "redirect:/Auth/login"; 
@@ -188,7 +182,6 @@ public class CartController {
         try {
             String userPhone = principal.getName();
 
-            // Gọi hàm Service với danh sách selectedItems
             newOrder = orderService.createOrderFromCart(userPhone, address, phone, paymentMethod, couponCode, selectedItems);
 
             if ("VNPay".equals(paymentMethod)) {
@@ -239,6 +232,32 @@ public class CartController {
         } catch (Exception e) {
             response.put("valid", false);
             response.put("message", e.getMessage());
+        }
+        return response;
+    }
+
+    @GetMapping("/api/quantity-discount/calculate")
+    @ResponseBody
+    public Map<String, Object> calculateQuantityDiscount(
+            @RequestParam Integer totalQuantity,
+            @RequestParam Double orderTotal) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            double discount = orderService.calculateQuantityDiscount(totalQuantity, orderTotal);
+            double discountPercent = 0;
+            
+            if (discount > 0) {
+                discountPercent = (discount / orderTotal) * 100;
+            }
+            
+            response.put("discountAmount", discount);
+            response.put("discountPercent", discountPercent);
+            response.put("newTotal", orderTotal - discount);
+            response.put("hasDiscount", discount > 0);
+        } catch (Exception e) {
+            response.put("error", e.getMessage());
+            response.put("discountAmount", 0.0);
+            response.put("newTotal", orderTotal);
         }
         return response;
     }

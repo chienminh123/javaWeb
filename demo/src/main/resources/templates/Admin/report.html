@@ -57,7 +57,6 @@
             </form>
           </div>
 
-          <!-- Biểu đồ Doanh thu -->
           <div class="chart-section">
             <div class="section-header">
               <h3 class="section-title">
@@ -95,7 +94,6 @@
             </div>
           </div>
 
-          <!-- Biểu đồ Top 10 Sản phẩm Bán chạy -->
           <div class="chart-section">
             <h3 class="section-title">
               <i class="fa-solid fa-star"></i> Top 10 Sản phẩm Bán chạy
@@ -222,25 +220,19 @@
     </div>
 
     <script th:inline="javascript">
-      // ========== BIỂU ĐỒ DOANH THU ==========
       const revenueData = /*[[${revenueData}]]*/ [];
       
-      // Chuyển đổi dữ liệu từ LocalDate sang định dạng phù hợp
-      // Thymeleaf serialize LocalDate thành string ISO format (YYYY-MM-DD)
       const revenueLabels = revenueData.map((item) => {
         if (item && item.date) {
-          // Nếu date là string từ Thymeleaf (format: "2024-01-15")
           if (typeof item.date === 'string') {
             return item.date;
           }
-          // Nếu date là object có các thuộc tính year, month, day
           if (item.date.year && item.date.monthValue && item.date.dayOfMonth) {
             const year = item.date.year;
             const month = String(item.date.monthValue).padStart(2, '0');
             const day = String(item.date.dayOfMonth).padStart(2, '0');
             return `${year}-${month}-${day}`;
           }
-          // Fallback: thử parse như Date object
           try {
             const date = new Date(item.date);
             if (!isNaN(date.getTime())) {
@@ -257,7 +249,6 @@
 
       let revenueChart = null;
 
-      // Tạo gradient cho biểu đồ
       function createGradient(ctx, chartArea, chartType) {
         let gradient;
         if (chartType === "line") {
@@ -316,7 +307,6 @@
                 categoryPercentage: 0.85,
                 borderRadius: chartType === "bar" ? 6 : 0,
                 borderSkipped: false,
-                // Cho line chart
                 pointRadius: chartType === "line" ? 4 : 0,
                 pointHoverRadius: chartType === "line" ? 7 : 0,
                 pointBackgroundColor: chartType === "line" ? linePointColor : undefined,
@@ -325,7 +315,6 @@
                 pointHoverBackgroundColor: chartType === "line" ? linePointHoverColor : undefined,
                 pointHoverBorderColor: chartType === "line" ? linePointColor : undefined,
                 pointHoverBorderWidth: chartType === "line" ? 3 : 0,
-                // Cho bar chart
                 hoverBackgroundColor: chartType === "bar" ? barHoverColor : undefined,
                 hoverBorderColor: chartType === "bar" ? "rgba(255, 255, 255, 1)" : undefined,
                 hoverBorderWidth: chartType === "bar" ? 2 : undefined,
@@ -538,7 +527,6 @@
         }
       }
 
-      // ========== BIỂU ĐỒ TOP 10 SẢN PHẨM BÁN CHẠY ==========
       const topProductsData = /*[[${topProducts}]]*/ [];
       
       const topProductsLabels = topProductsData.map((item) => {
@@ -556,9 +544,8 @@
           topProductsChart.destroy();
         }
 
-        // Tạo màu gradient cho biểu đồ
         const backgroundColors = topProductsLabels.map((_, index) => {
-          const hue = (index * 137.5) % 360; // Golden angle để tạo màu đẹp
+          const hue = (index * 137.5) % 360;
           return `hsla(${hue}, 70%, 60%, 0.8)`;
         });
 
@@ -582,7 +569,7 @@
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            indexAxis: 'y', // Biểu đồ ngang
+            indexAxis: 'y',
             interaction: {
               mode: "point",
               axis: "y",
@@ -674,7 +661,6 @@
         });
       }
 
-      // Khởi tạo biểu đồ khi trang được tải
       document.addEventListener("DOMContentLoaded", function () {
         renderRevenueChart("line");
         if (topProductsData.length > 0) {

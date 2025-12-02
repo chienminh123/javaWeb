@@ -33,15 +33,12 @@ public class ReportService {
     @Autowired
     private ProductRepository productRepo; 
 
-    // // Lấy dữ liệu cho biểu đồ Doanh thu
     public List<RevenueByDateDTO> getRevenueReport(LocalDate startDate, LocalDate endDate) {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
         
-        // 1. Lấy về List<Object[]>
         List<Object[]> results = orderDetailRepo.findRevenueByDateRange(startDateTime, endDateTime);
         
-        // 2. Chuyển đổi thủ công từ Object[] sang DTO
         List<RevenueByDateDTO> dtoList = new ArrayList<>();
         for (Object[] row : results) {
             Date sqlDate = (Date) row[0];
@@ -56,23 +53,20 @@ public class ReportService {
         return dtoList;
     }
 
-    // Lấy Top 10 sản phẩm bán chạy
     public List<TopProductDTO> getTopSellingProducts(LocalDate startDate, LocalDate endDate) {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
         
-        // 1. Lấy danh sách ID và số lượng từ query
         List<TopProductIdDTO> topIds = orderDetailRepo.findTopSellingProducts(
                 startDateTime, endDateTime, PageRequest.of(0, 10));
-        // 2. Chuyển đổi ID thành đối tượng Product (để hiển thị tên, ảnh, v.v.)
+   
         return topIds.stream().map(dto -> {
             Product product = productRepo.findById(dto.getProductId())
-                .orElse(new Product()); // Tạo 1 Product tạm nếu bị xóa
+                .orElse(new Product());
             return new TopProductDTO(product, dto.getTotalQuantity());
         }).collect(Collectors.toList());
     }
 
-    // Lấy các biên lai Nhập/Xuất
     public List<Quittance> getQuittances(String type, LocalDate startDate, LocalDate endDate) {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);

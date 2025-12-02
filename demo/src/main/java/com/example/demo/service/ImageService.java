@@ -12,11 +12,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ImageService {
-
-    // Thư mục lưu ảnh
     private static final String UPLOAD_DIR = "src/main/resources/static/uploads/products/";
 
-    // Tạo thư mục nếu chưa có
     public ImageService() {
         try {
             Files.createDirectories(Paths.get(UPLOAD_DIR));
@@ -25,16 +22,14 @@ public class ImageService {
         }
     }
 
-    /**
-     * Lưu 1 ảnh duy nhất và trả về URL
-     */
+
     public String saveSingleImage(MultipartFile file, Integer productId) {
         if (file == null || file.isEmpty()) {
             return null;
         }
 
         try {
-            // Tạo tên file duy nhất
+
             String originalName = file.getOriginalFilename();
             String extension = originalName != null && originalName.contains(".")
                 ? originalName.substring(originalName.lastIndexOf("."))
@@ -44,7 +39,6 @@ public class ImageService {
             Path filePath = Paths.get(UPLOAD_DIR + fileName);
             Files.copy(file.getInputStream(), filePath);
 
-            // Trả về URL truy cập
             return "/uploads/products/" + fileName;
 
         } catch (IOException e) {

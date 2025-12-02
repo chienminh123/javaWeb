@@ -86,6 +86,17 @@
       </a>
 
       <a
+        th:href="@{/Admin/coupons}"
+        sec:authorize="hasRole('ADMIN')"
+        th:class="${currentPage == '/Admin/coupons'} ? 'sidebar-link active' : 'sidebar-link'"
+      >
+        <span class="icon">
+          <i class="fa-solid fa-ticket"></i>
+        </span>
+        <span class="label">Mã giảm giá</span>
+      </a>
+
+      <a
         th:href="@{/Admin/report}"
         sec:authorize="hasRole('ADMIN')"
         th:class="${currentPage == '/Admin/report'} ? 'sidebar-link active' : 'sidebar-link'"
