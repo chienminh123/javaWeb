@@ -469,7 +469,7 @@ public String showOrdersByStatus(
     }
     @GetMapping("/login")
     public String adminLogin(Model model) {
-        return "Admin/login";
+        return "Auth/adminLogin";
     }
 
     @GetMapping("/api/providers")

@@ -72,6 +72,17 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             // 6. CÁC YÊU CẦU CÒN LẠI PHẢI ĐĂNG NHẬP
             .anyRequest().authenticated()
         )
+        // Xử lý exception khi chưa đăng nhập
+        .exceptionHandling((exceptions) -> exceptions
+            .authenticationEntryPoint((request, response, authException) -> {
+                // Nếu truy cập trang admin thì redirect đến /Admin/login
+                if (request.getRequestURI().startsWith("/Admin/")) {
+                    response.sendRedirect(request.getContextPath() + "/Admin/login");
+                } else {
+                    response.sendRedirect(request.getContextPath() + "/Auth/login");
+                }
+            })
+        )
         // Cấu hình form login - xử lý cả user và admin login
         .formLogin((form) -> form
             .loginPage("/Auth/login")
@@ -92,7 +103,15 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
         )
         .logout((logout) -> logout
             .logoutUrl("/logout")
-            .logoutSuccessUrl("/Auth/login")
+            .logoutSuccessHandler((request, response, authentication) -> {
+                // Kiểm tra nếu đăng xuất từ trang admin thì redirect về /Admin/login
+                String referer = request.getHeader("Referer");
+                if (referer != null && referer.contains("/Admin/")) {
+                    response.sendRedirect(request.getContextPath() + "/Admin/login?logout");
+                } else {
+                    response.sendRedirect(request.getContextPath() + "/Auth/login?logout");
+                }
+            })
             .permitAll()
             .invalidateHttpSession(true)
             .clearAuthentication(true)

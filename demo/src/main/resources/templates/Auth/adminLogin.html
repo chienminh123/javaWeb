@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html
+  lang="vi"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng Nhập Admin</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" th:href="@{/assets/css/admin.css}" />
+    <style>
+      .admin-login-page {
+        min-height: 100vh;
+        background-color: var(--color-background-light);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .admin-login-header {
+        background-color: var(--color-text-dark);
+        color: var(--color-text-light);
+        padding: 15px 30px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .admin-login-header .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.3em;
+        font-weight: bold;
+      }
+
+      .admin-login-header .brand-icon {
+        font-size: 1.5em;
+      }
+
+      .admin-login-header .back-link {
+        color: var(--color-text-light);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9em;
+        transition: opacity 0.3s;
+      }
+
+      .admin-login-header .back-link:hover {
+        opacity: 0.8;
+      }
+
+      .admin-login-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+      }
+
+      .admin-login-box {
+        background: var(--color-background-white);
+        padding: 50px 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 450px;
+      }
+
+      .admin-login-box h1 {
+        color: var(--color-primary);
+        margin-bottom: 10px;
+        font-size: 28px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .admin-login-box .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 14px;
+      }
+
+      .admin-login-box form {
+        margin-top: 30px;
+      }
+
+      .admin-login-box form > div {
+        margin-bottom: 20px;
+      }
+
+      .admin-login-box label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--color-text-dark);
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      .admin-login-box input[type="text"],
+      .admin-login-box input[type="password"] {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+        box-sizing: border-box;
+      }
+
+      .admin-login-box input[type="text"]:focus,
+      .admin-login-box input[type="password"]:focus {
+        outline: none;
+        border-color: var(--color-primary);
+      }
+
+      .pw-wrap {
+        margin-bottom: 20px;
+      }
+
+      .pw-input {
+        position: relative;
+      }
+
+      .pw-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--color-primary);
+        cursor: pointer;
+        font-size: 13px;
+        padding: 5px 10px;
+      }
+
+      .pw-toggle:hover {
+        opacity: 0.8;
+      }
+
+      .admin-login-box button[type="submit"] {
+        width: 100%;
+        padding: 14px;
+        background-color: var(--color-primary);
+        color: var(--color-text-light);
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-top: 10px;
+      }
+
+      .admin-login-box button[type="submit"]:hover {
+        background-color: var(--color-primary-dark);
+      }
+
+      .message-box {
+        padding: 12px 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        font-size: 14px;
+      }
+
+      .error-message {
+        background-color: #fee;
+        color: var(--color-danger);
+        border: 1px solid #fcc;
+      }
+
+      .success-message {
+        background-color: #efe;
+        color: var(--color-success);
+        border: 1px solid #cfc;
+      }
+
+      .back-to-user {
+        text-align: center;
+        margin-top: 25px;
+        padding-top: 25px;
+        border-top: 1px solid var(--color-border);
+      }
+
+      .back-to-user a {
+        color: var(--color-primary);
+        text-decoration: none;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: opacity 0.3s;
+      }
+
+      .back-to-user a:hover {
+        opacity: 0.8;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="admin-login-page">
+      <!-- Container đăng nhập -->
+      <div class="admin-login-container">
+        <div class="admin-login-box">
+          <h1>
+            <i class="fa-solid fa-shield-halved"></i>
+            Đăng Nhập Admin
+          </h1>
+          <p class="subtitle">Vui lòng đăng nhập để truy cập trang quản trị</p>
+
+          <div
+            th:if="${param.error == 'unauthorized'}"
+            class="message-box error-message"
+          >
+            <p>
+              Bạn không có quyền truy cập trang admin. Vui lòng đăng nhập bằng
+              tài khoản admin.
+            </p>
+          </div>
+          <div
+            th:if="${param.error != null && param.error != 'unauthorized'}"
+            class="message-box error-message"
+          >
+            <p>Tên đăng nhập hoặc mật khẩu không đúng.</p>
+          </div>
+          <div th:if="${param.logout}" class="message-box success-message">
+            <p>Bạn đã đăng xuất thành công.</p>
+          </div>
+
+          <form th:action="@{/Auth/login}" method="post">
+            <input
+              type="hidden"
+              th:name="${_csrf.parameterName}"
+              th:value="${_csrf.token}"
+            />
+
+            <div>
+              <label for="Phone">Số điện thoại</label>
+              <input
+                type="text"
+                id="Phone"
+                name="Phone"
+                placeholder="VD: 0912 345 678"
+                required
+              />
+            </div>
+
+            <div class="pw-wrap">
+              <label for="Password">Mật khẩu</label>
+              <div class="pw-input">
+                <input
+                  type="password"
+                  id="Password"
+                  name="Password"
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  class="pw-toggle"
+                  aria-label="Hiện/ẩn mật khẩu"
+                >
+                  Hiện
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <button type="submit">Đăng Nhập</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const btn = document.querySelector(".pw-toggle");
+        if (!btn) return;
+        const input = document.getElementById("Password");
+        btn.addEventListener("click", function () {
+          const isPwd = input.type === "password";
+          input.type = isPwd ? "text" : "password";
+          this.textContent = isPwd ? "Ẩn" : "Hiện";
+        });
+      })();
+    </script>
+  </body>
+</html>
