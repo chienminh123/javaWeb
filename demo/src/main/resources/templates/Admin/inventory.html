@@ -113,7 +113,7 @@
                             <input
                               type="number"
                               name="actualQty"
-                              min="0"
+                              th:value="${size.quantity}"
                               th:data-system="${size.quantity}"
                               onchange="calcDiff(this)"
                               class="form-input actual-qty-input"

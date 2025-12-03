@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.example.demo.model.Orders;
-import com.example.demo.model.Product;
 
 @Repository
 public interface OrdersRepository extends JpaRepository<Orders, Integer> {

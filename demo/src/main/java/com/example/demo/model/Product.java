@@ -73,10 +73,11 @@ public class Product {
     }
     
     public int getAutoStockDiscountPercent() {
+        // Chỉ áp dụng giảm giá tự động khi có config và đang active
         if (currentConfig != null && currentConfig.isActiveNow()) {
             return getAutoStockDiscountPercent(currentConfig.getMinStockQuantity(), currentConfig.getDiscountPercent());
         }
-        return hasAutoStockDiscount() ? 10 : 0;
+        return 0;
     }
     
     public int getTotalDiscountPercent(Integer minStockQuantity, Integer autoDiscountPercent) {
@@ -124,9 +125,11 @@ public class Product {
     }
     
     public boolean hasAutoStockDiscount() {
+        // Chỉ có giảm giá tự động khi có config và đang active
         if (currentConfig != null && currentConfig.isActiveNow()) {
             return hasAutoStockDiscount(currentConfig.getMinStockQuantity());
         }
-        return getTotalStockQuantity() > 20;
+        // Không có config active -> không có giảm giá tự động
+        return false;
     }
 }

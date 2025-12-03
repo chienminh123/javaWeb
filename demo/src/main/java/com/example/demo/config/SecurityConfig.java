@@ -54,22 +54,19 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
         .authorizeHttpRequests((requests) -> requests
             // 1. CẤP QUYỀN MỞ CHO TRANG CHỦ, ĐĂNG KÝ VÀ TÀI NGUYÊN TĨNH
             .requestMatchers("/", "/Auth/**", "/register", "/css/**", "/js/**", "/img/**","/assets/**",  "/uploads/**","/forgot-password","/reset-password","/user-css/**").permitAll() 
-            .requestMatchers("/Admin/addProvider", "/Admin/addGenre").permitAll() // Giữ nguyên
+            .requestMatchers("/Admin/addProvider", "/Admin/addGenre").permitAll()
 
-            // 2. CẤP QUYỀN XEM SẢN PHẨM & TRANG USER CHO TẤT CẢ MỌI NGƯỜI (KHÔNG CẦN ĐĂNG NHẬP)
-            .requestMatchers("/products", "/search", "/product/**", "/api/products/suggest", "/User/index", "/User/**").permitAll()
+            .requestMatchers("/products", "/search", "/product/**", "/api/products/suggest", "/api/chatbot/**", "/User/index", "/User/**").permitAll()
             
-            // 3. TRANG ĐĂNG NHẬP ADMIN
+            // TRANG ĐĂNG NHẬP ADMIN
             .requestMatchers("/Admin/login").permitAll()
             
-            // 4. CẤP QUYỀN XỬ LÝ GIỎ HÀNG CHO USER ĐÃ ĐĂNG NHẬP
-            // Chỉ yêu cầu đăng nhập khi thêm vào giỏ hàng hoặc xem giỏ hàng
             .requestMatchers("/cart/add", "/cart", "/cart/**", "/checkout", "/checkout/**").hasRole("USER") 
 
-            // 5. PHÂN QUYỀN THEO ROLE (Các trang Admin)
+            // PHÂN QUYỀN THEO ROLE (Các trang Admin)
             .requestMatchers("/Admin/**").hasRole("ADMIN")
 
-            // 6. CÁC YÊU CẦU CÒN LẠI PHẢI ĐĂNG NHẬP
+            //  CÁC YÊU CẦU CÒN LẠI PHẢI ĐĂNG NHẬP
             .anyRequest().authenticated()
         )
         // Xử lý exception khi chưa đăng nhập
@@ -118,6 +115,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
         )
         .csrf(csrf -> csrf
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+            .ignoringRequestMatchers("/api/chatbot/**") // Tắt CSRF cho chatbot API
         );
     return http.build();
 }
@@ -149,7 +147,6 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
                         return;
                     }
                 }
-                // default fallback
                 response.sendRedirect(request.getContextPath() + "/");
             }
         };

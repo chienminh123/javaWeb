@@ -1,5 +1,10 @@
-<div th:fragment="user-footer" class="footer">
-  <div class="footer__container">
+<div th:fragment="user-footer">
+  <!-- Chatbot Widget - Load trước -->
+  <link rel="stylesheet" th:href="@{/assets/css/chatbot.css}" />
+  <script th:src="@{/assets/js/chatbot.js}"></script>
+
+  <div class="footer">
+    <div class="footer__container">
     <div class="footer__col footer__col--info">
       <a href="/" class="footer__logo">
         <img th:src="@{/img/logo.png}" alt="Logo Mẹ & Bé" class="logo__image" />
@@ -88,8 +93,8 @@
     </div>
   </div>
 
-  <div class="footer__bottom">
-    <p>&copy; 2025 Me & Be Yeu. Tất cả quyền được bảo lưu.</p>
+    <div class="footer__bottom">
+      <p>&copy; 2025 Me & Be Yeu. Tất cả quyền được bảo lưu.</p>
+    </div>
   </div>
 </div>
-<script th:src="@{/assets/js/user.js}"></script>
