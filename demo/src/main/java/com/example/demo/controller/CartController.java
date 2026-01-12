@@ -19,14 +19,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.demo.model.CartDetail;
-import com.example.demo.model.Carts; // Thêm import
+import com.example.demo.model.Carts;
 import com.example.demo.model.Coupon;
 import com.example.demo.model.Orders;
 import com.example.demo.service.CartService;
 import com.example.demo.service.CouponService;
-import com.example.demo.service.EmailService;
 import com.example.demo.service.OrderService;
-import com.example.demo.service.ProductService;
 import com.example.demo.service.VNPayService;
 
 import jakarta.servlet.http.HttpServletRequest; 
@@ -38,10 +36,6 @@ public class CartController {
     private CartService cartService; 
     @Autowired
     private OrderService orderService;
-    @Autowired
-    private EmailService emailService;
-    @Autowired
-    private ProductService productService;
     @Autowired
     private VNPayService vnpayService;
     @Autowired private CouponService couponService;

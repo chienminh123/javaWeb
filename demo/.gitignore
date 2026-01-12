@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Python ignore
+python_service/venv/
+python_service/__pycache__/
+*.pyc

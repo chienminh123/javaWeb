@@ -19,7 +19,6 @@ import com.example.demo.model.Orders;
 import com.example.demo.model.User;
 import com.example.demo.repository.OrdersRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.service.CartService;
 import com.example.demo.service.EmailService;
 import com.example.demo.service.OrderService;
 import com.example.demo.service.UserService;
@@ -45,8 +44,6 @@ public class AuthController {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private OrdersRepository ordersRepo;
-    @Autowired
-    private CartService cartService;
     @Autowired
     private EmailService emailService;
     

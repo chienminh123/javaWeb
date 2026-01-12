@@ -435,6 +435,75 @@
           </div>
         </div>
       </section>
+      <!-- RECOMMENDATION SECTION -->
+      </section> 
+      <section class="hot-deal-section" th:if="${not #lists.isEmpty(recommendations)}">
+        <div class="section-header">
+          <h2>
+            <i class="fa-solid fa-wand-magic-sparkles" style="color: #48dbfb;"></i>
+            <span>Gợi ý riêng cho bạn</span>
+          </h2>
+        </div>
+
+        <div class="hot-deal-grid">
+          <a
+            th:href="@{/product/{id}(id=${product.productId})}"
+            class="product-card"
+            th:each="product : ${recommendations}"
+          >
+            <span class="discount-sticker" th:if="${product.getTotalDiscountPercent() > 0}">
+              Giảm [[${product.getTotalDiscountPercent()}]]%
+            </span>
+
+            <i class="far fa-heart product-wishlist"></i>
+
+            <div class="img-wrapper">
+              <img
+                th:src="@{${product.imageUrl != null ? product.imageUrl : '/img/placeholder.png'}}"
+                alt="Ảnh sản phẩm"
+                loading="lazy"
+              />
+            </div>
+
+            <div class="product-content">
+              <h3 class="product-name" th:text="${product.productName}">
+                Tên sản phẩm
+              </h3>
+
+              <div class="price-box">
+                <th:block th:if="${product.getTotalDiscountPercent() > 0}">
+                  <span class="main-price">
+                    <span
+                      th:text="${#numbers.formatDecimal(product.getDiscountedPrice(), 0, 'COMMA', 0, 'POINT')}"
+                    ></span
+                    >đ
+                  </span>
+                  <span class="old-price">
+                    <span
+                      th:text="${#numbers.formatDecimal(product.sellPrice, 0, 'COMMA', 0, 'POINT')}"
+                    ></span
+                    >đ
+                  </span>
+                </th:block>
+
+                <th:block th:unless="${product.getTotalDiscountPercent() > 0}">
+                  <span class="main-price">
+                    <span
+                      th:text="${#numbers.formatDecimal(product.sellPrice, 0, 'COMMA', 0, 'POINT')}"
+                    ></span
+                    >đ
+                  </span>
+                </th:block>
+              </div>
+
+              <button class="add-to-cart-btn">
+                <i class="fa-solid fa-cart-plus"></i>
+                Xem chi tiết
+              </button>
+            </div>
+          </a>
+        </div>
+      </section>
     </main>
 
     <div th:replace="User/userFooter::user-footer"></div>

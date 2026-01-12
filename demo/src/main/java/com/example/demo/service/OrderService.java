@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import com.example.demo.model.CartDetail;
 import com.example.demo.model.Carts;
@@ -108,7 +109,7 @@ public class OrderService {
             couponService.save(coupon);
         }
         
-        double totalDiscountAmount = quantityDiscountAmount + couponDiscountAmount;
+        // double totalDiscountAmount = quantityDiscountAmount + couponDiscountAmount;
 
         Orders newOrder = new Orders();
         newOrder.setUser(user);
@@ -367,6 +368,7 @@ public class OrderService {
     }
     public Optional<Orders> findOrderById(Integer orderId) { return ordersRepo.findById(orderId); }
     public Optional<Orders> findOrderDetailsById(Integer orderId) { return ordersRepo.findByIdWithDetails(orderId); }
+
     @Transactional public Orders save(Orders order) { return ordersRepo.save(order); }
     public void notifyOrderSuccess(Orders order) {
         try {
@@ -374,6 +376,16 @@ public class OrderService {
             emailService.sendNewOrderNotification(order);
             List<Sizes> lowStockItems = productService.checkLowStockAfterOrder(order, 5);
             if (!lowStockItems.isEmpty()) emailService.sendLowStockNotification(lowStockItems);
+            System.out.println(">> Đang yêu cầu AI học lại dữ liệu mới...");
+            try {
+                RestTemplate restTemplate = new RestTemplate();
+                // Gọi API /retrain của Python
+                restTemplate.getForObject("http://localhost:8000/retrain", String.class);
+                System.out.println(">> AI đã cập nhật kiến thức thành công!");
+            } catch (Exception e) {
+                // Nếu Python lỗi thì thôi, không ảnh hưởng quy trình bán hàng
+                System.err.println(">> Không gọi được AI để retrain: " + e.getMessage());
+            }
         } catch (MessagingException e) { logger.warn("Lỗi email", e); }
     }
 
