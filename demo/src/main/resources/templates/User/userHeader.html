@@ -201,6 +201,11 @@
             >
             <div class="notification-footer">
               <form th:action="@{/logout}" method="post" style="margin: 0">
+                <input
+                  type="hidden"
+                  th:name="${_csrf.parameterName}"
+                  th:value="${_csrf.token}"
+                />
                 <button type="submit" class="logout-btn">
                   <i class="fa-solid fa-arrow-right-from-bracket"></i>
                   Đăng xuất
@@ -251,7 +256,7 @@
 
       suggestionTimer = setTimeout(() => {
         let apiUrl = `/api/products/suggest?keyword=${encodeURIComponent(
-          keyword
+          keyword,
         )}`;
         if (genreId) {
           apiUrl += `&genreId=${encodeURIComponent(genreId)}`;
@@ -301,7 +306,7 @@
     window.onclick = function (event) {
       if (!event.target.closest(".top-bar__action--account")) {
         var dropdowns = document.getElementsByClassName(
-          "notification-dropdown"
+          "notification-dropdown",
         );
         for (var i = 0; i < dropdowns.length; i++) {
           var openDropdown = dropdowns[i];
